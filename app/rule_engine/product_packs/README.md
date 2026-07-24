@@ -11,6 +11,7 @@ product_packs/
 ├─ rules.py               단순 비교와 상품 고유 조건 도구
 ├─ registry.py            상품명·별칭·기준일로 Pack 선택
 ├─ engine.py              모든 상품이 공유하는 단일 판정기
+├─ handoff.py             상품·옵션·사용자 정보에 판정 결과를 붙여 전달
 └─ packs/
    ├─ __init__.py         실제 서비스에 사용할 Pack 등록 목록
    ├─ example_product.py  복사 전용 예제, 서비스에는 미등록
@@ -69,3 +70,35 @@ result = evaluate_product(request)
 기존 `policy/`, `loans/`, `savings/`는 그대로 유지한다. 신규 서비스는 우선
 `product_packs.evaluate_product()`를 상품 조건 판정 진입점으로 사용한다.
 기존 계산 로직에서 재사용할 가치가 있는 규칙은 추후 공통 Rule로 옮길 수 있다.
+
+## 다음 예적금·대출 엔진으로 전달하기
+
+Rule Pack은 상품 가입 필수조건만 판정하므로 상품 기본정보와 `optionList`를
+직접 소유하지 않는다. 상위 서비스는 원본 데이터를 `ProductCandidate`에 담고
+`route_product_candidates()`를 호출한다.
+
+```python
+candidate = ProductCandidate(
+    product_name=raw_product["baseList"]["fin_prdt_nm"],
+    base_data=raw_product["baseList"],
+    option_list=tuple(raw_product["optionList"]),
+)
+result = route_product_candidates(
+    [candidate],
+    user_facts={
+        "deposit_amount": 10_000_000,
+        "applicant_type": "individual",
+    },
+    as_of=date(2026, 7, 24),
+)
+```
+
+결과는 다음 세 갈래로 분리된다.
+
+- `forwardable`: 모든 가입 필수조건을 통과해 다음 계산 엔진으로 전달
+- `rejected`: 가입 필수조건을 명확히 충족하지 못해 제외
+- `needs_review`: 입력이나 원문이 부족해 판정을 확정하지 못함
+
+각 결과에는 `product.base_data`, `product.option_list`, `user_facts`,
+`rule_result`가 함께 들어 있다. 예적금 엔진은 `forwardable`의 옵션별 금리와
+우대조건을 계산하고, 대출 엔진은 옵션별 한도·금리·상환방식을 계산한다.

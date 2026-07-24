@@ -39,3 +39,54 @@ def dsr(
 def buffer(monthly_essential_expense: Decimal) -> Decimal:
     """최소 여유자금(Buffer) = max(300,000원, 필수생활비 × 0.10) (부록 A-8)."""
     return max(Decimal("300000"), monthly_essential_expense * Decimal("0.10"))
+
+
+def loan_max(
+    *,
+    ltv_limit_amount: Decimal,
+    product_limit_amount: Decimal,
+    dti_limit_amount: Decimal,
+    required_amount: Decimal,
+    annual_rate: Decimal,
+    months: int,
+    existing_annual_debt_service: Decimal,
+    annual_income: Decimal,
+    safe_dsr: Decimal,
+    post_purchase_monthly_income: Decimal,
+    post_purchase_monthly_expense: Decimal,
+    other_existing_monthly_debt_service: Decimal,
+    buffer_target: Decimal,
+    epsilon: Decimal = Decimal("100000"),
+) -> Decimal:
+    """대출 가능액 이분 탐색 (DESIGN SSOT 부록 A-2).
+
+    정책 상한(LTV·상품·DTI 한도)은 이미 금액으로 환산된 값을 인자로 받는다 —
+    비율→금액 변환은 이 함수의 책임이 아니다. hi 초기값은 그 한도들과 실제
+    필요액 중 최솟값이며, DSR·구매후 현금흐름(Buffer) 조건을 동시에 만족하는
+    최대 대출액을 찾을 때까지 이분 탐색한다. L 증가 → pmt·dsr 증가, 월 잉여
+    감소로 feasible은 L에 대해 단조이므로 이분 탐색이 유효하다(A-2 원문).
+    """
+    lo = Decimal("0")
+    hi = min(ltv_limit_amount, product_limit_amount, dti_limit_amount, required_amount)
+
+    while (hi - lo) > epsilon:
+        candidate = (lo + hi) / 2
+        new_pmt = pmt(candidate, annual_rate, months)
+        candidate_dsr = dsr(
+            existing_annual_debt_service=existing_annual_debt_service,
+            new_annual_debt_service=new_pmt * 12,
+            annual_income=annual_income,
+        )
+        monthly_surplus = (
+            post_purchase_monthly_income
+            - post_purchase_monthly_expense
+            - other_existing_monthly_debt_service
+            - new_pmt
+        )
+        feasible = candidate_dsr <= safe_dsr and monthly_surplus >= buffer_target
+        if feasible:
+            lo = candidate
+        else:
+            hi = candidate
+
+    return lo

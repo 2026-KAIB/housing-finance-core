@@ -1,11 +1,12 @@
-import requests
-import pandas as pd
-import xml.etree.ElementTree as ET
-import time
 import os
-from dotenv import load_dotenv
+import time
+import xml.etree.ElementTree as ET
 from datetime import datetime
+
+import pandas as pd
+import requests
 from dateutil.relativedelta import relativedelta
+from dotenv import load_dotenv
 
 load_dotenv()
 APARTMENT_API_KEY = (os.getenv("APARTMENT_API_KEY") or "").strip()
@@ -111,10 +112,11 @@ def clean(df):
 
 
 if __name__ == "__main__":
+    # 서울 전체 구(25개)
     df = collect("아파트", "매매",
                  ["11110","11140","11170","11200","11215","11230","11260","11290",
          "11305","11320","11350","11380","11410","11440","11470","11500",
-         "11530","11545","11560","11590","11620","11650","11680","11710","11740"],  # 서울 전체 구(25개)
+         "11530","11545","11560","11590","11620","11650","11680","11710","11740"],  
                  "202507", "202607")
     df = clean(df)
     df.to_csv("apt_trades_seoul.csv", index=False, encoding="utf-8-sig")

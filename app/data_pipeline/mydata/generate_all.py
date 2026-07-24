@@ -14,6 +14,7 @@ import os
 import random
 import sys
 from datetime import datetime
+
 from dateutil.relativedelta import relativedelta
 
 BASE = datetime(2026, 7, 24)
@@ -609,24 +610,30 @@ def generate(persona):
         # 수신·투자 → 은행-002 / 003
         if t[0] in "12":
             write(f"{out}/bank_002_deposit_basic_{num}.json",
-                  resp_deposit_basic(a, seq)); seq += 1
+                  resp_deposit_basic(a, seq)) 
+            seq += 1
             write(f"{out}/bank_003_deposit_detail_{num}.json",
-                  resp_deposit_detail(a, seq)); seq += 1
+                  resp_deposit_detail(a, seq)) 
+            seq += 1
 
         # 대출 → 은행-008 / 009
         if t[0] == "3":
             write(f"{out}/bank_008_loan_basic_{num}.json",
-                  resp_loan_basic(a, seq)); seq += 1
+                  resp_loan_basic(a, seq)) 
+            seq += 1
             write(f"{out}/bank_009_loan_detail_{num}.json",
-                  resp_loan_detail(a, seq)); seq += 1
+                  resp_loan_detail(a, seq)) 
+            seq += 1
 
         # 마이너스통장 → 수신 + 대출 양쪽
         if a.get("is_credit_line"):
             la = dict(a, balance_amt=a["loan_balance_amt"])
             write(f"{out}/bank_008_loan_basic_{num}.json",
-                  resp_loan_basic(la, seq)); seq += 1
+                  resp_loan_basic(la, seq)) 
+            seq += 1
             write(f"{out}/bank_009_loan_detail_{num}.json",
-                  resp_loan_detail(la, seq)); seq += 1
+                  resp_loan_detail(la, seq)) 
+            seq += 1
 
     # 은행-004 (주거래 계좌만)
     tl = build_transactions(persona, persona["final_balance"])

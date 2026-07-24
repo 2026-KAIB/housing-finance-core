@@ -26,30 +26,47 @@ class LoanEffectivePeriodRule:
 
 
 class LoanLimitRule:
-    """상품별 대출한도 (DESIGN SSOT §13.1-3)."""
+    """상품별 대출한도 (DESIGN SSOT §13.1-3).
+
+    원천 데이터의 대출한도(`loan_lmt`)는 자유텍스트라 정규화 단계에서 파싱이
+    실패할 수 있다(부록 B-5). `loan_limit=None`이면 판정 근거가 없는 것이지
+    신청자 결격이 아니므로 통과시킨다.
+    """
 
     code = "LOAN_PRODUCT_LIMIT"
 
     def evaluate(self, context: LoanEligibilityContext) -> RuleDecision:
-        passed = context.requested_loan_amount <= context.product.loan_limit
+        limit = context.product.loan_limit
+        if limit is None:
+            return RuleDecision(
+                rule_code=self.code, passed=True, reasons=(), source_version=context.data_version
+            )
+        requested = context.requested_loan_amount
+        passed = requested <= limit
         reasons: tuple[str, ...] = ()
         if not passed:
-            reasons = (
-                f"요청 대출액 {context.requested_loan_amount}원이 상품 한도"
-                f" {context.product.loan_limit}원을 초과합니다.",
-            )
+            reasons = (f"요청 대출액 {requested}원이 상품 한도 {limit}원을 초과합니다.",)
         return RuleDecision(
             rule_code=self.code, passed=passed, reasons=reasons, source_version=context.data_version
         )
 
 
 class LtvLimitRule:
-    """LTV 조건 (DESIGN SSOT §13.1-4)."""
+    """LTV 조건 (DESIGN SSOT §13.1-4).
+
+    LTV·DTI·DSR 상한은 상품 데이터가 아니라 별도 규제 상수표에서 매칭된다
+    (부록 B-5). 매칭되지 않아 `max_ltv=None`이면 판정 근거가 없는 것이므로
+    통과시킨다.
+    """
 
     code = "LOAN_LTV_LIMIT"
 
     def evaluate(self, context: LoanEligibilityContext) -> RuleDecision:
         max_ltv = context.product.max_ltv
+        if max_ltv is None:
+            return RuleDecision(
+                rule_code=self.code, passed=True, reasons=(), source_version=context.data_version
+            )
         passed = context.computed_ltv <= max_ltv
         reasons: tuple[str, ...] = ()
         if not passed:
@@ -60,12 +77,16 @@ class LtvLimitRule:
 
 
 class DtiLimitRule:
-    """DTI 조건 (DESIGN SSOT §13.1-4)."""
+    """DTI 조건. 상한 매칭 여부는 LtvLimitRule과 동일 (DESIGN SSOT §13.1-4 / 부록 B-5)."""
 
     code = "LOAN_DTI_LIMIT"
 
     def evaluate(self, context: LoanEligibilityContext) -> RuleDecision:
         max_dti = context.product.max_dti
+        if max_dti is None:
+            return RuleDecision(
+                rule_code=self.code, passed=True, reasons=(), source_version=context.data_version
+            )
         passed = context.computed_dti <= max_dti
         reasons: tuple[str, ...] = ()
         if not passed:
@@ -76,12 +97,19 @@ class DtiLimitRule:
 
 
 class DsrLimitRule:
-    """DSR 조건. 기존+신규 대출 원리금 포함 값이어야 한다 (DESIGN SSOT §13.1-4 / §13.2 / A-12)."""
+    """DSR 조건. 기존+신규 대출 원리금 포함 값이어야 한다 (DESIGN SSOT §13.1-4 / §13.2 / A-12).
+
+    상한 매칭 여부는 LtvLimitRule과 동일 (부록 B-5).
+    """
 
     code = "LOAN_DSR_LIMIT"
 
     def evaluate(self, context: LoanEligibilityContext) -> RuleDecision:
         max_dsr = context.product.max_dsr
+        if max_dsr is None:
+            return RuleDecision(
+                rule_code=self.code, passed=True, reasons=(), source_version=context.data_version
+            )
         passed = context.computed_dsr <= max_dsr
         reasons: tuple[str, ...] = ()
         if not passed:

@@ -161,3 +161,12 @@ def test_effective_period_outside_range_fails() -> None:
 
     assert result.eligible is False
     assert any(d.rule_code == "SAVINGS_EFFECTIVE_PERIOD" for d in result.failed_decisions)
+
+
+def test_data_version_prefers_regulatory_review_number_when_present() -> None:
+    # DESIGN SSOT 부록 B-2/B-6: manual_pdf 소스는 심의필 번호가 확인일보다 우선하는 출처 근거.
+    product = replace(
+        BASE_PRODUCT, source_type="manual_pdf", regulatory_review_no="준법감시인 심의필 제2025-1호"
+    )
+
+    assert product.data_version == f"{product.product_id}@준법감시인 심의필 제2025-1호"

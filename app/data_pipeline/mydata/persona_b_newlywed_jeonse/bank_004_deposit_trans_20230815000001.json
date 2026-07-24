@@ -1,0 +1,4517 @@
+{
+  "rsp_code": "00000",
+  "rsp_msg": "정상",
+  "trans_cnt": 451,
+  "trans_list": [
+    {
+      "trans_dtime": "20260722135106",
+      "trans_no": "00000451",
+      "trans_type": "02",
+      "trans_class": "체크카드",
+      "currency_code": "KRW",
+      "trans_amt": 67500,
+      "balance_amt": 26400000,
+      "trans_memo": "롯데마트 서초"
+    },
+    {
+      "trans_dtime": "20260721195030",
+      "trans_no": "00000450",
+      "trans_type": "02",
+      "trans_class": "체크카드",
+      "currency_code": "KRW",
+      "trans_amt": 51000,
+      "balance_amt": 26467500,
+      "trans_memo": "이마트 성수점"
+    },
+    {
+      "trans_dtime": "20260721161334",
+      "trans_no": "00000449",
+      "trans_type": "02",
+      "trans_class": "체크카드",
+      "currency_code": "KRW",
+      "trans_amt": 8000,
+      "balance_amt": 26518500,
+      "trans_memo": "맘스터치 강남"
+    },
+    {
+      "trans_dtime": "20260721141512",
+      "trans_no": "00000448",
+      "trans_type": "02",
+      "trans_class": "체크카드",
+      "currency_code": "KRW",
+      "trans_amt": 15000,
+      "balance_amt": 26526500,
+      "trans_memo": "GS25 역삼점"
+    },
+    {
+      "trans_dtime": "20260720200750",
+      "trans_no": "00000447",
+      "trans_type": "02",
+      "trans_class": "체크카드",
+      "currency_code": "KRW",
+      "trans_amt": 23000,
+      "balance_amt": 26541500,
+      "trans_memo": "본죽 논현점"
+    },
+    {
+      "trans_dtime": "20260717062000",
+      "trans_no": "00000446",
+      "trans_type": "02",
+      "trans_class": "자동이체",
+      "currency_code": "KRW",
+      "trans_amt": 91107,
+      "balance_amt": 26564500,
+      "trans_memo": "LGU+ 통신요금"
+    },
+    {
+      "trans_dtime": "20260715192722",
+      "trans_no": "00000445",
+      "trans_type": "02",
+      "trans_class": "체크카드",
+      "currency_code": "KRW",
+      "trans_amt": 45500,
+      "balance_amt": 26655607,
+      "trans_memo": "GS칼텍스 논현"
+    },
+    {
+      "trans_dtime": "20260715120625",
+      "trans_no": "00000444",
+      "trans_type": "02",
+      "trans_class": "체크카드",
+      "currency_code": "KRW",
+      "trans_amt": 12000,
+      "balance_amt": 26701107,
+      "trans_memo": "맘스터치 강남"
+    },
+    {
+      "trans_dtime": "20260715113942",
+      "trans_no": "00000443",
+      "trans_type": "02",
+      "trans_class": "체크카드",
+      "currency_code": "KRW",
+      "trans_amt": 74000,
+      "balance_amt": 26713107,
+      "trans_memo": "홈플러스 강남"
+    },
+    {
+      "trans_dtime": "20260715061000",
+      "trans_no": "00000442",
+      "trans_type": "02",
+      "trans_class": "자동이체",
+      "currency_code": "KRW",
+      "trans_amt": 525000,
+      "balance_amt": 26787107,
+      "trans_memo": "KB국민은행 전세자금대출이자"
+    },
+    {
+      "trans_dtime": "20260714212953",
+      "trans_no": "00000441",
+      "trans_type": "02",
+      "trans_class": "체크카드",
+      "currency_code": "KRW",
+      "trans_amt": 42500,
+      "balance_amt": 27312107,
+      "trans_memo": "롯데마트 서초"
+    },
+    {
+      "trans_dtime": "20260714064000",
+      "trans_no": "00000440",
+      "trans_type": "02",
+      "trans_class": "자동이체",
+      "currency_code": "KRW",
+      "trans_amt": 1884606,
+      "balance_amt": 27354607,
+      "trans_memo": "현대카드 결제"
+    },
+    {
+      "trans_dtime": "20260713141138",
+      "trans_no": "00000439",
+      "trans_type": "02",
+      "trans_class": "체크카드",
+      "currency_code": "KRW",
+      "trans_amt": 41500,
+      "balance_amt": 29239213,
+      "trans_memo": "올리브영 강남"
+    },
+    {
+      "trans_dtime": "20260712180911",
+      "trans_no": "00000438",
+      "trans_type": "02",
+      "trans_class": "체크카드",
+      "currency_code": "KRW",
+      "trans_amt": 5500,
+      "balance_amt": 29280713,
+      "trans_memo": "GS25 역삼점"
+    },
+    {
+      "trans_dtime": "20260712130142",
+      "trans_no": "00000437",
+      "trans_type": "02",
+      "trans_class": "체크카드",
+      "currency_code": "KRW",
+      "trans_amt": 14000,
+      "balance_amt": 29286213,
+      "trans_memo": "본죽 논현점"
+    },
+    {
+      "trans_dtime": "20260711154320",
+      "trans_no": "00000436",
+      "trans_type": "02",
+      "trans_class": "체크카드",
+      "currency_code": "KRW",
+      "trans_amt": 45500,
+      "balance_amt": 29300213,
+      "trans_memo": "홈플러스 강남"
+    },
+    {
+      "trans_dtime": "20260711122412",
+      "trans_no": "00000435",
+      "trans_type": "02",
+      "trans_class": "체크카드",
+      "currency_code": "KRW",
+      "trans_amt": 45000,
+      "balance_amt": 29345713,
+      "trans_memo": "이마트 성수점"
+    },
+    {
+      "trans_dtime": "20260710093000",
+      "trans_no": "00000434",
+      "trans_type": "03",
+      "trans_class": "인터넷뱅킹",
+      "currency_code": "KRW",
+      "trans_amt": 3064474,
+      "balance_amt": 29390713,
+      "trans_memo": "배우자 급여 이체"
+    },
+    {
+      "trans_dtime": "20260710062500",
+      "trans_no": "00000433",
+      "trans_type": "02",
+      "trans_class": "자동이체",
+      "currency_code": "KRW",
+      "trans_amt": 285000,
+      "balance_amt": 26326239,
+      "trans_memo": "한화생명 보험료"
+    },
+    {
+      "trans_dtime": "20260709135859",
+      "trans_no": "00000432",
+      "trans_type": "02",
+      "trans_class": "체크카드",
+      "currency_code": "KRW",
+      "trans_amt": 21500,
+      "balance_amt": 26611239,
+      "trans_memo": "맘스터치 강남"
+    },
+    {
+      "trans_dtime": "20260707135254",
+      "trans_no": "00000431",
+      "trans_type": "02",
+      "trans_class": "체크카드",
+      "currency_code": "KRW",
+      "trans_amt": 8500,
+      "balance_amt": 26632739,
+      "trans_memo": "김밥천국 역삼"
+    },
+    {
+      "trans_dtime": "20260706135954",
+      "trans_no": "00000430",
+      "trans_type": "02",
+      "trans_class": "체크카드",
+      "currency_code": "KRW",
+      "trans_amt": 65000,
+      "balance_amt": 26641239,
+      "trans_memo": "GS칼텍스 논현"
+    },
+    {
+      "trans_dtime": "20260706112301",
+      "trans_no": "00000429",
+      "trans_type": "02",
+      "trans_class": "체크카드",
+      "currency_code": "KRW",
+      "trans_amt": 98500,
+      "balance_amt": 26706239,
+      "trans_memo": "이마트 성수점"
+    },
+    {
+      "trans_dtime": "20260706090946",
+      "trans_no": "00000428",
+      "trans_type": "02",
+      "trans_class": "체크카드",
+      "currency_code": "KRW",
+      "trans_amt": 7500,
+      "balance_amt": 26804739,
+      "trans_memo": "투썸플레이스 역삼"
+    },
+    {
+      "trans_dtime": "20260705212344",
+      "trans_no": "00000427",
+      "trans_type": "02",
+      "trans_class": "체크카드",
+      "currency_code": "KRW",
+      "trans_amt": 57000,
+      "balance_amt": 26812239,
+      "trans_memo": "GS칼텍스 논현"
+    },
+    {
+      "trans_dtime": "20260705194505",
+      "trans_no": "00000426",
+      "trans_type": "02",
+      "trans_class": "체크카드",
+      "currency_code": "KRW",
+      "trans_amt": 55500,
+      "balance_amt": 26869239,
+      "trans_memo": "GS칼텍스 논현"
+    },
+    {
+      "trans_dtime": "20260705063500",
+      "trans_no": "00000425",
+      "trans_type": "02",
+      "trans_class": "자동이체",
+      "currency_code": "KRW",
+      "trans_amt": 200000,
+      "balance_amt": 26924739,
+      "trans_memo": "주택청약종합저축 이체"
+    },
+    {
+      "trans_dtime": "20260705063000",
+      "trans_no": "00000424",
+      "trans_type": "02",
+      "trans_class": "자동이체",
+      "currency_code": "KRW",
+      "trans_amt": 1200000,
+      "balance_amt": 27124739,
+      "trans_memo": "신혼부부 우대적금 이체"
+    },
+    {
+      "trans_dtime": "20260703094950",
+      "trans_no": "00000423",
+      "trans_type": "02",
+      "trans_class": "체크카드",
+      "currency_code": "KRW",
+      "trans_amt": 12000,
+      "balance_amt": 28324739,
+      "trans_memo": "맘스터치 강남"
+    },
+    {
+      "trans_dtime": "20260702204155",
+      "trans_no": "00000422",
+      "trans_type": "02",
+      "trans_class": "체크카드",
+      "currency_code": "KRW",
+      "trans_amt": 6500,
+      "balance_amt": 28336739,
+      "trans_memo": "스타벅스 삼성점"
+    },
+    {
+      "trans_dtime": "20260701191429",
+      "trans_no": "00000421",
+      "trans_type": "02",
+      "trans_class": "체크카드",
+      "currency_code": "KRW",
+      "trans_amt": 36500,
+      "balance_amt": 28343239,
+      "trans_memo": "홈플러스 강남"
+    },
+    {
+      "trans_dtime": "20260628165753",
+      "trans_no": "00000420",
+      "trans_type": "02",
+      "trans_class": "체크카드",
+      "currency_code": "KRW",
+      "trans_amt": 12500,
+      "balance_amt": 28379739,
+      "trans_memo": "올리브영 강남"
+    },
+    {
+      "trans_dtime": "20260628060000",
+      "trans_no": "00000419",
+      "trans_type": "98",
+      "trans_class": "자동처리",
+      "currency_code": "KRW",
+      "trans_amt": 1927,
+      "balance_amt": 28392239,
+      "trans_memo": "이자"
+    },
+    {
+      "trans_dtime": "20260627190258",
+      "trans_no": "00000418",
+      "trans_type": "02",
+      "trans_class": "체크카드",
+      "currency_code": "KRW",
+      "trans_amt": 10500,
+      "balance_amt": 28390312,
+      "trans_memo": "GS25 역삼점"
+    },
+    {
+      "trans_dtime": "20260626195433",
+      "trans_no": "00000417",
+      "trans_type": "02",
+      "trans_class": "체크카드",
+      "currency_code": "KRW",
+      "trans_amt": 5000,
+      "balance_amt": 28400812,
+      "trans_memo": "스타벅스 삼성점"
+    },
+    {
+      "trans_dtime": "20260626081416",
+      "trans_no": "00000416",
+      "trans_type": "02",
+      "trans_class": "체크카드",
+      "currency_code": "KRW",
+      "trans_amt": 21000,
+      "balance_amt": 28405812,
+      "trans_memo": "맘스터치 강남"
+    },
+    {
+      "trans_dtime": "20260625152512",
+      "trans_no": "00000415",
+      "trans_type": "02",
+      "trans_class": "체크카드",
+      "currency_code": "KRW",
+      "trans_amt": 7000,
+      "balance_amt": 28426812,
+      "trans_memo": "스타벅스 삼성점"
+    },
+    {
+      "trans_dtime": "20260625130939",
+      "trans_no": "00000414",
+      "trans_type": "02",
+      "trans_class": "체크카드",
+      "currency_code": "KRW",
+      "trans_amt": 5500,
+      "balance_amt": 28433812,
+      "trans_memo": "CU 논현점"
+    },
+    {
+      "trans_dtime": "20260625090000",
+      "trans_no": "00000413",
+      "trans_type": "03",
+      "trans_class": "인터넷뱅킹",
+      "currency_code": "KRW",
+      "trans_amt": 7553368,
+      "balance_amt": 28439312,
+      "trans_memo": "(주)디자인랩 상여"
+    },
+    {
+      "trans_dtime": "20260625061500",
+      "trans_no": "00000412",
+      "trans_type": "02",
+      "trans_class": "자동이체",
+      "currency_code": "KRW",
+      "trans_amt": 209146,
+      "balance_amt": 20885944,
+      "trans_memo": "관리비"
+    },
+    {
+      "trans_dtime": "20260622151056",
+      "trans_no": "00000411",
+      "trans_type": "02",
+      "trans_class": "체크카드",
+      "currency_code": "KRW",
+      "trans_amt": 8000,
+      "balance_amt": 21095090,
+      "trans_memo": "세븐일레븐 삼성"
+    },
+    {
+      "trans_dtime": "20260622105307",
+      "trans_no": "00000410",
+      "trans_type": "02",
+      "trans_class": "체크카드",
+      "currency_code": "KRW",
+      "trans_amt": 13500,
+      "balance_amt": 21103090,
+      "trans_memo": "올리브영 강남"
+    },
+    {
+      "trans_dtime": "20260621130839",
+      "trans_no": "00000409",
+      "trans_type": "02",
+      "trans_class": "체크카드",
+      "currency_code": "KRW",
+      "trans_amt": 61000,
+      "balance_amt": 21116590,
+      "trans_memo": "이마트 성수점"
+    },
+    {
+      "trans_dtime": "20260619142023",
+      "trans_no": "00000408",
+      "trans_type": "02",
+      "trans_class": "체크카드",
+      "currency_code": "KRW",
+      "trans_amt": 51500,
+      "balance_amt": 21177590,
+      "trans_memo": "롯데마트 서초"
+    },
+    {
+      "trans_dtime": "20260618194320",
+      "trans_no": "00000407",
+      "trans_type": "02",
+      "trans_class": "체크카드",
+      "currency_code": "KRW",
+      "trans_amt": 75000,
+      "balance_amt": 21229090,
+      "trans_memo": "롯데마트 서초"
+    },
+    {
+      "trans_dtime": "20260617150728",
+      "trans_no": "00000406",
+      "trans_type": "02",
+      "trans_class": "체크카드",
+      "currency_code": "KRW",
+      "trans_amt": 39000,
+      "balance_amt": 21304090,
+      "trans_memo": "롯데마트 서초"
+    },
+    {
+      "trans_dtime": "20260617062000",
+      "trans_no": "00000405",
+      "trans_type": "02",
+      "trans_class": "자동이체",
+      "currency_code": "KRW",
+      "trans_amt": 92263,
+      "balance_amt": 21343090,
+      "trans_memo": "LGU+ 통신요금"
+    },
+    {
+      "trans_dtime": "20260616173916",
+      "trans_no": "00000404",
+      "trans_type": "02",
+      "trans_class": "체크카드",
+      "currency_code": "KRW",
+      "trans_amt": 24000,
+      "balance_amt": 21435353,
+      "trans_memo": "김밥천국 역삼"
+    },
+    {
+      "trans_dtime": "20260615061000",
+      "trans_no": "00000403",
+      "trans_type": "02",
+      "trans_class": "자동이체",
+      "currency_code": "KRW",
+      "trans_amt": 525000,
+      "balance_amt": 21459353,
+      "trans_memo": "KB국민은행 전세자금대출이자"
+    },
+    {
+      "trans_dtime": "20260614064000",
+      "trans_no": "00000402",
+      "trans_type": "02",
+      "trans_class": "자동이체",
+      "currency_code": "KRW",
+      "trans_amt": 1632061,
+      "balance_amt": 21984353,
+      "trans_memo": "현대카드 결제"
+    },
+    {
+      "trans_dtime": "20260613114053",
+      "trans_no": "00000401",
+      "trans_type": "02",
+      "trans_class": "체크카드",
+      "currency_code": "KRW",
+      "trans_amt": 8500,
+      "balance_amt": 23616414,
+      "trans_memo": "스타벅스 삼성점"
+    },
+    {
+      "trans_dtime": "20260611193330",
+      "trans_no": "00000400",
+      "trans_type": "02",
+      "trans_class": "체크카드",
+      "currency_code": "KRW",
+      "trans_amt": 6500,
+      "balance_amt": 23624914,
+      "trans_memo": "스타벅스 삼성점"
+    },
+    {
+      "trans_dtime": "20260611133713",
+      "trans_no": "00000399",
+      "trans_type": "02",
+      "trans_class": "체크카드",
+      "currency_code": "KRW",
+      "trans_amt": 69500,
+      "balance_amt": 23631414,
+      "trans_memo": "홈플러스 강남"
+    },
+    {
+      "trans_dtime": "20260610191128",
+      "trans_no": "00000398",
+      "trans_type": "02",
+      "trans_class": "체크카드",
+      "currency_code": "KRW",
+      "trans_amt": 69000,
+      "balance_amt": 23700914,
+      "trans_memo": "홈플러스 강남"
+    },
+    {
+      "trans_dtime": "20260610164946",
+      "trans_no": "00000397",
+      "trans_type": "02",
+      "trans_class": "체크카드",
+      "currency_code": "KRW",
+      "trans_amt": 9000,
+      "balance_amt": 23769914,
+      "trans_memo": "GS25 역삼점"
+    },
+    {
+      "trans_dtime": "20260610093000",
+      "trans_no": "00000396",
+      "trans_type": "03",
+      "trans_class": "인터넷뱅킹",
+      "currency_code": "KRW",
+      "trans_amt": 3093065,
+      "balance_amt": 23778914,
+      "trans_memo": "배우자 급여 이체"
+    },
+    {
+      "trans_dtime": "20260610062500",
+      "trans_no": "00000395",
+      "trans_type": "02",
+      "trans_class": "자동이체",
+      "currency_code": "KRW",
+      "trans_amt": 285000,
+      "balance_amt": 20685849,
+      "trans_memo": "한화생명 보험료"
+    },
+    {
+      "trans_dtime": "20260609210956",
+      "trans_no": "00000394",
+      "trans_type": "02",
+      "trans_class": "체크카드",
+      "currency_code": "KRW",
+      "trans_amt": 3000,
+      "balance_amt": 20970849,
+      "trans_memo": "GS25 역삼점"
+    },
+    {
+      "trans_dtime": "20260608192222",
+      "trans_no": "00000393",
+      "trans_type": "02",
+      "trans_class": "체크카드",
+      "currency_code": "KRW",
+      "trans_amt": 54500,
+      "balance_amt": 20973849,
+      "trans_memo": "롯데마트 서초"
+    },
+    {
+      "trans_dtime": "20260608124108",
+      "trans_no": "00000392",
+      "trans_type": "02",
+      "trans_class": "체크카드",
+      "currency_code": "KRW",
+      "trans_amt": 78500,
+      "balance_amt": 21028349,
+      "trans_memo": "GS칼텍스 논현"
+    },
+    {
+      "trans_dtime": "20260607115117",
+      "trans_no": "00000391",
+      "trans_type": "02",
+      "trans_class": "체크카드",
+      "currency_code": "KRW",
+      "trans_amt": 62000,
+      "balance_amt": 21106849,
+      "trans_memo": "GS칼텍스 논현"
+    },
+    {
+      "trans_dtime": "20260606183642",
+      "trans_no": "00000390",
+      "trans_type": "02",
+      "trans_class": "체크카드",
+      "currency_code": "KRW",
+      "trans_amt": 51000,
+      "balance_amt": 21168849,
+      "trans_memo": "롯데마트 서초"
+    },
+    {
+      "trans_dtime": "20260606172650",
+      "trans_no": "00000389",
+      "trans_type": "02",
+      "trans_class": "체크카드",
+      "currency_code": "KRW",
+      "trans_amt": 20000,
+      "balance_amt": 21219849,
+      "trans_memo": "맘스터치 강남"
+    },
+    {
+      "trans_dtime": "20260606171828",
+      "trans_no": "00000388",
+      "trans_type": "02",
+      "trans_class": "체크카드",
+      "currency_code": "KRW",
+      "trans_amt": 94500,
+      "balance_amt": 21239849,
+      "trans_memo": "이마트 성수점"
+    },
+    {
+      "trans_dtime": "20260605153432",
+      "trans_no": "00000387",
+      "trans_type": "02",
+      "trans_class": "체크카드",
+      "currency_code": "KRW",
+      "trans_amt": 12500,
+      "balance_amt": 21334349,
+      "trans_memo": "올리브영 강남"
+    },
+    {
+      "trans_dtime": "20260605063500",
+      "trans_no": "00000386",
+      "trans_type": "02",
+      "trans_class": "자동이체",
+      "currency_code": "KRW",
+      "trans_amt": 200000,
+      "balance_amt": 21346849,
+      "trans_memo": "주택청약종합저축 이체"
+    },
+    {
+      "trans_dtime": "20260605063000",
+      "trans_no": "00000385",
+      "trans_type": "02",
+      "trans_class": "자동이체",
+      "currency_code": "KRW",
+      "trans_amt": 1200000,
+      "balance_amt": 21546849,
+      "trans_memo": "신혼부부 우대적금 이체"
+    },
+    {
+      "trans_dtime": "20260604212155",
+      "trans_no": "00000384",
+      "trans_type": "02",
+      "trans_class": "체크카드",
+      "currency_code": "KRW",
+      "trans_amt": 64000,
+      "balance_amt": 22746849,
+      "trans_memo": "이마트 성수점"
+    },
+    {
+      "trans_dtime": "20260604105656",
+      "trans_no": "00000383",
+      "trans_type": "02",
+      "trans_class": "체크카드",
+      "currency_code": "KRW",
+      "trans_amt": 11000,
+      "balance_amt": 22810849,
+      "trans_memo": "스타벅스 삼성점"
+    },
+    {
+      "trans_dtime": "20260603210016",
+      "trans_no": "00000382",
+      "trans_type": "02",
+      "trans_class": "체크카드",
+      "currency_code": "KRW",
+      "trans_amt": 102000,
+      "balance_amt": 22821849,
+      "trans_memo": "이마트 성수점"
+    },
+    {
+      "trans_dtime": "20260603192123",
+      "trans_no": "00000381",
+      "trans_type": "02",
+      "trans_class": "체크카드",
+      "currency_code": "KRW",
+      "trans_amt": 10000,
+      "balance_amt": 22923849,
+      "trans_memo": "세븐일레븐 삼성"
+    },
+    {
+      "trans_dtime": "20260602180009",
+      "trans_no": "00000380",
+      "trans_type": "02",
+      "trans_class": "체크카드",
+      "currency_code": "KRW",
+      "trans_amt": 7000,
+      "balance_amt": 22933849,
+      "trans_memo": "세븐일레븐 삼성"
+    },
+    {
+      "trans_dtime": "20260601102753",
+      "trans_no": "00000379",
+      "trans_type": "02",
+      "trans_class": "체크카드",
+      "currency_code": "KRW",
+      "trans_amt": 17000,
+      "balance_amt": 22940849,
+      "trans_memo": "올리브영 강남"
+    },
+    {
+      "trans_dtime": "20260527190520",
+      "trans_no": "00000378",
+      "trans_type": "02",
+      "trans_class": "체크카드",
+      "currency_code": "KRW",
+      "trans_amt": 55000,
+      "balance_amt": 22957849,
+      "trans_memo": "GS칼텍스 논현"
+    },
+    {
+      "trans_dtime": "20260527131023",
+      "trans_no": "00000377",
+      "trans_type": "02",
+      "trans_class": "체크카드",
+      "currency_code": "KRW",
+      "trans_amt": 5000,
+      "balance_amt": 23012849,
+      "trans_memo": "스타벅스 삼성점"
+    },
+    {
+      "trans_dtime": "20260526193918",
+      "trans_no": "00000376",
+      "trans_type": "02",
+      "trans_class": "체크카드",
+      "currency_code": "KRW",
+      "trans_amt": 21500,
+      "balance_amt": 23017849,
+      "trans_memo": "맘스터치 강남"
+    },
+    {
+      "trans_dtime": "20260525090000",
+      "trans_no": "00000375",
+      "trans_type": "03",
+      "trans_class": "인터넷뱅킹",
+      "currency_code": "KRW",
+      "trans_amt": 3799791,
+      "balance_amt": 23039349,
+      "trans_memo": "(주)디자인랩 급여"
+    },
+    {
+      "trans_dtime": "20260525061500",
+      "trans_no": "00000374",
+      "trans_type": "02",
+      "trans_class": "자동이체",
+      "currency_code": "KRW",
+      "trans_amt": 179801,
+      "balance_amt": 19239558,
+      "trans_memo": "관리비"
+    },
+    {
+      "trans_dtime": "20260524152200",
+      "trans_no": "00000373",
+      "trans_type": "02",
+      "trans_class": "체크카드",
+      "currency_code": "KRW",
+      "trans_amt": 6000,
+      "balance_amt": 19419359,
+      "trans_memo": "CU 논현점"
+    },
+    {
+      "trans_dtime": "20260523181034",
+      "trans_no": "00000372",
+      "trans_type": "02",
+      "trans_class": "체크카드",
+      "currency_code": "KRW",
+      "trans_amt": 8000,
+      "balance_amt": 19425359,
+      "trans_memo": "CU 논현점"
+    },
+    {
+      "trans_dtime": "20260523123422",
+      "trans_no": "00000371",
+      "trans_type": "02",
+      "trans_class": "체크카드",
+      "currency_code": "KRW",
+      "trans_amt": 60500,
+      "balance_amt": 19433359,
+      "trans_memo": "홈플러스 강남"
+    },
+    {
+      "trans_dtime": "20260523103230",
+      "trans_no": "00000370",
+      "trans_type": "02",
+      "trans_class": "체크카드",
+      "currency_code": "KRW",
+      "trans_amt": 11500,
+      "balance_amt": 19493859,
+      "trans_memo": "투썸플레이스 역삼"
+    },
+    {
+      "trans_dtime": "20260522120128",
+      "trans_no": "00000369",
+      "trans_type": "02",
+      "trans_class": "체크카드",
+      "currency_code": "KRW",
+      "trans_amt": 16000,
+      "balance_amt": 19505359,
+      "trans_memo": "맘스터치 강남"
+    },
+    {
+      "trans_dtime": "20260520093857",
+      "trans_no": "00000368",
+      "trans_type": "02",
+      "trans_class": "체크카드",
+      "currency_code": "KRW",
+      "trans_amt": 18000,
+      "balance_amt": 19521359,
+      "trans_memo": "본죽 논현점"
+    },
+    {
+      "trans_dtime": "20260520081656",
+      "trans_no": "00000367",
+      "trans_type": "02",
+      "trans_class": "체크카드",
+      "currency_code": "KRW",
+      "trans_amt": 21500,
+      "balance_amt": 19539359,
+      "trans_memo": "올리브영 강남"
+    },
+    {
+      "trans_dtime": "20260519141714",
+      "trans_no": "00000366",
+      "trans_type": "02",
+      "trans_class": "체크카드",
+      "currency_code": "KRW",
+      "trans_amt": 11000,
+      "balance_amt": 19560859,
+      "trans_memo": "맘스터치 강남"
+    },
+    {
+      "trans_dtime": "20260518203531",
+      "trans_no": "00000365",
+      "trans_type": "02",
+      "trans_class": "체크카드",
+      "currency_code": "KRW",
+      "trans_amt": 19500,
+      "balance_amt": 19571859,
+      "trans_memo": "맘스터치 강남"
+    },
+    {
+      "trans_dtime": "20260518170214",
+      "trans_no": "00000364",
+      "trans_type": "02",
+      "trans_class": "체크카드",
+      "currency_code": "KRW",
+      "trans_amt": 11000,
+      "balance_amt": 19591359,
+      "trans_memo": "GS25 역삼점"
+    },
+    {
+      "trans_dtime": "20260518115816",
+      "trans_no": "00000363",
+      "trans_type": "02",
+      "trans_class": "체크카드",
+      "currency_code": "KRW",
+      "trans_amt": 22500,
+      "balance_amt": 19602359,
+      "trans_memo": "김밥천국 역삼"
+    },
+    {
+      "trans_dtime": "20260517214227",
+      "trans_no": "00000362",
+      "trans_type": "02",
+      "trans_class": "체크카드",
+      "currency_code": "KRW",
+      "trans_amt": 24000,
+      "balance_amt": 19624859,
+      "trans_memo": "김밥천국 역삼"
+    },
+    {
+      "trans_dtime": "20260517062000",
+      "trans_no": "00000361",
+      "trans_type": "02",
+      "trans_class": "자동이체",
+      "currency_code": "KRW",
+      "trans_amt": 93504,
+      "balance_amt": 19648859,
+      "trans_memo": "LGU+ 통신요금"
+    },
+    {
+      "trans_dtime": "20260516185630",
+      "trans_no": "00000360",
+      "trans_type": "02",
+      "trans_class": "체크카드",
+      "currency_code": "KRW",
+      "trans_amt": 4000,
+      "balance_amt": 19742363,
+      "trans_memo": "GS25 역삼점"
+    },
+    {
+      "trans_dtime": "20260515172836",
+      "trans_no": "00000359",
+      "trans_type": "02",
+      "trans_class": "체크카드",
+      "currency_code": "KRW",
+      "trans_amt": 10000,
+      "balance_amt": 19746363,
+      "trans_memo": "스타벅스 삼성점"
+    },
+    {
+      "trans_dtime": "20260515133904",
+      "trans_no": "00000358",
+      "trans_type": "02",
+      "trans_class": "체크카드",
+      "currency_code": "KRW",
+      "trans_amt": 10500,
+      "balance_amt": 19756363,
+      "trans_memo": "세븐일레븐 삼성"
+    },
+    {
+      "trans_dtime": "20260515124546",
+      "trans_no": "00000357",
+      "trans_type": "02",
+      "trans_class": "체크카드",
+      "currency_code": "KRW",
+      "trans_amt": 3500,
+      "balance_amt": 19766863,
+      "trans_memo": "세븐일레븐 삼성"
+    },
+    {
+      "trans_dtime": "20260515061000",
+      "trans_no": "00000356",
+      "trans_type": "02",
+      "trans_class": "자동이체",
+      "currency_code": "KRW",
+      "trans_amt": 525000,
+      "balance_amt": 19770363,
+      "trans_memo": "KB국민은행 전세자금대출이자"
+    },
+    {
+      "trans_dtime": "20260514064000",
+      "trans_no": "00000355",
+      "trans_type": "02",
+      "trans_class": "자동이체",
+      "currency_code": "KRW",
+      "trans_amt": 1569507,
+      "balance_amt": 20295363,
+      "trans_memo": "현대카드 결제"
+    },
+    {
+      "trans_dtime": "20260512200812",
+      "trans_no": "00000354",
+      "trans_type": "02",
+      "trans_class": "체크카드",
+      "currency_code": "KRW",
+      "trans_amt": 8000,
+      "balance_amt": 21864870,
+      "trans_memo": "스타벅스 삼성점"
+    },
+    {
+      "trans_dtime": "20260511193609",
+      "trans_no": "00000353",
+      "trans_type": "02",
+      "trans_class": "체크카드",
+      "currency_code": "KRW",
+      "trans_amt": 65500,
+      "balance_amt": 21872870,
+      "trans_memo": "이마트 성수점"
+    },
+    {
+      "trans_dtime": "20260511165046",
+      "trans_no": "00000352",
+      "trans_type": "02",
+      "trans_class": "체크카드",
+      "currency_code": "KRW",
+      "trans_amt": 59500,
+      "balance_amt": 21938370,
+      "trans_memo": "GS칼텍스 논현"
+    },
+    {
+      "trans_dtime": "20260511153222",
+      "trans_no": "00000351",
+      "trans_type": "02",
+      "trans_class": "체크카드",
+      "currency_code": "KRW",
+      "trans_amt": 116000,
+      "balance_amt": 21997870,
+      "trans_memo": "이마트 성수점"
+    },
+    {
+      "trans_dtime": "20260510093000",
+      "trans_no": "00000350",
+      "trans_type": "03",
+      "trans_class": "인터넷뱅킹",
+      "currency_code": "KRW",
+      "trans_amt": 3089610,
+      "balance_amt": 22113870,
+      "trans_memo": "배우자 급여 이체"
+    },
+    {
+      "trans_dtime": "20260510062500",
+      "trans_no": "00000349",
+      "trans_type": "02",
+      "trans_class": "자동이체",
+      "currency_code": "KRW",
+      "trans_amt": 285000,
+      "balance_amt": 19024260,
+      "trans_memo": "한화생명 보험료"
+    },
+    {
+      "trans_dtime": "20260508112440",
+      "trans_no": "00000348",
+      "trans_type": "02",
+      "trans_class": "체크카드",
+      "currency_code": "KRW",
+      "trans_amt": 9500,
+      "balance_amt": 19309260,
+      "trans_memo": "CU 논현점"
+    },
+    {
+      "trans_dtime": "20260506091656",
+      "trans_no": "00000347",
+      "trans_type": "02",
+      "trans_class": "체크카드",
+      "currency_code": "KRW",
+      "trans_amt": 8000,
+      "balance_amt": 19318760,
+      "trans_memo": "투썸플레이스 역삼"
+    },
+    {
+      "trans_dtime": "20260506091645",
+      "trans_no": "00000346",
+      "trans_type": "02",
+      "trans_class": "체크카드",
+      "currency_code": "KRW",
+      "trans_amt": 8000,
+      "balance_amt": 19326760,
+      "trans_memo": "GS25 역삼점"
+    },
+    {
+      "trans_dtime": "20260505195015",
+      "trans_no": "00000345",
+      "trans_type": "02",
+      "trans_class": "체크카드",
+      "currency_code": "KRW",
+      "trans_amt": 47500,
+      "balance_amt": 19334760,
+      "trans_memo": "롯데마트 서초"
+    },
+    {
+      "trans_dtime": "20260505063500",
+      "trans_no": "00000344",
+      "trans_type": "02",
+      "trans_class": "자동이체",
+      "currency_code": "KRW",
+      "trans_amt": 200000,
+      "balance_amt": 19382260,
+      "trans_memo": "주택청약종합저축 이체"
+    },
+    {
+      "trans_dtime": "20260505063000",
+      "trans_no": "00000343",
+      "trans_type": "02",
+      "trans_class": "자동이체",
+      "currency_code": "KRW",
+      "trans_amt": 1200000,
+      "balance_amt": 19582260,
+      "trans_memo": "신혼부부 우대적금 이체"
+    },
+    {
+      "trans_dtime": "20260501162427",
+      "trans_no": "00000342",
+      "trans_type": "02",
+      "trans_class": "체크카드",
+      "currency_code": "KRW",
+      "trans_amt": 10000,
+      "balance_amt": 20782260,
+      "trans_memo": "투썸플레이스 역삼"
+    },
+    {
+      "trans_dtime": "20260501081955",
+      "trans_no": "00000341",
+      "trans_type": "02",
+      "trans_class": "체크카드",
+      "currency_code": "KRW",
+      "trans_amt": 84000,
+      "balance_amt": 20792260,
+      "trans_memo": "SK주유소 삼성"
+    },
+    {
+      "trans_dtime": "20260428120101",
+      "trans_no": "00000340",
+      "trans_type": "02",
+      "trans_class": "체크카드",
+      "currency_code": "KRW",
+      "trans_amt": 33500,
+      "balance_amt": 20876260,
+      "trans_memo": "롯데마트 서초"
+    },
+    {
+      "trans_dtime": "20260427131607",
+      "trans_no": "00000339",
+      "trans_type": "02",
+      "trans_class": "체크카드",
+      "currency_code": "KRW",
+      "trans_amt": 16000,
+      "balance_amt": 20909760,
+      "trans_memo": "맘스터치 강남"
+    },
+    {
+      "trans_dtime": "20260426204126",
+      "trans_no": "00000338",
+      "trans_type": "02",
+      "trans_class": "체크카드",
+      "currency_code": "KRW",
+      "trans_amt": 4500,
+      "balance_amt": 20925760,
+      "trans_memo": "GS25 역삼점"
+    },
+    {
+      "trans_dtime": "20260425090000",
+      "trans_no": "00000337",
+      "trans_type": "03",
+      "trans_class": "인터넷뱅킹",
+      "currency_code": "KRW",
+      "trans_amt": 3783971,
+      "balance_amt": 20930260,
+      "trans_memo": "(주)디자인랩 급여"
+    },
+    {
+      "trans_dtime": "20260425083745",
+      "trans_no": "00000336",
+      "trans_type": "02",
+      "trans_class": "체크카드",
+      "currency_code": "KRW",
+      "trans_amt": 50500,
+      "balance_amt": 17146289,
+      "trans_memo": "롯데마트 서초"
+    },
+    {
+      "trans_dtime": "20260425061500",
+      "trans_no": "00000335",
+      "trans_type": "02",
+      "trans_class": "자동이체",
+      "currency_code": "KRW",
+      "trans_amt": 191269,
+      "balance_amt": 17196789,
+      "trans_memo": "관리비"
+    },
+    {
+      "trans_dtime": "20260424164501",
+      "trans_no": "00000334",
+      "trans_type": "02",
+      "trans_class": "체크카드",
+      "currency_code": "KRW",
+      "trans_amt": 7500,
+      "balance_amt": 17388058,
+      "trans_memo": "투썸플레이스 역삼"
+    },
+    {
+      "trans_dtime": "20260423102308",
+      "trans_no": "00000333",
+      "trans_type": "02",
+      "trans_class": "체크카드",
+      "currency_code": "KRW",
+      "trans_amt": 86000,
+      "balance_amt": 17395558,
+      "trans_memo": "SK주유소 삼성"
+    },
+    {
+      "trans_dtime": "20260420212649",
+      "trans_no": "00000332",
+      "trans_type": "02",
+      "trans_class": "체크카드",
+      "currency_code": "KRW",
+      "trans_amt": 14500,
+      "balance_amt": 17481558,
+      "trans_memo": "투썸플레이스 역삼"
+    },
+    {
+      "trans_dtime": "20260418180128",
+      "trans_no": "00000331",
+      "trans_type": "02",
+      "trans_class": "체크카드",
+      "currency_code": "KRW",
+      "trans_amt": 17000,
+      "balance_amt": 17496058,
+      "trans_memo": "올리브영 강남"
+    },
+    {
+      "trans_dtime": "20260417090057",
+      "trans_no": "00000330",
+      "trans_type": "02",
+      "trans_class": "체크카드",
+      "currency_code": "KRW",
+      "trans_amt": 49500,
+      "balance_amt": 17513058,
+      "trans_memo": "GS칼텍스 논현"
+    },
+    {
+      "trans_dtime": "20260417062000",
+      "trans_no": "00000329",
+      "trans_type": "02",
+      "trans_class": "자동이체",
+      "currency_code": "KRW",
+      "trans_amt": 95993,
+      "balance_amt": 17562558,
+      "trans_memo": "LGU+ 통신요금"
+    },
+    {
+      "trans_dtime": "20260415140852",
+      "trans_no": "00000328",
+      "trans_type": "02",
+      "trans_class": "체크카드",
+      "currency_code": "KRW",
+      "trans_amt": 17500,
+      "balance_amt": 17658551,
+      "trans_memo": "GS25 역삼점"
+    },
+    {
+      "trans_dtime": "20260415061000",
+      "trans_no": "00000327",
+      "trans_type": "02",
+      "trans_class": "자동이체",
+      "currency_code": "KRW",
+      "trans_amt": 525000,
+      "balance_amt": 17676051,
+      "trans_memo": "KB국민은행 전세자금대출이자"
+    },
+    {
+      "trans_dtime": "20260414203857",
+      "trans_no": "00000326",
+      "trans_type": "02",
+      "trans_class": "체크카드",
+      "currency_code": "KRW",
+      "trans_amt": 8500,
+      "balance_amt": 18201051,
+      "trans_memo": "투썸플레이스 역삼"
+    },
+    {
+      "trans_dtime": "20260414175000",
+      "trans_no": "00000325",
+      "trans_type": "02",
+      "trans_class": "체크카드",
+      "currency_code": "KRW",
+      "trans_amt": 10000,
+      "balance_amt": 18209551,
+      "trans_memo": "투썸플레이스 역삼"
+    },
+    {
+      "trans_dtime": "20260414064000",
+      "trans_no": "00000324",
+      "trans_type": "02",
+      "trans_class": "자동이체",
+      "currency_code": "KRW",
+      "trans_amt": 1768056,
+      "balance_amt": 18219551,
+      "trans_memo": "현대카드 결제"
+    },
+    {
+      "trans_dtime": "20260413135050",
+      "trans_no": "00000323",
+      "trans_type": "02",
+      "trans_class": "체크카드",
+      "currency_code": "KRW",
+      "trans_amt": 5000,
+      "balance_amt": 19987607,
+      "trans_memo": "투썸플레이스 역삼"
+    },
+    {
+      "trans_dtime": "20260413103031",
+      "trans_no": "00000322",
+      "trans_type": "02",
+      "trans_class": "체크카드",
+      "currency_code": "KRW",
+      "trans_amt": 16000,
+      "balance_amt": 19992607,
+      "trans_memo": "맘스터치 강남"
+    },
+    {
+      "trans_dtime": "20260412135357",
+      "trans_no": "00000321",
+      "trans_type": "02",
+      "trans_class": "체크카드",
+      "currency_code": "KRW",
+      "trans_amt": 75500,
+      "balance_amt": 20008607,
+      "trans_memo": "이마트 성수점"
+    },
+    {
+      "trans_dtime": "20260411184800",
+      "trans_no": "00000320",
+      "trans_type": "02",
+      "trans_class": "체크카드",
+      "currency_code": "KRW",
+      "trans_amt": 27500,
+      "balance_amt": 20084107,
+      "trans_memo": "본죽 논현점"
+    },
+    {
+      "trans_dtime": "20260410150422",
+      "trans_no": "00000319",
+      "trans_type": "02",
+      "trans_class": "체크카드",
+      "currency_code": "KRW",
+      "trans_amt": 49000,
+      "balance_amt": 20111607,
+      "trans_memo": "GS칼텍스 논현"
+    },
+    {
+      "trans_dtime": "20260410093000",
+      "trans_no": "00000318",
+      "trans_type": "03",
+      "trans_class": "인터넷뱅킹",
+      "currency_code": "KRW",
+      "trans_amt": 3084080,
+      "balance_amt": 20160607,
+      "trans_memo": "배우자 급여 이체"
+    },
+    {
+      "trans_dtime": "20260410062500",
+      "trans_no": "00000317",
+      "trans_type": "02",
+      "trans_class": "자동이체",
+      "currency_code": "KRW",
+      "trans_amt": 285000,
+      "balance_amt": 17076527,
+      "trans_memo": "한화생명 보험료"
+    },
+    {
+      "trans_dtime": "20260409080902",
+      "trans_no": "00000316",
+      "trans_type": "02",
+      "trans_class": "체크카드",
+      "currency_code": "KRW",
+      "trans_amt": 5000,
+      "balance_amt": 17361527,
+      "trans_memo": "스타벅스 삼성점"
+    },
+    {
+      "trans_dtime": "20260407164355",
+      "trans_no": "00000315",
+      "trans_type": "02",
+      "trans_class": "체크카드",
+      "currency_code": "KRW",
+      "trans_amt": 13500,
+      "balance_amt": 17366527,
+      "trans_memo": "김밥천국 역삼"
+    },
+    {
+      "trans_dtime": "20260407092558",
+      "trans_no": "00000314",
+      "trans_type": "02",
+      "trans_class": "체크카드",
+      "currency_code": "KRW",
+      "trans_amt": 40000,
+      "balance_amt": 17380027,
+      "trans_memo": "이마트 성수점"
+    },
+    {
+      "trans_dtime": "20260406210033",
+      "trans_no": "00000313",
+      "trans_type": "02",
+      "trans_class": "체크카드",
+      "currency_code": "KRW",
+      "trans_amt": 9000,
+      "balance_amt": 17420027,
+      "trans_memo": "GS25 역삼점"
+    },
+    {
+      "trans_dtime": "20260405063500",
+      "trans_no": "00000312",
+      "trans_type": "02",
+      "trans_class": "자동이체",
+      "currency_code": "KRW",
+      "trans_amt": 200000,
+      "balance_amt": 17429027,
+      "trans_memo": "주택청약종합저축 이체"
+    },
+    {
+      "trans_dtime": "20260405063000",
+      "trans_no": "00000311",
+      "trans_type": "02",
+      "trans_class": "자동이체",
+      "currency_code": "KRW",
+      "trans_amt": 1200000,
+      "balance_amt": 17629027,
+      "trans_memo": "신혼부부 우대적금 이체"
+    },
+    {
+      "trans_dtime": "20260404204202",
+      "trans_no": "00000310",
+      "trans_type": "02",
+      "trans_class": "체크카드",
+      "currency_code": "KRW",
+      "trans_amt": 22500,
+      "balance_amt": 18829027,
+      "trans_memo": "본죽 논현점"
+    },
+    {
+      "trans_dtime": "20260403115214",
+      "trans_no": "00000309",
+      "trans_type": "02",
+      "trans_class": "체크카드",
+      "currency_code": "KRW",
+      "trans_amt": 6000,
+      "balance_amt": 18851527,
+      "trans_memo": "GS25 역삼점"
+    },
+    {
+      "trans_dtime": "20260402124137",
+      "trans_no": "00000308",
+      "trans_type": "02",
+      "trans_class": "체크카드",
+      "currency_code": "KRW",
+      "trans_amt": 5500,
+      "balance_amt": 18857527,
+      "trans_memo": "투썸플레이스 역삼"
+    },
+    {
+      "trans_dtime": "20260328122025",
+      "trans_no": "00000307",
+      "trans_type": "02",
+      "trans_class": "체크카드",
+      "currency_code": "KRW",
+      "trans_amt": 7500,
+      "balance_amt": 18863027,
+      "trans_memo": "세븐일레븐 삼성"
+    },
+    {
+      "trans_dtime": "20260328102834",
+      "trans_no": "00000306",
+      "trans_type": "02",
+      "trans_class": "체크카드",
+      "currency_code": "KRW",
+      "trans_amt": 11500,
+      "balance_amt": 18870527,
+      "trans_memo": "세븐일레븐 삼성"
+    },
+    {
+      "trans_dtime": "20260328081840",
+      "trans_no": "00000305",
+      "trans_type": "02",
+      "trans_class": "체크카드",
+      "currency_code": "KRW",
+      "trans_amt": 12000,
+      "balance_amt": 18882027,
+      "trans_memo": "맘스터치 강남"
+    },
+    {
+      "trans_dtime": "20260328060000",
+      "trans_no": "00000304",
+      "trans_type": "98",
+      "trans_class": "자동처리",
+      "currency_code": "KRW",
+      "trans_amt": 2759,
+      "balance_amt": 18894027,
+      "trans_memo": "이자"
+    },
+    {
+      "trans_dtime": "20260327192935",
+      "trans_no": "00000303",
+      "trans_type": "02",
+      "trans_class": "체크카드",
+      "currency_code": "KRW",
+      "trans_amt": 17000,
+      "balance_amt": 18891268,
+      "trans_memo": "본죽 논현점"
+    },
+    {
+      "trans_dtime": "20260326110433",
+      "trans_no": "00000302",
+      "trans_type": "02",
+      "trans_class": "체크카드",
+      "currency_code": "KRW",
+      "trans_amt": 59000,
+      "balance_amt": 18908268,
+      "trans_memo": "홈플러스 강남"
+    },
+    {
+      "trans_dtime": "20260325090000",
+      "trans_no": "00000301",
+      "trans_type": "03",
+      "trans_class": "인터넷뱅킹",
+      "currency_code": "KRW",
+      "trans_amt": 3848651,
+      "balance_amt": 18967268,
+      "trans_memo": "(주)디자인랩 급여"
+    },
+    {
+      "trans_dtime": "20260325061500",
+      "trans_no": "00000300",
+      "trans_type": "02",
+      "trans_class": "자동이체",
+      "currency_code": "KRW",
+      "trans_amt": 206314,
+      "balance_amt": 15118617,
+      "trans_memo": "관리비"
+    },
+    {
+      "trans_dtime": "20260324142907",
+      "trans_no": "00000299",
+      "trans_type": "02",
+      "trans_class": "체크카드",
+      "currency_code": "KRW",
+      "trans_amt": 17500,
+      "balance_amt": 15324931,
+      "trans_memo": "맘스터치 강남"
+    },
+    {
+      "trans_dtime": "20260323145751",
+      "trans_no": "00000298",
+      "trans_type": "02",
+      "trans_class": "체크카드",
+      "currency_code": "KRW",
+      "trans_amt": 26500,
+      "balance_amt": 15342431,
+      "trans_memo": "홈플러스 강남"
+    },
+    {
+      "trans_dtime": "20260320160411",
+      "trans_no": "00000297",
+      "trans_type": "02",
+      "trans_class": "체크카드",
+      "currency_code": "KRW",
+      "trans_amt": 16000,
+      "balance_amt": 15368931,
+      "trans_memo": "맘스터치 강남"
+    },
+    {
+      "trans_dtime": "20260319161040",
+      "trans_no": "00000296",
+      "trans_type": "02",
+      "trans_class": "체크카드",
+      "currency_code": "KRW",
+      "trans_amt": 59500,
+      "balance_amt": 15384931,
+      "trans_memo": "롯데마트 서초"
+    },
+    {
+      "trans_dtime": "20260319123555",
+      "trans_no": "00000295",
+      "trans_type": "02",
+      "trans_class": "체크카드",
+      "currency_code": "KRW",
+      "trans_amt": 9500,
+      "balance_amt": 15444431,
+      "trans_memo": "스타벅스 삼성점"
+    },
+    {
+      "trans_dtime": "20260318215410",
+      "trans_no": "00000294",
+      "trans_type": "02",
+      "trans_class": "체크카드",
+      "currency_code": "KRW",
+      "trans_amt": 54500,
+      "balance_amt": 15453931,
+      "trans_memo": "홈플러스 강남"
+    },
+    {
+      "trans_dtime": "20260318170148",
+      "trans_no": "00000293",
+      "trans_type": "02",
+      "trans_class": "체크카드",
+      "currency_code": "KRW",
+      "trans_amt": 10500,
+      "balance_amt": 15508431,
+      "trans_memo": "스타벅스 삼성점"
+    },
+    {
+      "trans_dtime": "20260317141144",
+      "trans_no": "00000292",
+      "trans_type": "02",
+      "trans_class": "체크카드",
+      "currency_code": "KRW",
+      "trans_amt": 9500,
+      "balance_amt": 15518931,
+      "trans_memo": "스타벅스 삼성점"
+    },
+    {
+      "trans_dtime": "20260317062000",
+      "trans_no": "00000291",
+      "trans_type": "02",
+      "trans_class": "자동이체",
+      "currency_code": "KRW",
+      "trans_amt": 92831,
+      "balance_amt": 15528431,
+      "trans_memo": "LGU+ 통신요금"
+    },
+    {
+      "trans_dtime": "20260315104422",
+      "trans_no": "00000290",
+      "trans_type": "02",
+      "trans_class": "체크카드",
+      "currency_code": "KRW",
+      "trans_amt": 51500,
+      "balance_amt": 15621262,
+      "trans_memo": "GS칼텍스 논현"
+    },
+    {
+      "trans_dtime": "20260315061000",
+      "trans_no": "00000289",
+      "trans_type": "02",
+      "trans_class": "자동이체",
+      "currency_code": "KRW",
+      "trans_amt": 525000,
+      "balance_amt": 15672762,
+      "trans_memo": "KB국민은행 전세자금대출이자"
+    },
+    {
+      "trans_dtime": "20260314064000",
+      "trans_no": "00000288",
+      "trans_type": "02",
+      "trans_class": "자동이체",
+      "currency_code": "KRW",
+      "trans_amt": 1694868,
+      "balance_amt": 16197762,
+      "trans_memo": "현대카드 결제"
+    },
+    {
+      "trans_dtime": "20260313170731",
+      "trans_no": "00000287",
+      "trans_type": "02",
+      "trans_class": "체크카드",
+      "currency_code": "KRW",
+      "trans_amt": 7000,
+      "balance_amt": 17892630,
+      "trans_memo": "GS25 역삼점"
+    },
+    {
+      "trans_dtime": "20260312135732",
+      "trans_no": "00000286",
+      "trans_type": "02",
+      "trans_class": "체크카드",
+      "currency_code": "KRW",
+      "trans_amt": 89500,
+      "balance_amt": 17899630,
+      "trans_memo": "홈플러스 강남"
+    },
+    {
+      "trans_dtime": "20260311143226",
+      "trans_no": "00000285",
+      "trans_type": "02",
+      "trans_class": "체크카드",
+      "currency_code": "KRW",
+      "trans_amt": 5500,
+      "balance_amt": 17989130,
+      "trans_memo": "GS25 역삼점"
+    },
+    {
+      "trans_dtime": "20260310164108",
+      "trans_no": "00000284",
+      "trans_type": "02",
+      "trans_class": "체크카드",
+      "currency_code": "KRW",
+      "trans_amt": 28500,
+      "balance_amt": 17994630,
+      "trans_memo": "본죽 논현점"
+    },
+    {
+      "trans_dtime": "20260310131140",
+      "trans_no": "00000283",
+      "trans_type": "02",
+      "trans_class": "체크카드",
+      "currency_code": "KRW",
+      "trans_amt": 10000,
+      "balance_amt": 18023130,
+      "trans_memo": "투썸플레이스 역삼"
+    },
+    {
+      "trans_dtime": "20260310093000",
+      "trans_no": "00000282",
+      "trans_type": "03",
+      "trans_class": "인터넷뱅킹",
+      "currency_code": "KRW",
+      "trans_amt": 3135956,
+      "balance_amt": 18033130,
+      "trans_memo": "배우자 급여 이체"
+    },
+    {
+      "trans_dtime": "20260310062500",
+      "trans_no": "00000281",
+      "trans_type": "02",
+      "trans_class": "자동이체",
+      "currency_code": "KRW",
+      "trans_amt": 285000,
+      "balance_amt": 14897174,
+      "trans_memo": "한화생명 보험료"
+    },
+    {
+      "trans_dtime": "20260309140010",
+      "trans_no": "00000280",
+      "trans_type": "02",
+      "trans_class": "체크카드",
+      "currency_code": "KRW",
+      "trans_amt": 6500,
+      "balance_amt": 15182174,
+      "trans_memo": "투썸플레이스 역삼"
+    },
+    {
+      "trans_dtime": "20260306094525",
+      "trans_no": "00000279",
+      "trans_type": "02",
+      "trans_class": "체크카드",
+      "currency_code": "KRW",
+      "trans_amt": 22000,
+      "balance_amt": 15188674,
+      "trans_memo": "본죽 논현점"
+    },
+    {
+      "trans_dtime": "20260305063500",
+      "trans_no": "00000278",
+      "trans_type": "02",
+      "trans_class": "자동이체",
+      "currency_code": "KRW",
+      "trans_amt": 200000,
+      "balance_amt": 15210674,
+      "trans_memo": "주택청약종합저축 이체"
+    },
+    {
+      "trans_dtime": "20260305063000",
+      "trans_no": "00000277",
+      "trans_type": "02",
+      "trans_class": "자동이체",
+      "currency_code": "KRW",
+      "trans_amt": 1200000,
+      "balance_amt": 15410674,
+      "trans_memo": "신혼부부 우대적금 이체"
+    },
+    {
+      "trans_dtime": "20260302181802",
+      "trans_no": "00000276",
+      "trans_type": "02",
+      "trans_class": "체크카드",
+      "currency_code": "KRW",
+      "trans_amt": 7000,
+      "balance_amt": 16610674,
+      "trans_memo": "세븐일레븐 삼성"
+    },
+    {
+      "trans_dtime": "20260302152923",
+      "trans_no": "00000275",
+      "trans_type": "02",
+      "trans_class": "체크카드",
+      "currency_code": "KRW",
+      "trans_amt": 11500,
+      "balance_amt": 16617674,
+      "trans_memo": "본죽 논현점"
+    },
+    {
+      "trans_dtime": "20260302083926",
+      "trans_no": "00000274",
+      "trans_type": "02",
+      "trans_class": "체크카드",
+      "currency_code": "KRW",
+      "trans_amt": 70000,
+      "balance_amt": 16629174,
+      "trans_memo": "이마트 성수점"
+    },
+    {
+      "trans_dtime": "20260301170616",
+      "trans_no": "00000273",
+      "trans_type": "02",
+      "trans_class": "체크카드",
+      "currency_code": "KRW",
+      "trans_amt": 10500,
+      "balance_amt": 16699174,
+      "trans_memo": "투썸플레이스 역삼"
+    },
+    {
+      "trans_dtime": "20260228215159",
+      "trans_no": "00000272",
+      "trans_type": "02",
+      "trans_class": "체크카드",
+      "currency_code": "KRW",
+      "trans_amt": 85000,
+      "balance_amt": 16709674,
+      "trans_memo": "SK주유소 삼성"
+    },
+    {
+      "trans_dtime": "20260227171717",
+      "trans_no": "00000271",
+      "trans_type": "02",
+      "trans_class": "체크카드",
+      "currency_code": "KRW",
+      "trans_amt": 46500,
+      "balance_amt": 16794674,
+      "trans_memo": "GS칼텍스 논현"
+    },
+    {
+      "trans_dtime": "20260227124758",
+      "trans_no": "00000270",
+      "trans_type": "02",
+      "trans_class": "체크카드",
+      "currency_code": "KRW",
+      "trans_amt": 10500,
+      "balance_amt": 16841174,
+      "trans_memo": "투썸플레이스 역삼"
+    },
+    {
+      "trans_dtime": "20260225090000",
+      "trans_no": "00000269",
+      "trans_type": "03",
+      "trans_class": "인터넷뱅킹",
+      "currency_code": "KRW",
+      "trans_amt": 3804042,
+      "balance_amt": 16851674,
+      "trans_memo": "(주)디자인랩 급여"
+    },
+    {
+      "trans_dtime": "20260225061500",
+      "trans_no": "00000268",
+      "trans_type": "02",
+      "trans_class": "자동이체",
+      "currency_code": "KRW",
+      "trans_amt": 184103,
+      "balance_amt": 13047632,
+      "trans_memo": "관리비"
+    },
+    {
+      "trans_dtime": "20260224134706",
+      "trans_no": "00000267",
+      "trans_type": "02",
+      "trans_class": "체크카드",
+      "currency_code": "KRW",
+      "trans_amt": 5000,
+      "balance_amt": 13231735,
+      "trans_memo": "GS25 역삼점"
+    },
+    {
+      "trans_dtime": "20260223105509",
+      "trans_no": "00000266",
+      "trans_type": "02",
+      "trans_class": "체크카드",
+      "currency_code": "KRW",
+      "trans_amt": 7000,
+      "balance_amt": 13236735,
+      "trans_memo": "스타벅스 삼성점"
+    },
+    {
+      "trans_dtime": "20260222193119",
+      "trans_no": "00000265",
+      "trans_type": "02",
+      "trans_class": "체크카드",
+      "currency_code": "KRW",
+      "trans_amt": 13500,
+      "balance_amt": 13243735,
+      "trans_memo": "세븐일레븐 삼성"
+    },
+    {
+      "trans_dtime": "20260221190139",
+      "trans_no": "00000264",
+      "trans_type": "02",
+      "trans_class": "체크카드",
+      "currency_code": "KRW",
+      "trans_amt": 8000,
+      "balance_amt": 13257235,
+      "trans_memo": "CU 논현점"
+    },
+    {
+      "trans_dtime": "20260218121411",
+      "trans_no": "00000263",
+      "trans_type": "02",
+      "trans_class": "체크카드",
+      "currency_code": "KRW",
+      "trans_amt": 18500,
+      "balance_amt": 13265235,
+      "trans_memo": "김밥천국 역삼"
+    },
+    {
+      "trans_dtime": "20260217062000",
+      "trans_no": "00000262",
+      "trans_type": "02",
+      "trans_class": "자동이체",
+      "currency_code": "KRW",
+      "trans_amt": 91113,
+      "balance_amt": 13283735,
+      "trans_memo": "LGU+ 통신요금"
+    },
+    {
+      "trans_dtime": "20260216204551",
+      "trans_no": "00000261",
+      "trans_type": "02",
+      "trans_class": "체크카드",
+      "currency_code": "KRW",
+      "trans_amt": 37000,
+      "balance_amt": 13374848,
+      "trans_memo": "롯데마트 서초"
+    },
+    {
+      "trans_dtime": "20260215131516",
+      "trans_no": "00000260",
+      "trans_type": "02",
+      "trans_class": "체크카드",
+      "currency_code": "KRW",
+      "trans_amt": 6000,
+      "balance_amt": 13411848,
+      "trans_memo": "세븐일레븐 삼성"
+    },
+    {
+      "trans_dtime": "20260215061000",
+      "trans_no": "00000259",
+      "trans_type": "02",
+      "trans_class": "자동이체",
+      "currency_code": "KRW",
+      "trans_amt": 525000,
+      "balance_amt": 13417848,
+      "trans_memo": "KB국민은행 전세자금대출이자"
+    },
+    {
+      "trans_dtime": "20260214132504",
+      "trans_no": "00000258",
+      "trans_type": "02",
+      "trans_class": "체크카드",
+      "currency_code": "KRW",
+      "trans_amt": 81500,
+      "balance_amt": 13942848,
+      "trans_memo": "GS칼텍스 논현"
+    },
+    {
+      "trans_dtime": "20260214064000",
+      "trans_no": "00000257",
+      "trans_type": "02",
+      "trans_class": "자동이체",
+      "currency_code": "KRW",
+      "trans_amt": 1502805,
+      "balance_amt": 14024348,
+      "trans_memo": "현대카드 결제"
+    },
+    {
+      "trans_dtime": "20260212213350",
+      "trans_no": "00000256",
+      "trans_type": "02",
+      "trans_class": "체크카드",
+      "currency_code": "KRW",
+      "trans_amt": 6500,
+      "balance_amt": 15527153,
+      "trans_memo": "스타벅스 삼성점"
+    },
+    {
+      "trans_dtime": "20260212182127",
+      "trans_no": "00000255",
+      "trans_type": "02",
+      "trans_class": "체크카드",
+      "currency_code": "KRW",
+      "trans_amt": 10000,
+      "balance_amt": 15533653,
+      "trans_memo": "GS25 역삼점"
+    },
+    {
+      "trans_dtime": "20260211154224",
+      "trans_no": "00000254",
+      "trans_type": "02",
+      "trans_class": "체크카드",
+      "currency_code": "KRW",
+      "trans_amt": 80000,
+      "balance_amt": 15543653,
+      "trans_memo": "GS칼텍스 논현"
+    },
+    {
+      "trans_dtime": "20260210093000",
+      "trans_no": "00000253",
+      "trans_type": "03",
+      "trans_class": "인터넷뱅킹",
+      "currency_code": "KRW",
+      "trans_amt": 3146299,
+      "balance_amt": 15623653,
+      "trans_memo": "배우자 급여 이체"
+    },
+    {
+      "trans_dtime": "20260210062500",
+      "trans_no": "00000252",
+      "trans_type": "02",
+      "trans_class": "자동이체",
+      "currency_code": "KRW",
+      "trans_amt": 285000,
+      "balance_amt": 12477354,
+      "trans_memo": "한화생명 보험료"
+    },
+    {
+      "trans_dtime": "20260209150901",
+      "trans_no": "00000251",
+      "trans_type": "02",
+      "trans_class": "체크카드",
+      "currency_code": "KRW",
+      "trans_amt": 9000,
+      "balance_amt": 12762354,
+      "trans_memo": "본죽 논현점"
+    },
+    {
+      "trans_dtime": "20260209112412",
+      "trans_no": "00000250",
+      "trans_type": "02",
+      "trans_class": "체크카드",
+      "currency_code": "KRW",
+      "trans_amt": 79000,
+      "balance_amt": 12771354,
+      "trans_memo": "SK주유소 삼성"
+    },
+    {
+      "trans_dtime": "20260208140655",
+      "trans_no": "00000249",
+      "trans_type": "02",
+      "trans_class": "체크카드",
+      "currency_code": "KRW",
+      "trans_amt": 8500,
+      "balance_amt": 12850354,
+      "trans_memo": "GS25 역삼점"
+    },
+    {
+      "trans_dtime": "20260207131323",
+      "trans_no": "00000248",
+      "trans_type": "02",
+      "trans_class": "체크카드",
+      "currency_code": "KRW",
+      "trans_amt": 11500,
+      "balance_amt": 12858854,
+      "trans_memo": "GS25 역삼점"
+    },
+    {
+      "trans_dtime": "20260206213154",
+      "trans_no": "00000247",
+      "trans_type": "02",
+      "trans_class": "체크카드",
+      "currency_code": "KRW",
+      "trans_amt": 4500,
+      "balance_amt": 12870354,
+      "trans_memo": "세븐일레븐 삼성"
+    },
+    {
+      "trans_dtime": "20260206154405",
+      "trans_no": "00000246",
+      "trans_type": "02",
+      "trans_class": "체크카드",
+      "currency_code": "KRW",
+      "trans_amt": 26500,
+      "balance_amt": 12874854,
+      "trans_memo": "본죽 논현점"
+    },
+    {
+      "trans_dtime": "20260205161700",
+      "trans_no": "00000245",
+      "trans_type": "02",
+      "trans_class": "체크카드",
+      "currency_code": "KRW",
+      "trans_amt": 7500,
+      "balance_amt": 12901354,
+      "trans_memo": "스타벅스 삼성점"
+    },
+    {
+      "trans_dtime": "20260205155433",
+      "trans_no": "00000244",
+      "trans_type": "02",
+      "trans_class": "체크카드",
+      "currency_code": "KRW",
+      "trans_amt": 16000,
+      "balance_amt": 12908854,
+      "trans_memo": "김밥천국 역삼"
+    },
+    {
+      "trans_dtime": "20260205143517",
+      "trans_no": "00000243",
+      "trans_type": "02",
+      "trans_class": "체크카드",
+      "currency_code": "KRW",
+      "trans_amt": 37500,
+      "balance_amt": 12924854,
+      "trans_memo": "올리브영 강남"
+    },
+    {
+      "trans_dtime": "20260205142012",
+      "trans_no": "00000242",
+      "trans_type": "02",
+      "trans_class": "체크카드",
+      "currency_code": "KRW",
+      "trans_amt": 89000,
+      "balance_amt": 12962354,
+      "trans_memo": "SK주유소 삼성"
+    },
+    {
+      "trans_dtime": "20260205123104",
+      "trans_no": "00000241",
+      "trans_type": "02",
+      "trans_class": "체크카드",
+      "currency_code": "KRW",
+      "trans_amt": 117000,
+      "balance_amt": 13051354,
+      "trans_memo": "이마트 성수점"
+    },
+    {
+      "trans_dtime": "20260205112022",
+      "trans_no": "00000240",
+      "trans_type": "02",
+      "trans_class": "체크카드",
+      "currency_code": "KRW",
+      "trans_amt": 10500,
+      "balance_amt": 13168354,
+      "trans_memo": "투썸플레이스 역삼"
+    },
+    {
+      "trans_dtime": "20260205063500",
+      "trans_no": "00000239",
+      "trans_type": "02",
+      "trans_class": "자동이체",
+      "currency_code": "KRW",
+      "trans_amt": 200000,
+      "balance_amt": 13178854,
+      "trans_memo": "주택청약종합저축 이체"
+    },
+    {
+      "trans_dtime": "20260205063000",
+      "trans_no": "00000238",
+      "trans_type": "02",
+      "trans_class": "자동이체",
+      "currency_code": "KRW",
+      "trans_amt": 1200000,
+      "balance_amt": 13378854,
+      "trans_memo": "신혼부부 우대적금 이체"
+    },
+    {
+      "trans_dtime": "20260204171123",
+      "trans_no": "00000237",
+      "trans_type": "02",
+      "trans_class": "체크카드",
+      "currency_code": "KRW",
+      "trans_amt": 73000,
+      "balance_amt": 14578854,
+      "trans_memo": "SK주유소 삼성"
+    },
+    {
+      "trans_dtime": "20260204093206",
+      "trans_no": "00000236",
+      "trans_type": "02",
+      "trans_class": "체크카드",
+      "currency_code": "KRW",
+      "trans_amt": 40000,
+      "balance_amt": 14651854,
+      "trans_memo": "올리브영 강남"
+    },
+    {
+      "trans_dtime": "20260203213414",
+      "trans_no": "00000235",
+      "trans_type": "02",
+      "trans_class": "체크카드",
+      "currency_code": "KRW",
+      "trans_amt": 75000,
+      "balance_amt": 14691854,
+      "trans_memo": "SK주유소 삼성"
+    },
+    {
+      "trans_dtime": "20260203175326",
+      "trans_no": "00000234",
+      "trans_type": "02",
+      "trans_class": "체크카드",
+      "currency_code": "KRW",
+      "trans_amt": 29000,
+      "balance_amt": 14766854,
+      "trans_memo": "올리브영 강남"
+    },
+    {
+      "trans_dtime": "20260128212628",
+      "trans_no": "00000233",
+      "trans_type": "02",
+      "trans_class": "체크카드",
+      "currency_code": "KRW",
+      "trans_amt": 11500,
+      "balance_amt": 14795854,
+      "trans_memo": "스타벅스 삼성점"
+    },
+    {
+      "trans_dtime": "20260128183635",
+      "trans_no": "00000232",
+      "trans_type": "02",
+      "trans_class": "체크카드",
+      "currency_code": "KRW",
+      "trans_amt": 113000,
+      "balance_amt": 14807354,
+      "trans_memo": "이마트 성수점"
+    },
+    {
+      "trans_dtime": "20260127111805",
+      "trans_no": "00000231",
+      "trans_type": "02",
+      "trans_class": "체크카드",
+      "currency_code": "KRW",
+      "trans_amt": 12000,
+      "balance_amt": 14920354,
+      "trans_memo": "세븐일레븐 삼성"
+    },
+    {
+      "trans_dtime": "20260126152503",
+      "trans_no": "00000230",
+      "trans_type": "02",
+      "trans_class": "체크카드",
+      "currency_code": "KRW",
+      "trans_amt": 10500,
+      "balance_amt": 14932354,
+      "trans_memo": "GS25 역삼점"
+    },
+    {
+      "trans_dtime": "20260125185853",
+      "trans_no": "00000229",
+      "trans_type": "02",
+      "trans_class": "체크카드",
+      "currency_code": "KRW",
+      "trans_amt": 45500,
+      "balance_amt": 14942854,
+      "trans_memo": "GS칼텍스 논현"
+    },
+    {
+      "trans_dtime": "20260125122836",
+      "trans_no": "00000228",
+      "trans_type": "02",
+      "trans_class": "체크카드",
+      "currency_code": "KRW",
+      "trans_amt": 4500,
+      "balance_amt": 14988354,
+      "trans_memo": "CU 논현점"
+    },
+    {
+      "trans_dtime": "20260125114301",
+      "trans_no": "00000227",
+      "trans_type": "02",
+      "trans_class": "체크카드",
+      "currency_code": "KRW",
+      "trans_amt": 6500,
+      "balance_amt": 14992854,
+      "trans_memo": "CU 논현점"
+    },
+    {
+      "trans_dtime": "20260125090000",
+      "trans_no": "00000226",
+      "trans_type": "03",
+      "trans_class": "인터넷뱅킹",
+      "currency_code": "KRW",
+      "trans_amt": 3802662,
+      "balance_amt": 14999354,
+      "trans_memo": "(주)디자인랩 급여"
+    },
+    {
+      "trans_dtime": "20260125061500",
+      "trans_no": "00000225",
+      "trans_type": "02",
+      "trans_class": "자동이체",
+      "currency_code": "KRW",
+      "trans_amt": 184018,
+      "balance_amt": 11196692,
+      "trans_memo": "관리비"
+    },
+    {
+      "trans_dtime": "20260124134649",
+      "trans_no": "00000224",
+      "trans_type": "02",
+      "trans_class": "체크카드",
+      "currency_code": "KRW",
+      "trans_amt": 13000,
+      "balance_amt": 11380710,
+      "trans_memo": "세븐일레븐 삼성"
+    },
+    {
+      "trans_dtime": "20260124091958",
+      "trans_no": "00000223",
+      "trans_type": "02",
+      "trans_class": "체크카드",
+      "currency_code": "KRW",
+      "trans_amt": 9000,
+      "balance_amt": 11393710,
+      "trans_memo": "스타벅스 삼성점"
+    },
+    {
+      "trans_dtime": "20260123121314",
+      "trans_no": "00000222",
+      "trans_type": "02",
+      "trans_class": "체크카드",
+      "currency_code": "KRW",
+      "trans_amt": 11500,
+      "balance_amt": 11402710,
+      "trans_memo": "GS25 역삼점"
+    },
+    {
+      "trans_dtime": "20260122161934",
+      "trans_no": "00000221",
+      "trans_type": "02",
+      "trans_class": "체크카드",
+      "currency_code": "KRW",
+      "trans_amt": 83500,
+      "balance_amt": 11414210,
+      "trans_memo": "GS칼텍스 논현"
+    },
+    {
+      "trans_dtime": "20260122134107",
+      "trans_no": "00000220",
+      "trans_type": "02",
+      "trans_class": "체크카드",
+      "currency_code": "KRW",
+      "trans_amt": 62500,
+      "balance_amt": 11497710,
+      "trans_memo": "SK주유소 삼성"
+    },
+    {
+      "trans_dtime": "20260122124603",
+      "trans_no": "00000219",
+      "trans_type": "02",
+      "trans_class": "체크카드",
+      "currency_code": "KRW",
+      "trans_amt": 67500,
+      "balance_amt": 11560210,
+      "trans_memo": "GS칼텍스 논현"
+    },
+    {
+      "trans_dtime": "20260121191626",
+      "trans_no": "00000218",
+      "trans_type": "02",
+      "trans_class": "체크카드",
+      "currency_code": "KRW",
+      "trans_amt": 84500,
+      "balance_amt": 11627710,
+      "trans_memo": "홈플러스 강남"
+    },
+    {
+      "trans_dtime": "20260121112543",
+      "trans_no": "00000217",
+      "trans_type": "02",
+      "trans_class": "체크카드",
+      "currency_code": "KRW",
+      "trans_amt": 10000,
+      "balance_amt": 11712210,
+      "trans_memo": "스타벅스 삼성점"
+    },
+    {
+      "trans_dtime": "20260121083511",
+      "trans_no": "00000216",
+      "trans_type": "02",
+      "trans_class": "체크카드",
+      "currency_code": "KRW",
+      "trans_amt": 67500,
+      "balance_amt": 11722210,
+      "trans_memo": "SK주유소 삼성"
+    },
+    {
+      "trans_dtime": "20260120160936",
+      "trans_no": "00000215",
+      "trans_type": "02",
+      "trans_class": "체크카드",
+      "currency_code": "KRW",
+      "trans_amt": 20000,
+      "balance_amt": 11789710,
+      "trans_memo": "맘스터치 강남"
+    },
+    {
+      "trans_dtime": "20260120120428",
+      "trans_no": "00000214",
+      "trans_type": "02",
+      "trans_class": "체크카드",
+      "currency_code": "KRW",
+      "trans_amt": 17500,
+      "balance_amt": 11809710,
+      "trans_memo": "본죽 논현점"
+    },
+    {
+      "trans_dtime": "20260118210250",
+      "trans_no": "00000213",
+      "trans_type": "02",
+      "trans_class": "체크카드",
+      "currency_code": "KRW",
+      "trans_amt": 61000,
+      "balance_amt": 11827210,
+      "trans_memo": "롯데마트 서초"
+    },
+    {
+      "trans_dtime": "20260117062000",
+      "trans_no": "00000212",
+      "trans_type": "02",
+      "trans_class": "자동이체",
+      "currency_code": "KRW",
+      "trans_amt": 89923,
+      "balance_amt": 11888210,
+      "trans_memo": "LGU+ 통신요금"
+    },
+    {
+      "trans_dtime": "20260115153446",
+      "trans_no": "00000211",
+      "trans_type": "02",
+      "trans_class": "체크카드",
+      "currency_code": "KRW",
+      "trans_amt": 9500,
+      "balance_amt": 11978133,
+      "trans_memo": "스타벅스 삼성점"
+    },
+    {
+      "trans_dtime": "20260115102921",
+      "trans_no": "00000210",
+      "trans_type": "02",
+      "trans_class": "체크카드",
+      "currency_code": "KRW",
+      "trans_amt": 5000,
+      "balance_amt": 11987633,
+      "trans_memo": "세븐일레븐 삼성"
+    },
+    {
+      "trans_dtime": "20260115061000",
+      "trans_no": "00000209",
+      "trans_type": "02",
+      "trans_class": "자동이체",
+      "currency_code": "KRW",
+      "trans_amt": 525000,
+      "balance_amt": 11992633,
+      "trans_memo": "KB국민은행 전세자금대출이자"
+    },
+    {
+      "trans_dtime": "20260114121830",
+      "trans_no": "00000208",
+      "trans_type": "02",
+      "trans_class": "체크카드",
+      "currency_code": "KRW",
+      "trans_amt": 10500,
+      "balance_amt": 12517633,
+      "trans_memo": "CU 논현점"
+    },
+    {
+      "trans_dtime": "20260114064000",
+      "trans_no": "00000207",
+      "trans_type": "02",
+      "trans_class": "자동이체",
+      "currency_code": "KRW",
+      "trans_amt": 1429886,
+      "balance_amt": 12528133,
+      "trans_memo": "현대카드 결제"
+    },
+    {
+      "trans_dtime": "20260110173618",
+      "trans_no": "00000206",
+      "trans_type": "02",
+      "trans_class": "체크카드",
+      "currency_code": "KRW",
+      "trans_amt": 66000,
+      "balance_amt": 13958019,
+      "trans_memo": "롯데마트 서초"
+    },
+    {
+      "trans_dtime": "20260110093000",
+      "trans_no": "00000205",
+      "trans_type": "03",
+      "trans_class": "인터넷뱅킹",
+      "currency_code": "KRW",
+      "trans_amt": 3107858,
+      "balance_amt": 14024019,
+      "trans_memo": "배우자 급여 이체"
+    },
+    {
+      "trans_dtime": "20260110062500",
+      "trans_no": "00000204",
+      "trans_type": "02",
+      "trans_class": "자동이체",
+      "currency_code": "KRW",
+      "trans_amt": 285000,
+      "balance_amt": 10916161,
+      "trans_memo": "한화생명 보험료"
+    },
+    {
+      "trans_dtime": "20260106174632",
+      "trans_no": "00000203",
+      "trans_type": "02",
+      "trans_class": "체크카드",
+      "currency_code": "KRW",
+      "trans_amt": 70500,
+      "balance_amt": 11201161,
+      "trans_memo": "SK주유소 삼성"
+    },
+    {
+      "trans_dtime": "20260105130734",
+      "trans_no": "00000202",
+      "trans_type": "02",
+      "trans_class": "체크카드",
+      "currency_code": "KRW",
+      "trans_amt": 19000,
+      "balance_amt": 11271661,
+      "trans_memo": "본죽 논현점"
+    },
+    {
+      "trans_dtime": "20260105063500",
+      "trans_no": "00000201",
+      "trans_type": "02",
+      "trans_class": "자동이체",
+      "currency_code": "KRW",
+      "trans_amt": 200000,
+      "balance_amt": 11290661,
+      "trans_memo": "주택청약종합저축 이체"
+    },
+    {
+      "trans_dtime": "20260105063000",
+      "trans_no": "00000200",
+      "trans_type": "02",
+      "trans_class": "자동이체",
+      "currency_code": "KRW",
+      "trans_amt": 1200000,
+      "balance_amt": 11490661,
+      "trans_memo": "신혼부부 우대적금 이체"
+    },
+    {
+      "trans_dtime": "20260104212151",
+      "trans_no": "00000199",
+      "trans_type": "02",
+      "trans_class": "체크카드",
+      "currency_code": "KRW",
+      "trans_amt": 8000,
+      "balance_amt": 12690661,
+      "trans_memo": "CU 논현점"
+    },
+    {
+      "trans_dtime": "20260104143730",
+      "trans_no": "00000198",
+      "trans_type": "02",
+      "trans_class": "체크카드",
+      "currency_code": "KRW",
+      "trans_amt": 18000,
+      "balance_amt": 12698661,
+      "trans_memo": "김밥천국 역삼"
+    },
+    {
+      "trans_dtime": "20260102203120",
+      "trans_no": "00000197",
+      "trans_type": "02",
+      "trans_class": "체크카드",
+      "currency_code": "KRW",
+      "trans_amt": 71000,
+      "balance_amt": 12716661,
+      "trans_memo": "홈플러스 강남"
+    },
+    {
+      "trans_dtime": "20260102124113",
+      "trans_no": "00000196",
+      "trans_type": "02",
+      "trans_class": "체크카드",
+      "currency_code": "KRW",
+      "trans_amt": 83000,
+      "balance_amt": 12787661,
+      "trans_memo": "GS칼텍스 논현"
+    },
+    {
+      "trans_dtime": "20260101184207",
+      "trans_no": "00000195",
+      "trans_type": "02",
+      "trans_class": "체크카드",
+      "currency_code": "KRW",
+      "trans_amt": 11500,
+      "balance_amt": 12870661,
+      "trans_memo": "GS25 역삼점"
+    },
+    {
+      "trans_dtime": "20260101171736",
+      "trans_no": "00000194",
+      "trans_type": "02",
+      "trans_class": "체크카드",
+      "currency_code": "KRW",
+      "trans_amt": 40500,
+      "balance_amt": 12882161,
+      "trans_memo": "올리브영 강남"
+    },
+    {
+      "trans_dtime": "20260101100332",
+      "trans_no": "00000193",
+      "trans_type": "02",
+      "trans_class": "체크카드",
+      "currency_code": "KRW",
+      "trans_amt": 8500,
+      "balance_amt": 12922661,
+      "trans_memo": "CU 논현점"
+    },
+    {
+      "trans_dtime": "20251228160632",
+      "trans_no": "00000192",
+      "trans_type": "02",
+      "trans_class": "체크카드",
+      "currency_code": "KRW",
+      "trans_amt": 71000,
+      "balance_amt": 12931161,
+      "trans_memo": "롯데마트 서초"
+    },
+    {
+      "trans_dtime": "20251228143749",
+      "trans_no": "00000191",
+      "trans_type": "02",
+      "trans_class": "체크카드",
+      "currency_code": "KRW",
+      "trans_amt": 59500,
+      "balance_amt": 13002161,
+      "trans_memo": "GS칼텍스 논현"
+    },
+    {
+      "trans_dtime": "20251228083946",
+      "trans_no": "00000190",
+      "trans_type": "02",
+      "trans_class": "체크카드",
+      "currency_code": "KRW",
+      "trans_amt": 58500,
+      "balance_amt": 13061661,
+      "trans_memo": "롯데마트 서초"
+    },
+    {
+      "trans_dtime": "20251228060000",
+      "trans_no": "00000189",
+      "trans_type": "98",
+      "trans_class": "자동처리",
+      "currency_code": "KRW",
+      "trans_amt": 3643,
+      "balance_amt": 13120161,
+      "trans_memo": "이자"
+    },
+    {
+      "trans_dtime": "20251227130712",
+      "trans_no": "00000188",
+      "trans_type": "02",
+      "trans_class": "체크카드",
+      "currency_code": "KRW",
+      "trans_amt": 6000,
+      "balance_amt": 13116518,
+      "trans_memo": "GS25 역삼점"
+    },
+    {
+      "trans_dtime": "20251225201310",
+      "trans_no": "00000187",
+      "trans_type": "02",
+      "trans_class": "체크카드",
+      "currency_code": "KRW",
+      "trans_amt": 16000,
+      "balance_amt": 13122518,
+      "trans_memo": "김밥천국 역삼"
+    },
+    {
+      "trans_dtime": "20251225164251",
+      "trans_no": "00000186",
+      "trans_type": "02",
+      "trans_class": "체크카드",
+      "currency_code": "KRW",
+      "trans_amt": 69000,
+      "balance_amt": 13138518,
+      "trans_memo": "SK주유소 삼성"
+    },
+    {
+      "trans_dtime": "20251225144834",
+      "trans_no": "00000185",
+      "trans_type": "02",
+      "trans_class": "체크카드",
+      "currency_code": "KRW",
+      "trans_amt": 7000,
+      "balance_amt": 13207518,
+      "trans_memo": "GS25 역삼점"
+    },
+    {
+      "trans_dtime": "20251225090000",
+      "trans_no": "00000184",
+      "trans_type": "03",
+      "trans_class": "인터넷뱅킹",
+      "currency_code": "KRW",
+      "trans_amt": 7519898,
+      "balance_amt": 13214518,
+      "trans_memo": "(주)디자인랩 상여"
+    },
+    {
+      "trans_dtime": "20251225061500",
+      "trans_no": "00000183",
+      "trans_type": "02",
+      "trans_class": "자동이체",
+      "currency_code": "KRW",
+      "trans_amt": 189667,
+      "balance_amt": 5694620,
+      "trans_memo": "관리비"
+    },
+    {
+      "trans_dtime": "20251224091449",
+      "trans_no": "00000182",
+      "trans_type": "02",
+      "trans_class": "체크카드",
+      "currency_code": "KRW",
+      "trans_amt": 14500,
+      "balance_amt": 5884287,
+      "trans_memo": "CU 논현점"
+    },
+    {
+      "trans_dtime": "20251223121557",
+      "trans_no": "00000181",
+      "trans_type": "02",
+      "trans_class": "체크카드",
+      "currency_code": "KRW",
+      "trans_amt": 39500,
+      "balance_amt": 5898787,
+      "trans_memo": "올리브영 강남"
+    },
+    {
+      "trans_dtime": "20251221211450",
+      "trans_no": "00000180",
+      "trans_type": "02",
+      "trans_class": "체크카드",
+      "currency_code": "KRW",
+      "trans_amt": 86500,
+      "balance_amt": 5938287,
+      "trans_memo": "이마트 성수점"
+    },
+    {
+      "trans_dtime": "20251220140426",
+      "trans_no": "00000179",
+      "trans_type": "02",
+      "trans_class": "체크카드",
+      "currency_code": "KRW",
+      "trans_amt": 8500,
+      "balance_amt": 6024787,
+      "trans_memo": "세븐일레븐 삼성"
+    },
+    {
+      "trans_dtime": "20251219113848",
+      "trans_no": "00000178",
+      "trans_type": "02",
+      "trans_class": "체크카드",
+      "currency_code": "KRW",
+      "trans_amt": 17500,
+      "balance_amt": 6033287,
+      "trans_memo": "본죽 논현점"
+    },
+    {
+      "trans_dtime": "20251219103829",
+      "trans_no": "00000177",
+      "trans_type": "02",
+      "trans_class": "체크카드",
+      "currency_code": "KRW",
+      "trans_amt": 17500,
+      "balance_amt": 6050787,
+      "trans_memo": "본죽 논현점"
+    },
+    {
+      "trans_dtime": "20251218202601",
+      "trans_no": "00000176",
+      "trans_type": "02",
+      "trans_class": "체크카드",
+      "currency_code": "KRW",
+      "trans_amt": 69500,
+      "balance_amt": 6068287,
+      "trans_memo": "이마트 성수점"
+    },
+    {
+      "trans_dtime": "20251217185135",
+      "trans_no": "00000175",
+      "trans_type": "02",
+      "trans_class": "체크카드",
+      "currency_code": "KRW",
+      "trans_amt": 13000,
+      "balance_amt": 6137787,
+      "trans_memo": "올리브영 강남"
+    },
+    {
+      "trans_dtime": "20251217062000",
+      "trans_no": "00000174",
+      "trans_type": "02",
+      "trans_class": "자동이체",
+      "currency_code": "KRW",
+      "trans_amt": 91325,
+      "balance_amt": 6150787,
+      "trans_memo": "LGU+ 통신요금"
+    },
+    {
+      "trans_dtime": "20251216203557",
+      "trans_no": "00000173",
+      "trans_type": "02",
+      "trans_class": "체크카드",
+      "currency_code": "KRW",
+      "trans_amt": 8500,
+      "balance_amt": 6242112,
+      "trans_memo": "김밥천국 역삼"
+    },
+    {
+      "trans_dtime": "20251215194407",
+      "trans_no": "00000172",
+      "trans_type": "02",
+      "trans_class": "체크카드",
+      "currency_code": "KRW",
+      "trans_amt": 13000,
+      "balance_amt": 6250612,
+      "trans_memo": "세븐일레븐 삼성"
+    },
+    {
+      "trans_dtime": "20251215123538",
+      "trans_no": "00000171",
+      "trans_type": "02",
+      "trans_class": "체크카드",
+      "currency_code": "KRW",
+      "trans_amt": 65500,
+      "balance_amt": 6263612,
+      "trans_memo": "GS칼텍스 논현"
+    },
+    {
+      "trans_dtime": "20251215061000",
+      "trans_no": "00000170",
+      "trans_type": "02",
+      "trans_class": "자동이체",
+      "currency_code": "KRW",
+      "trans_amt": 525000,
+      "balance_amt": 6329112,
+      "trans_memo": "KB국민은행 전세자금대출이자"
+    },
+    {
+      "trans_dtime": "20251214104104",
+      "trans_no": "00000169",
+      "trans_type": "02",
+      "trans_class": "체크카드",
+      "currency_code": "KRW",
+      "trans_amt": 9000,
+      "balance_amt": 6854112,
+      "trans_memo": "스타벅스 삼성점"
+    },
+    {
+      "trans_dtime": "20251214064000",
+      "trans_no": "00000168",
+      "trans_type": "02",
+      "trans_class": "자동이체",
+      "currency_code": "KRW",
+      "trans_amt": 1195373,
+      "balance_amt": 6863112,
+      "trans_memo": "현대카드 결제"
+    },
+    {
+      "trans_dtime": "20251212192119",
+      "trans_no": "00000167",
+      "trans_type": "02",
+      "trans_class": "체크카드",
+      "currency_code": "KRW",
+      "trans_amt": 5500,
+      "balance_amt": 8058485,
+      "trans_memo": "CU 논현점"
+    },
+    {
+      "trans_dtime": "20251211191417",
+      "trans_no": "00000166",
+      "trans_type": "02",
+      "trans_class": "체크카드",
+      "currency_code": "KRW",
+      "trans_amt": 17500,
+      "balance_amt": 8063985,
+      "trans_memo": "맘스터치 강남"
+    },
+    {
+      "trans_dtime": "20251210093000",
+      "trans_no": "00000165",
+      "trans_type": "03",
+      "trans_class": "인터넷뱅킹",
+      "currency_code": "KRW",
+      "trans_amt": 3060479,
+      "balance_amt": 8081485,
+      "trans_memo": "배우자 급여 이체"
+    },
+    {
+      "trans_dtime": "20251210062500",
+      "trans_no": "00000164",
+      "trans_type": "02",
+      "trans_class": "자동이체",
+      "currency_code": "KRW",
+      "trans_amt": 285000,
+      "balance_amt": 5021006,
+      "trans_memo": "한화생명 보험료"
+    },
+    {
+      "trans_dtime": "20251209111323",
+      "trans_no": "00000163",
+      "trans_type": "02",
+      "trans_class": "체크카드",
+      "currency_code": "KRW",
+      "trans_amt": 51000,
+      "balance_amt": 5306006,
+      "trans_memo": "이마트 성수점"
+    },
+    {
+      "trans_dtime": "20251209094403",
+      "trans_no": "00000162",
+      "trans_type": "02",
+      "trans_class": "체크카드",
+      "currency_code": "KRW",
+      "trans_amt": 40000,
+      "balance_amt": 5357006,
+      "trans_memo": "이마트 성수점"
+    },
+    {
+      "trans_dtime": "20251208202455",
+      "trans_no": "00000161",
+      "trans_type": "02",
+      "trans_class": "체크카드",
+      "currency_code": "KRW",
+      "trans_amt": 56000,
+      "balance_amt": 5397006,
+      "trans_memo": "SK주유소 삼성"
+    },
+    {
+      "trans_dtime": "20251207163052",
+      "trans_no": "00000160",
+      "trans_type": "02",
+      "trans_class": "체크카드",
+      "currency_code": "KRW",
+      "trans_amt": 23500,
+      "balance_amt": 5453006,
+      "trans_memo": "올리브영 강남"
+    },
+    {
+      "trans_dtime": "20251207152048",
+      "trans_no": "00000159",
+      "trans_type": "02",
+      "trans_class": "체크카드",
+      "currency_code": "KRW",
+      "trans_amt": 11000,
+      "balance_amt": 5476506,
+      "trans_memo": "맘스터치 강남"
+    },
+    {
+      "trans_dtime": "20251205063500",
+      "trans_no": "00000158",
+      "trans_type": "02",
+      "trans_class": "자동이체",
+      "currency_code": "KRW",
+      "trans_amt": 200000,
+      "balance_amt": 5487506,
+      "trans_memo": "주택청약종합저축 이체"
+    },
+    {
+      "trans_dtime": "20251205063000",
+      "trans_no": "00000157",
+      "trans_type": "02",
+      "trans_class": "자동이체",
+      "currency_code": "KRW",
+      "trans_amt": 1200000,
+      "balance_amt": 5687506,
+      "trans_memo": "신혼부부 우대적금 이체"
+    },
+    {
+      "trans_dtime": "20251204212602",
+      "trans_no": "00000156",
+      "trans_type": "02",
+      "trans_class": "체크카드",
+      "currency_code": "KRW",
+      "trans_amt": 8500,
+      "balance_amt": 6887506,
+      "trans_memo": "투썸플레이스 역삼"
+    },
+    {
+      "trans_dtime": "20251204094042",
+      "trans_no": "00000155",
+      "trans_type": "02",
+      "trans_class": "체크카드",
+      "currency_code": "KRW",
+      "trans_amt": 4500,
+      "balance_amt": 6896006,
+      "trans_memo": "GS25 역삼점"
+    },
+    {
+      "trans_dtime": "20251203195548",
+      "trans_no": "00000154",
+      "trans_type": "02",
+      "trans_class": "체크카드",
+      "currency_code": "KRW",
+      "trans_amt": 7500,
+      "balance_amt": 6900506,
+      "trans_memo": "스타벅스 삼성점"
+    },
+    {
+      "trans_dtime": "20251202133210",
+      "trans_no": "00000153",
+      "trans_type": "02",
+      "trans_class": "체크카드",
+      "currency_code": "KRW",
+      "trans_amt": 51000,
+      "balance_amt": 6908006,
+      "trans_memo": "SK주유소 삼성"
+    },
+    {
+      "trans_dtime": "20251201173017",
+      "trans_no": "00000152",
+      "trans_type": "02",
+      "trans_class": "체크카드",
+      "currency_code": "KRW",
+      "trans_amt": 15000,
+      "balance_amt": 6959006,
+      "trans_memo": "본죽 논현점"
+    },
+    {
+      "trans_dtime": "20251128205641",
+      "trans_no": "00000151",
+      "trans_type": "02",
+      "trans_class": "체크카드",
+      "currency_code": "KRW",
+      "trans_amt": 63500,
+      "balance_amt": 6974006,
+      "trans_memo": "SK주유소 삼성"
+    },
+    {
+      "trans_dtime": "20251128162428",
+      "trans_no": "00000150",
+      "trans_type": "02",
+      "trans_class": "체크카드",
+      "currency_code": "KRW",
+      "trans_amt": 5500,
+      "balance_amt": 7037506,
+      "trans_memo": "투썸플레이스 역삼"
+    },
+    {
+      "trans_dtime": "20251128143641",
+      "trans_no": "00000149",
+      "trans_type": "02",
+      "trans_class": "체크카드",
+      "currency_code": "KRW",
+      "trans_amt": 48500,
+      "balance_amt": 7043006,
+      "trans_memo": "롯데마트 서초"
+    },
+    {
+      "trans_dtime": "20251127195342",
+      "trans_no": "00000148",
+      "trans_type": "02",
+      "trans_class": "체크카드",
+      "currency_code": "KRW",
+      "trans_amt": 76500,
+      "balance_amt": 7091506,
+      "trans_memo": "SK주유소 삼성"
+    },
+    {
+      "trans_dtime": "20251126195103",
+      "trans_no": "00000147",
+      "trans_type": "02",
+      "trans_class": "체크카드",
+      "currency_code": "KRW",
+      "trans_amt": 63000,
+      "balance_amt": 7168006,
+      "trans_memo": "이마트 성수점"
+    },
+    {
+      "trans_dtime": "20251125090000",
+      "trans_no": "00000146",
+      "trans_type": "03",
+      "trans_class": "인터넷뱅킹",
+      "currency_code": "KRW",
+      "trans_amt": 3795541,
+      "balance_amt": 7231006,
+      "trans_memo": "(주)디자인랩 급여"
+    },
+    {
+      "trans_dtime": "20251125061500",
+      "trans_no": "00000145",
+      "trans_type": "02",
+      "trans_class": "자동이체",
+      "currency_code": "KRW",
+      "trans_amt": 174342,
+      "balance_amt": 3435465,
+      "trans_memo": "관리비"
+    },
+    {
+      "trans_dtime": "20251124145345",
+      "trans_no": "00000144",
+      "trans_type": "02",
+      "trans_class": "체크카드",
+      "currency_code": "KRW",
+      "trans_amt": 14000,
+      "balance_amt": 3609807,
+      "trans_memo": "CU 논현점"
+    },
+    {
+      "trans_dtime": "20251123175938",
+      "trans_no": "00000143",
+      "trans_type": "02",
+      "trans_class": "체크카드",
+      "currency_code": "KRW",
+      "trans_amt": 14000,
+      "balance_amt": 3623807,
+      "trans_memo": "맘스터치 강남"
+    },
+    {
+      "trans_dtime": "20251123173630",
+      "trans_no": "00000142",
+      "trans_type": "02",
+      "trans_class": "체크카드",
+      "currency_code": "KRW",
+      "trans_amt": 9500,
+      "balance_amt": 3637807,
+      "trans_memo": "세븐일레븐 삼성"
+    },
+    {
+      "trans_dtime": "20251122140610",
+      "trans_no": "00000141",
+      "trans_type": "02",
+      "trans_class": "체크카드",
+      "currency_code": "KRW",
+      "trans_amt": 60000,
+      "balance_amt": 3647307,
+      "trans_memo": "SK주유소 삼성"
+    },
+    {
+      "trans_dtime": "20251122093853",
+      "trans_no": "00000140",
+      "trans_type": "02",
+      "trans_class": "체크카드",
+      "currency_code": "KRW",
+      "trans_amt": 11500,
+      "balance_amt": 3707307,
+      "trans_memo": "GS25 역삼점"
+    },
+    {
+      "trans_dtime": "20251122080102",
+      "trans_no": "00000139",
+      "trans_type": "02",
+      "trans_class": "체크카드",
+      "currency_code": "KRW",
+      "trans_amt": 69500,
+      "balance_amt": 3718807,
+      "trans_memo": "롯데마트 서초"
+    },
+    {
+      "trans_dtime": "20251119192524",
+      "trans_no": "00000138",
+      "trans_type": "02",
+      "trans_class": "체크카드",
+      "currency_code": "KRW",
+      "trans_amt": 16500,
+      "balance_amt": 3788307,
+      "trans_memo": "김밥천국 역삼"
+    },
+    {
+      "trans_dtime": "20251119151403",
+      "trans_no": "00000137",
+      "trans_type": "02",
+      "trans_class": "체크카드",
+      "currency_code": "KRW",
+      "trans_amt": 32500,
+      "balance_amt": 3804807,
+      "trans_memo": "홈플러스 강남"
+    },
+    {
+      "trans_dtime": "20251119135554",
+      "trans_no": "00000136",
+      "trans_type": "02",
+      "trans_class": "체크카드",
+      "currency_code": "KRW",
+      "trans_amt": 42500,
+      "balance_amt": 3837307,
+      "trans_memo": "롯데마트 서초"
+    },
+    {
+      "trans_dtime": "20251119094036",
+      "trans_no": "00000135",
+      "trans_type": "02",
+      "trans_class": "체크카드",
+      "currency_code": "KRW",
+      "trans_amt": 17500,
+      "balance_amt": 3879807,
+      "trans_memo": "올리브영 강남"
+    },
+    {
+      "trans_dtime": "20251118124715",
+      "trans_no": "00000134",
+      "trans_type": "02",
+      "trans_class": "체크카드",
+      "currency_code": "KRW",
+      "trans_amt": 5500,
+      "balance_amt": 3897307,
+      "trans_memo": "투썸플레이스 역삼"
+    },
+    {
+      "trans_dtime": "20251118091337",
+      "trans_no": "00000133",
+      "trans_type": "02",
+      "trans_class": "체크카드",
+      "currency_code": "KRW",
+      "trans_amt": 70500,
+      "balance_amt": 3902807,
+      "trans_memo": "홈플러스 강남"
+    },
+    {
+      "trans_dtime": "20251117062000",
+      "trans_no": "00000132",
+      "trans_type": "02",
+      "trans_class": "자동이체",
+      "currency_code": "KRW",
+      "trans_amt": 93634,
+      "balance_amt": 3973307,
+      "trans_memo": "LGU+ 통신요금"
+    },
+    {
+      "trans_dtime": "20251116183530",
+      "trans_no": "00000131",
+      "trans_type": "02",
+      "trans_class": "체크카드",
+      "currency_code": "KRW",
+      "trans_amt": 51000,
+      "balance_amt": 4066941,
+      "trans_memo": "SK주유소 삼성"
+    },
+    {
+      "trans_dtime": "20251116143934",
+      "trans_no": "00000130",
+      "trans_type": "02",
+      "trans_class": "체크카드",
+      "currency_code": "KRW",
+      "trans_amt": 12500,
+      "balance_amt": 4117941,
+      "trans_memo": "본죽 논현점"
+    },
+    {
+      "trans_dtime": "20251116082707",
+      "trans_no": "00000129",
+      "trans_type": "02",
+      "trans_class": "체크카드",
+      "currency_code": "KRW",
+      "trans_amt": 11000,
+      "balance_amt": 4130441,
+      "trans_memo": "김밥천국 역삼"
+    },
+    {
+      "trans_dtime": "20251115061000",
+      "trans_no": "00000128",
+      "trans_type": "02",
+      "trans_class": "자동이체",
+      "currency_code": "KRW",
+      "trans_amt": 525000,
+      "balance_amt": 4141441,
+      "trans_memo": "KB국민은행 전세자금대출이자"
+    },
+    {
+      "trans_dtime": "20251114064000",
+      "trans_no": "00000127",
+      "trans_type": "02",
+      "trans_class": "자동이체",
+      "currency_code": "KRW",
+      "trans_amt": 1799731,
+      "balance_amt": 4666441,
+      "trans_memo": "현대카드 결제"
+    },
+    {
+      "trans_dtime": "20251111194011",
+      "trans_no": "00000126",
+      "trans_type": "02",
+      "trans_class": "체크카드",
+      "currency_code": "KRW",
+      "trans_amt": 9500,
+      "balance_amt": 6466172,
+      "trans_memo": "GS25 역삼점"
+    },
+    {
+      "trans_dtime": "20251110113258",
+      "trans_no": "00000125",
+      "trans_type": "02",
+      "trans_class": "체크카드",
+      "currency_code": "KRW",
+      "trans_amt": 28000,
+      "balance_amt": 6475672,
+      "trans_memo": "본죽 논현점"
+    },
+    {
+      "trans_dtime": "20251110093000",
+      "trans_no": "00000124",
+      "trans_type": "03",
+      "trans_class": "인터넷뱅킹",
+      "currency_code": "KRW",
+      "trans_amt": 3014927,
+      "balance_amt": 6503672,
+      "trans_memo": "배우자 급여 이체"
+    },
+    {
+      "trans_dtime": "20251110062500",
+      "trans_no": "00000123",
+      "trans_type": "02",
+      "trans_class": "자동이체",
+      "currency_code": "KRW",
+      "trans_amt": 285000,
+      "balance_amt": 3488745,
+      "trans_memo": "한화생명 보험료"
+    },
+    {
+      "trans_dtime": "20251106132429",
+      "trans_no": "00000122",
+      "trans_type": "02",
+      "trans_class": "체크카드",
+      "currency_code": "KRW",
+      "trans_amt": 74000,
+      "balance_amt": 3773745,
+      "trans_memo": "홈플러스 강남"
+    },
+    {
+      "trans_dtime": "20251105162731",
+      "trans_no": "00000121",
+      "trans_type": "02",
+      "trans_class": "체크카드",
+      "currency_code": "KRW",
+      "trans_amt": 70000,
+      "balance_amt": 3847745,
+      "trans_memo": "GS칼텍스 논현"
+    },
+    {
+      "trans_dtime": "20251105123019",
+      "trans_no": "00000120",
+      "trans_type": "02",
+      "trans_class": "체크카드",
+      "currency_code": "KRW",
+      "trans_amt": 18500,
+      "balance_amt": 3917745,
+      "trans_memo": "본죽 논현점"
+    },
+    {
+      "trans_dtime": "20251105063500",
+      "trans_no": "00000119",
+      "trans_type": "02",
+      "trans_class": "자동이체",
+      "currency_code": "KRW",
+      "trans_amt": 200000,
+      "balance_amt": 3936245,
+      "trans_memo": "주택청약종합저축 이체"
+    },
+    {
+      "trans_dtime": "20251105063000",
+      "trans_no": "00000118",
+      "trans_type": "02",
+      "trans_class": "자동이체",
+      "currency_code": "KRW",
+      "trans_amt": 1200000,
+      "balance_amt": 4136245,
+      "trans_memo": "신혼부부 우대적금 이체"
+    },
+    {
+      "trans_dtime": "20251104124308",
+      "trans_no": "00000117",
+      "trans_type": "02",
+      "trans_class": "체크카드",
+      "currency_code": "KRW",
+      "trans_amt": 41500,
+      "balance_amt": 5336245,
+      "trans_memo": "이마트 성수점"
+    },
+    {
+      "trans_dtime": "20251028181900",
+      "trans_no": "00000116",
+      "trans_type": "02",
+      "trans_class": "체크카드",
+      "currency_code": "KRW",
+      "trans_amt": 4500,
+      "balance_amt": 5377745,
+      "trans_memo": "스타벅스 삼성점"
+    },
+    {
+      "trans_dtime": "20251028135534",
+      "trans_no": "00000115",
+      "trans_type": "02",
+      "trans_class": "체크카드",
+      "currency_code": "KRW",
+      "trans_amt": 3000,
+      "balance_amt": 5382245,
+      "trans_memo": "CU 논현점"
+    },
+    {
+      "trans_dtime": "20251028115627",
+      "trans_no": "00000114",
+      "trans_type": "02",
+      "trans_class": "체크카드",
+      "currency_code": "KRW",
+      "trans_amt": 24500,
+      "balance_amt": 5385245,
+      "trans_memo": "본죽 논현점"
+    },
+    {
+      "trans_dtime": "20251026164015",
+      "trans_no": "00000113",
+      "trans_type": "02",
+      "trans_class": "체크카드",
+      "currency_code": "KRW",
+      "trans_amt": 11500,
+      "balance_amt": 5409745,
+      "trans_memo": "스타벅스 삼성점"
+    },
+    {
+      "trans_dtime": "20251026141524",
+      "trans_no": "00000112",
+      "trans_type": "02",
+      "trans_class": "체크카드",
+      "currency_code": "KRW",
+      "trans_amt": 14500,
+      "balance_amt": 5421245,
+      "trans_memo": "김밥천국 역삼"
+    },
+    {
+      "trans_dtime": "20251026084623",
+      "trans_no": "00000111",
+      "trans_type": "02",
+      "trans_class": "체크카드",
+      "currency_code": "KRW",
+      "trans_amt": 55000,
+      "balance_amt": 5435745,
+      "trans_memo": "홈플러스 강남"
+    },
+    {
+      "trans_dtime": "20251025214922",
+      "trans_no": "00000110",
+      "trans_type": "02",
+      "trans_class": "체크카드",
+      "currency_code": "KRW",
+      "trans_amt": 47500,
+      "balance_amt": 5490745,
+      "trans_memo": "GS칼텍스 논현"
+    },
+    {
+      "trans_dtime": "20251025170900",
+      "trans_no": "00000109",
+      "trans_type": "02",
+      "trans_class": "체크카드",
+      "currency_code": "KRW",
+      "trans_amt": 11000,
+      "balance_amt": 5538245,
+      "trans_memo": "CU 논현점"
+    },
+    {
+      "trans_dtime": "20251025090000",
+      "trans_no": "00000108",
+      "trans_type": "03",
+      "trans_class": "인터넷뱅킹",
+      "currency_code": "KRW",
+      "trans_amt": 3800694,
+      "balance_amt": 5549245,
+      "trans_memo": "(주)디자인랩 급여"
+    },
+    {
+      "trans_dtime": "20251025061500",
+      "trans_no": "00000107",
+      "trans_type": "02",
+      "trans_class": "자동이체",
+      "currency_code": "KRW",
+      "trans_amt": 193895,
+      "balance_amt": 1748551,
+      "trans_memo": "관리비"
+    },
+    {
+      "trans_dtime": "20251022151708",
+      "trans_no": "00000106",
+      "trans_type": "02",
+      "trans_class": "체크카드",
+      "currency_code": "KRW",
+      "trans_amt": 28500,
+      "balance_amt": 1942446,
+      "trans_memo": "홈플러스 강남"
+    },
+    {
+      "trans_dtime": "20251020171642",
+      "trans_no": "00000105",
+      "trans_type": "02",
+      "trans_class": "체크카드",
+      "currency_code": "KRW",
+      "trans_amt": 18500,
+      "balance_amt": 1970946,
+      "trans_memo": "김밥천국 역삼"
+    },
+    {
+      "trans_dtime": "20251017100007",
+      "trans_no": "00000104",
+      "trans_type": "02",
+      "trans_class": "체크카드",
+      "currency_code": "KRW",
+      "trans_amt": 5000,
+      "balance_amt": 1989446,
+      "trans_memo": "GS25 역삼점"
+    },
+    {
+      "trans_dtime": "20251017062000",
+      "trans_no": "00000103",
+      "trans_type": "02",
+      "trans_class": "자동이체",
+      "currency_code": "KRW",
+      "trans_amt": 92016,
+      "balance_amt": 1994446,
+      "trans_memo": "LGU+ 통신요금"
+    },
+    {
+      "trans_dtime": "20251015061000",
+      "trans_no": "00000102",
+      "trans_type": "02",
+      "trans_class": "자동이체",
+      "currency_code": "KRW",
+      "trans_amt": 525000,
+      "balance_amt": 2086462,
+      "trans_memo": "KB국민은행 전세자금대출이자"
+    },
+    {
+      "trans_dtime": "20251014201003",
+      "trans_no": "00000101",
+      "trans_type": "02",
+      "trans_class": "체크카드",
+      "currency_code": "KRW",
+      "trans_amt": 62000,
+      "balance_amt": 2611462,
+      "trans_memo": "롯데마트 서초"
+    },
+    {
+      "trans_dtime": "20251014153009",
+      "trans_no": "00000100",
+      "trans_type": "02",
+      "trans_class": "체크카드",
+      "currency_code": "KRW",
+      "trans_amt": 14500,
+      "balance_amt": 2673462,
+      "trans_memo": "김밥천국 역삼"
+    },
+    {
+      "trans_dtime": "20251014064000",
+      "trans_no": "00000099",
+      "trans_type": "02",
+      "trans_class": "자동이체",
+      "currency_code": "KRW",
+      "trans_amt": 1563289,
+      "balance_amt": 2687962,
+      "trans_memo": "현대카드 결제"
+    },
+    {
+      "trans_dtime": "20251013201708",
+      "trans_no": "00000098",
+      "trans_type": "02",
+      "trans_class": "체크카드",
+      "currency_code": "KRW",
+      "trans_amt": 11000,
+      "balance_amt": 4251251,
+      "trans_memo": "세븐일레븐 삼성"
+    },
+    {
+      "trans_dtime": "20251012185641",
+      "trans_no": "00000097",
+      "trans_type": "02",
+      "trans_class": "체크카드",
+      "currency_code": "KRW",
+      "trans_amt": 89000,
+      "balance_amt": 4262251,
+      "trans_memo": "이마트 성수점"
+    },
+    {
+      "trans_dtime": "20251012171322",
+      "trans_no": "00000096",
+      "trans_type": "02",
+      "trans_class": "체크카드",
+      "currency_code": "KRW",
+      "trans_amt": 82500,
+      "balance_amt": 4351251,
+      "trans_memo": "롯데마트 서초"
+    },
+    {
+      "trans_dtime": "20251011161813",
+      "trans_no": "00000095",
+      "trans_type": "02",
+      "trans_class": "체크카드",
+      "currency_code": "KRW",
+      "trans_amt": 11500,
+      "balance_amt": 4433751,
+      "trans_memo": "스타벅스 삼성점"
+    },
+    {
+      "trans_dtime": "20251010143213",
+      "trans_no": "00000094",
+      "trans_type": "02",
+      "trans_class": "체크카드",
+      "currency_code": "KRW",
+      "trans_amt": 16000,
+      "balance_amt": 4445251,
+      "trans_memo": "올리브영 강남"
+    },
+    {
+      "trans_dtime": "20251010093000",
+      "trans_no": "00000093",
+      "trans_type": "03",
+      "trans_class": "인터넷뱅킹",
+      "currency_code": "KRW",
+      "trans_amt": 3141081,
+      "balance_amt": 4461251,
+      "trans_memo": "배우자 급여 이체"
+    },
+    {
+      "trans_dtime": "20251010062500",
+      "trans_no": "00000092",
+      "trans_type": "02",
+      "trans_class": "자동이체",
+      "currency_code": "KRW",
+      "trans_amt": 285000,
+      "balance_amt": 1320170,
+      "trans_memo": "한화생명 보험료"
+    },
+    {
+      "trans_dtime": "20251008110000",
+      "trans_no": "00000091",
+      "trans_type": "02",
+      "trans_class": "인터넷뱅킹",
+      "currency_code": "KRW",
+      "trans_amt": 3200000,
+      "balance_amt": 1605170,
+      "trans_memo": "가전 구입"
+    },
+    {
+      "trans_dtime": "20251007162153",
+      "trans_no": "00000090",
+      "trans_type": "02",
+      "trans_class": "체크카드",
+      "currency_code": "KRW",
+      "trans_amt": 11500,
+      "balance_amt": 4805170,
+      "trans_memo": "김밥천국 역삼"
+    },
+    {
+      "trans_dtime": "20251007133427",
+      "trans_no": "00000089",
+      "trans_type": "02",
+      "trans_class": "체크카드",
+      "currency_code": "KRW",
+      "trans_amt": 16000,
+      "balance_amt": 4816670,
+      "trans_memo": "GS25 역삼점"
+    },
+    {
+      "trans_dtime": "20251006101433",
+      "trans_no": "00000088",
+      "trans_type": "02",
+      "trans_class": "체크카드",
+      "currency_code": "KRW",
+      "trans_amt": 33500,
+      "balance_amt": 4832670,
+      "trans_memo": "롯데마트 서초"
+    },
+    {
+      "trans_dtime": "20251005063500",
+      "trans_no": "00000087",
+      "trans_type": "02",
+      "trans_class": "자동이체",
+      "currency_code": "KRW",
+      "trans_amt": 200000,
+      "balance_amt": 4866170,
+      "trans_memo": "주택청약종합저축 이체"
+    },
+    {
+      "trans_dtime": "20251005063000",
+      "trans_no": "00000086",
+      "trans_type": "02",
+      "trans_class": "자동이체",
+      "currency_code": "KRW",
+      "trans_amt": 1200000,
+      "balance_amt": 5066170,
+      "trans_memo": "신혼부부 우대적금 이체"
+    },
+    {
+      "trans_dtime": "20251003200351",
+      "trans_no": "00000085",
+      "trans_type": "02",
+      "trans_class": "체크카드",
+      "currency_code": "KRW",
+      "trans_amt": 10000,
+      "balance_amt": 6266170,
+      "trans_memo": "투썸플레이스 역삼"
+    },
+    {
+      "trans_dtime": "20251003122642",
+      "trans_no": "00000084",
+      "trans_type": "02",
+      "trans_class": "체크카드",
+      "currency_code": "KRW",
+      "trans_amt": 11000,
+      "balance_amt": 6276170,
+      "trans_memo": "본죽 논현점"
+    },
+    {
+      "trans_dtime": "20251003093416",
+      "trans_no": "00000083",
+      "trans_type": "02",
+      "trans_class": "체크카드",
+      "currency_code": "KRW",
+      "trans_amt": 69000,
+      "balance_amt": 6287170,
+      "trans_memo": "GS칼텍스 논현"
+    },
+    {
+      "trans_dtime": "20251002150333",
+      "trans_no": "00000082",
+      "trans_type": "02",
+      "trans_class": "체크카드",
+      "currency_code": "KRW",
+      "trans_amt": 82500,
+      "balance_amt": 6356170,
+      "trans_memo": "GS칼텍스 논현"
+    },
+    {
+      "trans_dtime": "20250928204425",
+      "trans_no": "00000081",
+      "trans_type": "02",
+      "trans_class": "체크카드",
+      "currency_code": "KRW",
+      "trans_amt": 65500,
+      "balance_amt": 6438670,
+      "trans_memo": "홈플러스 강남"
+    },
+    {
+      "trans_dtime": "20250928193832",
+      "trans_no": "00000080",
+      "trans_type": "02",
+      "trans_class": "체크카드",
+      "currency_code": "KRW",
+      "trans_amt": 18000,
+      "balance_amt": 6504170,
+      "trans_memo": "맘스터치 강남"
+    },
+    {
+      "trans_dtime": "20250928143654",
+      "trans_no": "00000079",
+      "trans_type": "02",
+      "trans_class": "체크카드",
+      "currency_code": "KRW",
+      "trans_amt": 8000,
+      "balance_amt": 6522170,
+      "trans_memo": "스타벅스 삼성점"
+    },
+    {
+      "trans_dtime": "20250928140001",
+      "trans_no": "00000078",
+      "trans_type": "02",
+      "trans_class": "체크카드",
+      "currency_code": "KRW",
+      "trans_amt": 14000,
+      "balance_amt": 6530170,
+      "trans_memo": "올리브영 강남"
+    },
+    {
+      "trans_dtime": "20250928060000",
+      "trans_no": "00000077",
+      "trans_type": "98",
+      "trans_class": "자동처리",
+      "currency_code": "KRW",
+      "trans_amt": 3556,
+      "balance_amt": 6544170,
+      "trans_memo": "이자"
+    },
+    {
+      "trans_dtime": "20250927114058",
+      "trans_no": "00000076",
+      "trans_type": "02",
+      "trans_class": "체크카드",
+      "currency_code": "KRW",
+      "trans_amt": 63000,
+      "balance_amt": 6540614,
+      "trans_memo": "홈플러스 강남"
+    },
+    {
+      "trans_dtime": "20250926153749",
+      "trans_no": "00000075",
+      "trans_type": "02",
+      "trans_class": "체크카드",
+      "currency_code": "KRW",
+      "trans_amt": 9000,
+      "balance_amt": 6603614,
+      "trans_memo": "세븐일레븐 삼성"
+    },
+    {
+      "trans_dtime": "20250926152121",
+      "trans_no": "00000074",
+      "trans_type": "02",
+      "trans_class": "체크카드",
+      "currency_code": "KRW",
+      "trans_amt": 60000,
+      "balance_amt": 6612614,
+      "trans_memo": "이마트 성수점"
+    },
+    {
+      "trans_dtime": "20250925090000",
+      "trans_no": "00000073",
+      "trans_type": "03",
+      "trans_class": "인터넷뱅킹",
+      "currency_code": "KRW",
+      "trans_amt": 3710155,
+      "balance_amt": 6672614,
+      "trans_memo": "(주)디자인랩 급여"
+    },
+    {
+      "trans_dtime": "20250925061500",
+      "trans_no": "00000072",
+      "trans_type": "02",
+      "trans_class": "자동이체",
+      "currency_code": "KRW",
+      "trans_amt": 196500,
+      "balance_amt": 2962459,
+      "trans_memo": "관리비"
+    },
+    {
+      "trans_dtime": "20250924111812",
+      "trans_no": "00000071",
+      "trans_type": "02",
+      "trans_class": "체크카드",
+      "currency_code": "KRW",
+      "trans_amt": 21500,
+      "balance_amt": 3158959,
+      "trans_memo": "맘스터치 강남"
+    },
+    {
+      "trans_dtime": "20250923084421",
+      "trans_no": "00000070",
+      "trans_type": "02",
+      "trans_class": "체크카드",
+      "currency_code": "KRW",
+      "trans_amt": 15500,
+      "balance_amt": 3180459,
+      "trans_memo": "GS25 역삼점"
+    },
+    {
+      "trans_dtime": "20250922195522",
+      "trans_no": "00000069",
+      "trans_type": "02",
+      "trans_class": "체크카드",
+      "currency_code": "KRW",
+      "trans_amt": 8000,
+      "balance_amt": 3195959,
+      "trans_memo": "스타벅스 삼성점"
+    },
+    {
+      "trans_dtime": "20250922191144",
+      "trans_no": "00000068",
+      "trans_type": "02",
+      "trans_class": "체크카드",
+      "currency_code": "KRW",
+      "trans_amt": 47500,
+      "balance_amt": 3203959,
+      "trans_memo": "GS칼텍스 논현"
+    },
+    {
+      "trans_dtime": "20250922124057",
+      "trans_no": "00000067",
+      "trans_type": "02",
+      "trans_class": "체크카드",
+      "currency_code": "KRW",
+      "trans_amt": 44500,
+      "balance_amt": 3251459,
+      "trans_memo": "롯데마트 서초"
+    },
+    {
+      "trans_dtime": "20250921165528",
+      "trans_no": "00000066",
+      "trans_type": "02",
+      "trans_class": "체크카드",
+      "currency_code": "KRW",
+      "trans_amt": 14000,
+      "balance_amt": 3295959,
+      "trans_memo": "GS25 역삼점"
+    },
+    {
+      "trans_dtime": "20250920171314",
+      "trans_no": "00000065",
+      "trans_type": "02",
+      "trans_class": "체크카드",
+      "currency_code": "KRW",
+      "trans_amt": 17000,
+      "balance_amt": 3309959,
+      "trans_memo": "올리브영 강남"
+    },
+    {
+      "trans_dtime": "20250919092403",
+      "trans_no": "00000064",
+      "trans_type": "02",
+      "trans_class": "체크카드",
+      "currency_code": "KRW",
+      "trans_amt": 13500,
+      "balance_amt": 3326959,
+      "trans_memo": "세븐일레븐 삼성"
+    },
+    {
+      "trans_dtime": "20250918164749",
+      "trans_no": "00000063",
+      "trans_type": "02",
+      "trans_class": "체크카드",
+      "currency_code": "KRW",
+      "trans_amt": 26500,
+      "balance_amt": 3340459,
+      "trans_memo": "본죽 논현점"
+    },
+    {
+      "trans_dtime": "20250918110447",
+      "trans_no": "00000062",
+      "trans_type": "02",
+      "trans_class": "체크카드",
+      "currency_code": "KRW",
+      "trans_amt": 9500,
+      "balance_amt": 3366959,
+      "trans_memo": "김밥천국 역삼"
+    },
+    {
+      "trans_dtime": "20250917062000",
+      "trans_no": "00000061",
+      "trans_type": "02",
+      "trans_class": "자동이체",
+      "currency_code": "KRW",
+      "trans_amt": 94476,
+      "balance_amt": 3376459,
+      "trans_memo": "LGU+ 통신요금"
+    },
+    {
+      "trans_dtime": "20250916165307",
+      "trans_no": "00000060",
+      "trans_type": "02",
+      "trans_class": "체크카드",
+      "currency_code": "KRW",
+      "trans_amt": 17500,
+      "balance_amt": 3470935,
+      "trans_memo": "맘스터치 강남"
+    },
+    {
+      "trans_dtime": "20250916143435",
+      "trans_no": "00000059",
+      "trans_type": "02",
+      "trans_class": "체크카드",
+      "currency_code": "KRW",
+      "trans_amt": 6500,
+      "balance_amt": 3488435,
+      "trans_memo": "투썸플레이스 역삼"
+    },
+    {
+      "trans_dtime": "20250915134357",
+      "trans_no": "00000058",
+      "trans_type": "02",
+      "trans_class": "체크카드",
+      "currency_code": "KRW",
+      "trans_amt": 13000,
+      "balance_amt": 3494935,
+      "trans_memo": "본죽 논현점"
+    },
+    {
+      "trans_dtime": "20250915100337",
+      "trans_no": "00000057",
+      "trans_type": "02",
+      "trans_class": "체크카드",
+      "currency_code": "KRW",
+      "trans_amt": 26500,
+      "balance_amt": 3507935,
+      "trans_memo": "본죽 논현점"
+    },
+    {
+      "trans_dtime": "20250915061000",
+      "trans_no": "00000056",
+      "trans_type": "02",
+      "trans_class": "자동이체",
+      "currency_code": "KRW",
+      "trans_amt": 525000,
+      "balance_amt": 3534435,
+      "trans_memo": "KB국민은행 전세자금대출이자"
+    },
+    {
+      "trans_dtime": "20250914212437",
+      "trans_no": "00000055",
+      "trans_type": "02",
+      "trans_class": "체크카드",
+      "currency_code": "KRW",
+      "trans_amt": 54500,
+      "balance_amt": 4059435,
+      "trans_memo": "롯데마트 서초"
+    },
+    {
+      "trans_dtime": "20250914064000",
+      "trans_no": "00000054",
+      "trans_type": "02",
+      "trans_class": "자동이체",
+      "currency_code": "KRW",
+      "trans_amt": 1356597,
+      "balance_amt": 4113935,
+      "trans_memo": "현대카드 결제"
+    },
+    {
+      "trans_dtime": "20250911110859",
+      "trans_no": "00000053",
+      "trans_type": "02",
+      "trans_class": "체크카드",
+      "currency_code": "KRW",
+      "trans_amt": 43000,
+      "balance_amt": 5470532,
+      "trans_memo": "홈플러스 강남"
+    },
+    {
+      "trans_dtime": "20250910112339",
+      "trans_no": "00000052",
+      "trans_type": "02",
+      "trans_class": "체크카드",
+      "currency_code": "KRW",
+      "trans_amt": 56500,
+      "balance_amt": 5513532,
+      "trans_memo": "롯데마트 서초"
+    },
+    {
+      "trans_dtime": "20250910101512",
+      "trans_no": "00000051",
+      "trans_type": "02",
+      "trans_class": "체크카드",
+      "currency_code": "KRW",
+      "trans_amt": 32500,
+      "balance_amt": 5570032,
+      "trans_memo": "롯데마트 서초"
+    },
+    {
+      "trans_dtime": "20250910093000",
+      "trans_no": "00000050",
+      "trans_type": "03",
+      "trans_class": "인터넷뱅킹",
+      "currency_code": "KRW",
+      "trans_amt": 3132006,
+      "balance_amt": 5602532,
+      "trans_memo": "배우자 급여 이체"
+    },
+    {
+      "trans_dtime": "20250910062500",
+      "trans_no": "00000049",
+      "trans_type": "02",
+      "trans_class": "자동이체",
+      "currency_code": "KRW",
+      "trans_amt": 285000,
+      "balance_amt": 2470526,
+      "trans_memo": "한화생명 보험료"
+    },
+    {
+      "trans_dtime": "20250909201423",
+      "trans_no": "00000048",
+      "trans_type": "02",
+      "trans_class": "체크카드",
+      "currency_code": "KRW",
+      "trans_amt": 38500,
+      "balance_amt": 2755526,
+      "trans_memo": "올리브영 강남"
+    },
+    {
+      "trans_dtime": "20250909162720",
+      "trans_no": "00000047",
+      "trans_type": "02",
+      "trans_class": "체크카드",
+      "currency_code": "KRW",
+      "trans_amt": 47000,
+      "balance_amt": 2794026,
+      "trans_memo": "홈플러스 강남"
+    },
+    {
+      "trans_dtime": "20250908195145",
+      "trans_no": "00000046",
+      "trans_type": "02",
+      "trans_class": "체크카드",
+      "currency_code": "KRW",
+      "trans_amt": 48000,
+      "balance_amt": 2841026,
+      "trans_memo": "롯데마트 서초"
+    },
+    {
+      "trans_dtime": "20250907160122",
+      "trans_no": "00000045",
+      "trans_type": "02",
+      "trans_class": "체크카드",
+      "currency_code": "KRW",
+      "trans_amt": 73000,
+      "balance_amt": 2889026,
+      "trans_memo": "이마트 성수점"
+    },
+    {
+      "trans_dtime": "20250907125148",
+      "trans_no": "00000044",
+      "trans_type": "02",
+      "trans_class": "체크카드",
+      "currency_code": "KRW",
+      "trans_amt": 25500,
+      "balance_amt": 2962026,
+      "trans_memo": "올리브영 강남"
+    },
+    {
+      "trans_dtime": "20250907121210",
+      "trans_no": "00000043",
+      "trans_type": "02",
+      "trans_class": "체크카드",
+      "currency_code": "KRW",
+      "trans_amt": 73000,
+      "balance_amt": 2987526,
+      "trans_memo": "GS칼텍스 논현"
+    },
+    {
+      "trans_dtime": "20250907093342",
+      "trans_no": "00000042",
+      "trans_type": "02",
+      "trans_class": "체크카드",
+      "currency_code": "KRW",
+      "trans_amt": 27000,
+      "balance_amt": 3060526,
+      "trans_memo": "올리브영 강남"
+    },
+    {
+      "trans_dtime": "20250905063500",
+      "trans_no": "00000041",
+      "trans_type": "02",
+      "trans_class": "자동이체",
+      "currency_code": "KRW",
+      "trans_amt": 200000,
+      "balance_amt": 3087526,
+      "trans_memo": "주택청약종합저축 이체"
+    },
+    {
+      "trans_dtime": "20250905063000",
+      "trans_no": "00000040",
+      "trans_type": "02",
+      "trans_class": "자동이체",
+      "currency_code": "KRW",
+      "trans_amt": 1200000,
+      "balance_amt": 3287526,
+      "trans_memo": "신혼부부 우대적금 이체"
+    },
+    {
+      "trans_dtime": "20250828151702",
+      "trans_no": "00000039",
+      "trans_type": "02",
+      "trans_class": "체크카드",
+      "currency_code": "KRW",
+      "trans_amt": 56000,
+      "balance_amt": 4487526,
+      "trans_memo": "GS칼텍스 논현"
+    },
+    {
+      "trans_dtime": "20250828150257",
+      "trans_no": "00000038",
+      "trans_type": "02",
+      "trans_class": "체크카드",
+      "currency_code": "KRW",
+      "trans_amt": 13000,
+      "balance_amt": 4543526,
+      "trans_memo": "투썸플레이스 역삼"
+    },
+    {
+      "trans_dtime": "20250826110535",
+      "trans_no": "00000037",
+      "trans_type": "02",
+      "trans_class": "체크카드",
+      "currency_code": "KRW",
+      "trans_amt": 15500,
+      "balance_amt": 4556526,
+      "trans_memo": "본죽 논현점"
+    },
+    {
+      "trans_dtime": "20250825090000",
+      "trans_no": "00000036",
+      "trans_type": "03",
+      "trans_class": "인터넷뱅킹",
+      "currency_code": "KRW",
+      "trans_amt": 3804762,
+      "balance_amt": 4572026,
+      "trans_memo": "(주)디자인랩 급여"
+    },
+    {
+      "trans_dtime": "20250825061500",
+      "trans_no": "00000035",
+      "trans_type": "02",
+      "trans_class": "자동이체",
+      "currency_code": "KRW",
+      "trans_amt": 188450,
+      "balance_amt": 767264,
+      "trans_memo": "관리비"
+    },
+    {
+      "trans_dtime": "20250824195345",
+      "trans_no": "00000034",
+      "trans_type": "02",
+      "trans_class": "체크카드",
+      "currency_code": "KRW",
+      "trans_amt": 5500,
+      "balance_amt": 955714,
+      "trans_memo": "투썸플레이스 역삼"
+    },
+    {
+      "trans_dtime": "20250824170801",
+      "trans_no": "00000033",
+      "trans_type": "02",
+      "trans_class": "체크카드",
+      "currency_code": "KRW",
+      "trans_amt": 12500,
+      "balance_amt": 961214,
+      "trans_memo": "투썸플레이스 역삼"
+    },
+    {
+      "trans_dtime": "20250822200513",
+      "trans_no": "00000032",
+      "trans_type": "02",
+      "trans_class": "체크카드",
+      "currency_code": "KRW",
+      "trans_amt": 14500,
+      "balance_amt": 973714,
+      "trans_memo": "맘스터치 강남"
+    },
+    {
+      "trans_dtime": "20250821200602",
+      "trans_no": "00000031",
+      "trans_type": "02",
+      "trans_class": "체크카드",
+      "currency_code": "KRW",
+      "trans_amt": 69000,
+      "balance_amt": 988214,
+      "trans_memo": "GS칼텍스 논현"
+    },
+    {
+      "trans_dtime": "20250821112715",
+      "trans_no": "00000030",
+      "trans_type": "02",
+      "trans_class": "체크카드",
+      "currency_code": "KRW",
+      "trans_amt": 69500,
+      "balance_amt": 1057214,
+      "trans_memo": "SK주유소 삼성"
+    },
+    {
+      "trans_dtime": "20250819132226",
+      "trans_no": "00000029",
+      "trans_type": "02",
+      "trans_class": "체크카드",
+      "currency_code": "KRW",
+      "trans_amt": 60000,
+      "balance_amt": 1126714,
+      "trans_memo": "SK주유소 삼성"
+    },
+    {
+      "trans_dtime": "20250819130005",
+      "trans_no": "00000028",
+      "trans_type": "02",
+      "trans_class": "체크카드",
+      "currency_code": "KRW",
+      "trans_amt": 115000,
+      "balance_amt": 1186714,
+      "trans_memo": "이마트 성수점"
+    },
+    {
+      "trans_dtime": "20250818135622",
+      "trans_no": "00000027",
+      "trans_type": "02",
+      "trans_class": "체크카드",
+      "currency_code": "KRW",
+      "trans_amt": 44000,
+      "balance_amt": 1301714,
+      "trans_memo": "이마트 성수점"
+    },
+    {
+      "trans_dtime": "20250817062000",
+      "trans_no": "00000026",
+      "trans_type": "02",
+      "trans_class": "자동이체",
+      "currency_code": "KRW",
+      "trans_amt": 92658,
+      "balance_amt": 1345714,
+      "trans_memo": "LGU+ 통신요금"
+    },
+    {
+      "trans_dtime": "20250815201522",
+      "trans_no": "00000025",
+      "trans_type": "02",
+      "trans_class": "체크카드",
+      "currency_code": "KRW",
+      "trans_amt": 48500,
+      "balance_amt": 1438372,
+      "trans_memo": "GS칼텍스 논현"
+    },
+    {
+      "trans_dtime": "20250815061000",
+      "trans_no": "00000024",
+      "trans_type": "02",
+      "trans_class": "자동이체",
+      "currency_code": "KRW",
+      "trans_amt": 525000,
+      "balance_amt": 1486872,
+      "trans_memo": "KB국민은행 전세자금대출이자"
+    },
+    {
+      "trans_dtime": "20250814064000",
+      "trans_no": "00000023",
+      "trans_type": "02",
+      "trans_class": "자동이체",
+      "currency_code": "KRW",
+      "trans_amt": 1202224,
+      "balance_amt": 2011872,
+      "trans_memo": "현대카드 결제"
+    },
+    {
+      "trans_dtime": "20250813172006",
+      "trans_no": "00000022",
+      "trans_type": "02",
+      "trans_class": "체크카드",
+      "currency_code": "KRW",
+      "trans_amt": 16000,
+      "balance_amt": 3214096,
+      "trans_memo": "김밥천국 역삼"
+    },
+    {
+      "trans_dtime": "20250813133008",
+      "trans_no": "00000021",
+      "trans_type": "02",
+      "trans_class": "체크카드",
+      "currency_code": "KRW",
+      "trans_amt": 72000,
+      "balance_amt": 3230096,
+      "trans_memo": "GS칼텍스 논현"
+    },
+    {
+      "trans_dtime": "20250813082312",
+      "trans_no": "00000020",
+      "trans_type": "02",
+      "trans_class": "체크카드",
+      "currency_code": "KRW",
+      "trans_amt": 13000,
+      "balance_amt": 3302096,
+      "trans_memo": "투썸플레이스 역삼"
+    },
+    {
+      "trans_dtime": "20250812111918",
+      "trans_no": "00000019",
+      "trans_type": "02",
+      "trans_class": "체크카드",
+      "currency_code": "KRW",
+      "trans_amt": 13000,
+      "balance_amt": 3315096,
+      "trans_memo": "맘스터치 강남"
+    },
+    {
+      "trans_dtime": "20250812105614",
+      "trans_no": "00000018",
+      "trans_type": "02",
+      "trans_class": "체크카드",
+      "currency_code": "KRW",
+      "trans_amt": 14000,
+      "balance_amt": 3328096,
+      "trans_memo": "CU 논현점"
+    },
+    {
+      "trans_dtime": "20250810184156",
+      "trans_no": "00000017",
+      "trans_type": "02",
+      "trans_class": "체크카드",
+      "currency_code": "KRW",
+      "trans_amt": 20000,
+      "balance_amt": 3342096,
+      "trans_memo": "올리브영 강남"
+    },
+    {
+      "trans_dtime": "20250810093000",
+      "trans_no": "00000016",
+      "trans_type": "03",
+      "trans_class": "인터넷뱅킹",
+      "currency_code": "KRW",
+      "trans_amt": 3055567,
+      "balance_amt": 3362096,
+      "trans_memo": "배우자 급여 이체"
+    },
+    {
+      "trans_dtime": "20250810062500",
+      "trans_no": "00000015",
+      "trans_type": "02",
+      "trans_class": "자동이체",
+      "currency_code": "KRW",
+      "trans_amt": 285000,
+      "balance_amt": 306529,
+      "trans_memo": "한화생명 보험료"
+    },
+    {
+      "trans_dtime": "20250808204114",
+      "trans_no": "00000014",
+      "trans_type": "02",
+      "trans_class": "체크카드",
+      "currency_code": "KRW",
+      "trans_amt": 12500,
+      "balance_amt": 591529,
+      "trans_memo": "투썸플레이스 역삼"
+    },
+    {
+      "trans_dtime": "20250808201628",
+      "trans_no": "00000013",
+      "trans_type": "02",
+      "trans_class": "체크카드",
+      "currency_code": "KRW",
+      "trans_amt": 22000,
+      "balance_amt": 604029,
+      "trans_memo": "김밥천국 역삼"
+    },
+    {
+      "trans_dtime": "20250807202425",
+      "trans_no": "00000012",
+      "trans_type": "02",
+      "trans_class": "체크카드",
+      "currency_code": "KRW",
+      "trans_amt": 25500,
+      "balance_amt": 626029,
+      "trans_memo": "본죽 논현점"
+    },
+    {
+      "trans_dtime": "20250807175110",
+      "trans_no": "00000011",
+      "trans_type": "02",
+      "trans_class": "체크카드",
+      "currency_code": "KRW",
+      "trans_amt": 13000,
+      "balance_amt": 651529,
+      "trans_memo": "CU 논현점"
+    },
+    {
+      "trans_dtime": "20250807113140",
+      "trans_no": "00000010",
+      "trans_type": "02",
+      "trans_class": "체크카드",
+      "currency_code": "KRW",
+      "trans_amt": 44500,
+      "balance_amt": 664529,
+      "trans_memo": "롯데마트 서초"
+    },
+    {
+      "trans_dtime": "20250806183529",
+      "trans_no": "00000009",
+      "trans_type": "02",
+      "trans_class": "체크카드",
+      "currency_code": "KRW",
+      "trans_amt": 11000,
+      "balance_amt": 709029,
+      "trans_memo": "김밥천국 역삼"
+    },
+    {
+      "trans_dtime": "20250806125538",
+      "trans_no": "00000008",
+      "trans_type": "02",
+      "trans_class": "체크카드",
+      "currency_code": "KRW",
+      "trans_amt": 43500,
+      "balance_amt": 720029,
+      "trans_memo": "올리브영 강남"
+    },
+    {
+      "trans_dtime": "20250806091429",
+      "trans_no": "00000007",
+      "trans_type": "02",
+      "trans_class": "체크카드",
+      "currency_code": "KRW",
+      "trans_amt": 24000,
+      "balance_amt": 763529,
+      "trans_memo": "본죽 논현점"
+    },
+    {
+      "trans_dtime": "20250805063500",
+      "trans_no": "00000006",
+      "trans_type": "02",
+      "trans_class": "자동이체",
+      "currency_code": "KRW",
+      "trans_amt": 200000,
+      "balance_amt": 787529,
+      "trans_memo": "주택청약종합저축 이체"
+    },
+    {
+      "trans_dtime": "20250805063000",
+      "trans_no": "00000005",
+      "trans_type": "02",
+      "trans_class": "자동이체",
+      "currency_code": "KRW",
+      "trans_amt": 1200000,
+      "balance_amt": 987529,
+      "trans_memo": "신혼부부 우대적금 이체"
+    },
+    {
+      "trans_dtime": "20250802204155",
+      "trans_no": "00000004",
+      "trans_type": "02",
+      "trans_class": "체크카드",
+      "currency_code": "KRW",
+      "trans_amt": 4000,
+      "balance_amt": 2187529,
+      "trans_memo": "GS25 역삼점"
+    },
+    {
+      "trans_dtime": "20250802161648",
+      "trans_no": "00000003",
+      "trans_type": "02",
+      "trans_class": "체크카드",
+      "currency_code": "KRW",
+      "trans_amt": 11500,
+      "balance_amt": 2191529,
+      "trans_memo": "투썸플레이스 역삼"
+    },
+    {
+      "trans_dtime": "20250802081122",
+      "trans_no": "00000002",
+      "trans_type": "02",
+      "trans_class": "체크카드",
+      "currency_code": "KRW",
+      "trans_amt": 12000,
+      "balance_amt": 2203029,
+      "trans_memo": "투썸플레이스 역삼"
+    },
+    {
+      "trans_dtime": "20250801101358",
+      "trans_no": "00000001",
+      "trans_type": "02",
+      "trans_class": "체크카드",
+      "currency_code": "KRW",
+      "trans_amt": 50500,
+      "balance_amt": 2215029,
+      "trans_memo": "홈플러스 강남"
+    }
+  ]
+}

@@ -1,0 +1,22 @@
+{
+  "birth_year": 1995,
+  "marital_status": "single",
+  "household_size": 1,
+  "is_first_home_buyer": true,
+  "owns_property": false,
+  "lease_deposit": 30000000,
+  "lease_end_date": "20270630",
+  "target_region": "11740",
+  "target_price": 620000000,
+  "target_move_in_ym": "203009",
+  "annual_income_verified": 61000000,
+  "spouse_annual_income": 0,
+  "planned_expenses": [
+    {
+      "name": "결혼 자금",
+      "amount": 40000000,
+      "target_ym": "202805"
+    }
+  ],
+  "risk_preference": "speed"
+}

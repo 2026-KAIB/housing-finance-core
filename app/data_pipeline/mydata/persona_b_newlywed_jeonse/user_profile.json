@@ -1,0 +1,22 @@
+{
+  "birth_year": 1993,
+  "marital_status": "married",
+  "household_size": 2,
+  "is_first_home_buyer": true,
+  "owns_property": false,
+  "lease_deposit": 320000000,
+  "lease_end_date": "20270228",
+  "target_region": "41135",
+  "target_price": 780000000,
+  "target_move_in_ym": "202903",
+  "annual_income_verified": 48000000,
+  "spouse_annual_income": 41000000,
+  "planned_expenses": [
+    {
+      "name": "출산·육아 준비",
+      "amount": 15000000,
+      "target_ym": "202709"
+    }
+  ],
+  "risk_preference": "stability"
+}

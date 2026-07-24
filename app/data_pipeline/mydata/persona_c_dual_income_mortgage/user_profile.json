@@ -1,0 +1,22 @@
+{
+  "birth_year": 1990,
+  "marital_status": "married",
+  "household_size": 3,
+  "is_first_home_buyer": false,
+  "owns_property": true,
+  "lease_deposit": 0,
+  "lease_end_date": null,
+  "target_region": "11680",
+  "target_price": 1100000000,
+  "target_move_in_ym": "202903",
+  "annual_income_verified": 58000000,
+  "spouse_annual_income": 46000000,
+  "planned_expenses": [
+    {
+      "name": "자동차 교체",
+      "amount": 25000000,
+      "target_ym": "202803"
+    }
+  ],
+  "risk_preference": "stability"
+}

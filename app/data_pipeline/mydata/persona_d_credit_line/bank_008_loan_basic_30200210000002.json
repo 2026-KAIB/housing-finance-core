@@ -1,0 +1,11 @@
+{
+  "rsp_code": "00000",
+  "rsp_msg": "정상",
+  "search_timestamp": "20260724000005",
+  "issue_date": "20230920",
+  "exp_date": "20270920",
+  "last_offered_rate": 0.061,
+  "repay_method": "08",
+  "repay_org_code": "00040001",
+  "repay_account_num": "30200210000001"
+}

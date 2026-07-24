@@ -1,0 +1,43 @@
+{
+  "rsp_code": "00000",
+  "rsp_msg": "정상",
+  "search_timestamp": "20260724000000",
+  "reg_date": "20190815",
+  "account_cnt": 4,
+  "account_list": [
+    {
+      "account_num": "20230815000001",
+      "is_consent": true,
+      "prod_name": "KB국민 신혼부부 우대통장",
+      "account_type": "1001",
+      "account_status": "01",
+      "is_foreign_deposit": false,
+      "is_minus": false
+    },
+    {
+      "account_num": "20230815000002",
+      "is_consent": true,
+      "prod_name": "KB 신혼부부 우대적금",
+      "account_type": "1003",
+      "account_status": "01",
+      "is_foreign_deposit": false,
+      "is_minus": false
+    },
+    {
+      "account_num": "20230815000003",
+      "is_consent": true,
+      "prod_name": "주택청약종합저축",
+      "account_type": "1999",
+      "account_status": "01",
+      "is_foreign_deposit": false,
+      "is_minus": false
+    },
+    {
+      "account_num": "20230815000004",
+      "is_consent": true,
+      "prod_name": "KB 전세자금대출 (버팀목)",
+      "account_type": "3170",
+      "account_status": "01"
+    }
+  ]
+}

@@ -1,0 +1,16 @@
+{
+  "birth_year": 1999,
+  "marital_status": "single",
+  "household_size": 1,
+  "is_first_home_buyer": true,
+  "owns_property": false,
+  "lease_deposit": 10000000,
+  "lease_end_date": "20270228",
+  "target_region": "11350",
+  "target_price": 450000000,
+  "target_move_in_ym": "203003",
+  "annual_income_verified": 37000000,
+  "spouse_annual_income": 0,
+  "planned_expenses": [],
+  "risk_preference": "stability"
+}

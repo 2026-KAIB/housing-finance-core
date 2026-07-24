@@ -1,0 +1,13 @@
+{
+  "rsp_code": "00000",
+  "rsp_msg": "정상",
+  "search_timestamp": "20260724000003",
+  "basic_cnt": 1,
+  "basic_list": [
+    {
+      "currency_code": "KRW",
+      "saving_method": "04",
+      "issue_date": "20220401"
+    }
+  ]
+}

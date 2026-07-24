@@ -123,3 +123,19 @@ def test_default_registry_contains_friends_merged_packs() -> None:
     )
 
     assert result.forwardable[0].product.product_name == "KB Star 정기예금"
+
+
+def test_default_registry_contains_new_first_and_fourth_packs() -> None:
+    result = route_product_candidates(
+        [
+            ProductCandidate(product_name="KB골든라이프연금예금"),
+            ProductCandidate(product_name="일반정기예금"),
+        ],
+        user_facts={"deposit_amount": 1_000_000, "applicant_type": "individual"},
+        as_of=AS_OF,
+    )
+
+    assert [item.product.product_name for item in result.forwardable] == [
+        "KB골든라이프연금예금",
+        "일반정기예금",
+    ]

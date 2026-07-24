@@ -1,4 +1,10 @@
 from app.rule_engine.product_packs.engine import evaluate_product
+from app.rule_engine.product_packs.handoff import (
+    ProductCandidate,
+    ProductEngineHandoff,
+    ProductRoutingResult,
+    route_product_candidates,
+)
 from app.rule_engine.product_packs.models import (
     EvaluationStatus,
     ProductCategory,
@@ -31,8 +37,11 @@ __all__ = [
     "EvaluationStatus",
     "PredicateRule",
     "ProductCategory",
+    "ProductCandidate",
+    "ProductEngineHandoff",
     "ProductEvaluationRequest",
     "ProductEvaluationResult",
+    "ProductRoutingResult",
     "ProductRuleDecision",
     "ProductRulePack",
     "ProductRulePackAmbiguousError",
@@ -40,4 +49,5 @@ __all__ = [
     "ProductRulePackRegistry",
     "evaluate_product",
     "normalize_product_name",
+    "route_product_candidates",
 ]

@@ -1,5 +1,7 @@
 from decimal import Decimal
 
+import pytest
+
 from app.engines.loan.formulas import buffer, dsr, loan_max, pmt
 
 TOLERANCE = Decimal("0.001")
@@ -140,3 +142,71 @@ def test_loan_max_never_exceeds_the_lowest_of_the_amount_limits() -> None:
     result = loan_max(**_loan_max_kwargs(dti_limit_amount=Decimal("50000000")))
 
     assert result <= Decimal("50000000")
+
+
+def test_pmt_rejects_zero_months_instead_of_dividing_by_zero() -> None:
+    with pytest.raises(ValueError, match="months"):
+        pmt(Decimal("100000000"), Decimal("0.035"), 0)
+
+
+def test_pmt_rejects_negative_months() -> None:
+    with pytest.raises(ValueError, match="months"):
+        pmt(Decimal("100000000"), Decimal("0.035"), -12)
+
+
+def test_pmt_rejects_negative_principal() -> None:
+    with pytest.raises(ValueError, match="principal"):
+        pmt(Decimal("-1"), Decimal("0.035"), 360)
+
+
+def test_pmt_rejects_negative_rate() -> None:
+    with pytest.raises(ValueError, match="annual_rate"):
+        pmt(Decimal("100000000"), Decimal("-0.01"), 360)
+
+
+def test_dsr_rejects_zero_annual_income_instead_of_dividing_by_zero() -> None:
+    with pytest.raises(ValueError, match="annual_income"):
+        dsr(
+            existing_annual_debt_service=Decimal("0"),
+            new_annual_debt_service=Decimal("12000000"),
+            annual_income=Decimal("0"),
+        )
+
+
+def test_dsr_rejects_negative_debt_service() -> None:
+    with pytest.raises(ValueError, match="new_annual_debt_service"):
+        dsr(
+            existing_annual_debt_service=Decimal("0"),
+            new_annual_debt_service=Decimal("-1"),
+            annual_income=Decimal("60000000"),
+        )
+
+
+def test_buffer_rejects_negative_expense() -> None:
+    with pytest.raises(ValueError, match="monthly_essential_expense"):
+        buffer(Decimal("-1"))
+
+
+def test_loan_max_rejects_zero_epsilon() -> None:
+    with pytest.raises(ValueError, match="epsilon"):
+        loan_max(**_loan_max_kwargs(epsilon=Decimal("0")))
+
+
+def test_loan_max_rejects_negative_epsilon_instead_of_looping_forever() -> None:
+    with pytest.raises(ValueError, match="epsilon"):
+        loan_max(**_loan_max_kwargs(epsilon=Decimal("-1")))
+
+
+def test_loan_max_rejects_zero_annual_income() -> None:
+    with pytest.raises(ValueError, match="annual_income"):
+        loan_max(**_loan_max_kwargs(annual_income=Decimal("0")))
+
+
+def test_loan_max_rejects_zero_months() -> None:
+    with pytest.raises(ValueError, match="months"):
+        loan_max(**_loan_max_kwargs(months=0))
+
+
+def test_loan_max_rejects_negative_amount_limit() -> None:
+    with pytest.raises(ValueError, match="dti_limit_amount"):
+        loan_max(**_loan_max_kwargs(dti_limit_amount=Decimal("-1")))

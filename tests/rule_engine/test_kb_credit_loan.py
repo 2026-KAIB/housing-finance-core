@@ -54,3 +54,19 @@ def test_overdraft_type_capped_at_150m_even_with_short_employment() -> None:
     )
 
     assert result.eligible is True
+
+
+def test_amount_between_100m_and_350m_without_overdraft_info_is_unknown() -> None:
+    result = evaluate_product(
+        _request(is_overdraft_type=None, requested_amount=Decimal("200000000")), REGISTRY
+    )
+
+    assert result.status is EvaluationStatus.UNKNOWN
+
+
+def test_amount_at_100m_passes_even_without_overdraft_info() -> None:
+    result = evaluate_product(
+        _request(is_overdraft_type=None, requested_amount=Decimal("100000000")), REGISTRY
+    )
+
+    assert result.eligible is True

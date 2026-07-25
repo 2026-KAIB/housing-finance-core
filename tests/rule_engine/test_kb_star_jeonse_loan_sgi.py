@@ -61,3 +61,29 @@ def test_one_house_owner_non_regulated_region_capped_at_300m() -> None:
     )
 
     assert result.eligible is True
+
+
+def test_one_house_owner_amount_between_200m_and_300m_without_region_info_is_unknown() -> None:
+    result = evaluate_product(
+        _request(
+            owned_house_count=1,
+            requested_amount=Decimal("250000000"),
+            is_regulated_region=None,
+        ),
+        REGISTRY,
+    )
+
+    assert result.status is EvaluationStatus.UNKNOWN
+
+
+def test_one_house_owner_amount_at_200m_passes_even_without_region_info() -> None:
+    result = evaluate_product(
+        _request(
+            owned_house_count=1,
+            requested_amount=Decimal("200000000"),
+            is_regulated_region=None,
+        ),
+        REGISTRY,
+    )
+
+    assert result.eligible is True

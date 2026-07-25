@@ -29,14 +29,22 @@ def _lease_deposit_within_region_cap(facts: Mapping[str, object]) -> bool | None
 
 
 def _loan_amount_within_tier(facts: Mapping[str, object]) -> bool | None:
+    # 200M 이내면 신혼·다둥이 여부와 무관하게 통과, 222M 초과면 무조건 탈락이다.
+    # 그 사이(200M~222M)는 신혼·다둥이가구가 아닐 때만 통과이므로 결측 시
+    # UNKNOWN을 반환한다(추측 금지).
     requested_amount = facts.get("requested_amount")
     if requested_amount is None:
         return None
     if requested_amount < Decimal("5000000"):
         return False
-    is_newlywed_or_multi_child = bool(facts.get("is_newlywed_or_multi_child"))
-    limit = Decimal("200000000") if is_newlywed_or_multi_child else Decimal("222000000")
-    return requested_amount <= limit
+    if requested_amount <= Decimal("200000000"):
+        return True
+    if requested_amount > Decimal("222000000"):
+        return False
+    is_newlywed_or_multi_child = facts.get("is_newlywed_or_multi_child")
+    if is_newlywed_or_multi_child is None:
+        return None
+    return not is_newlywed_or_multi_child
 
 
 KB_STAR_JEONSE_LOAN_HF_PACK = ProductRulePack(

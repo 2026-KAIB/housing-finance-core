@@ -62,3 +62,21 @@ def test_underage_applicant_fails() -> None:
     result = evaluate_product(_request(age=18), REGISTRY)
 
     assert result.status is EvaluationStatus.FAIL
+
+
+def test_amount_between_200m_and_222m_without_newlywed_info_is_unknown() -> None:
+    result = evaluate_product(
+        _request(requested_amount=Decimal("210000000"), is_newlywed_or_multi_child=None),
+        REGISTRY,
+    )
+
+    assert result.status is EvaluationStatus.UNKNOWN
+
+
+def test_amount_at_200m_passes_even_without_newlywed_info() -> None:
+    result = evaluate_product(
+        _request(requested_amount=Decimal("200000000"), is_newlywed_or_multi_child=None),
+        REGISTRY,
+    )
+
+    assert result.eligible is True

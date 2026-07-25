@@ -68,3 +68,32 @@ def test_loan_amount_within_first_home_buyer_limit_passes() -> None:
     )
 
     assert result.eligible is True
+
+
+def test_income_between_base_and_top_tier_without_household_info_is_unknown() -> None:
+    result = evaluate_product(
+        _request(combined_annual_income=Decimal("80000000"), child_count=None), REGISTRY
+    )
+
+    assert result.status is EvaluationStatus.UNKNOWN
+
+
+def test_income_at_base_tier_passes_even_without_household_info() -> None:
+    result = evaluate_product(
+        _request(combined_annual_income=Decimal("70000000"), child_count=None), REGISTRY
+    )
+
+    assert result.eligible is True
+
+
+def test_loan_amount_between_360m_and_400m_without_category_info_is_unknown() -> None:
+    result = evaluate_product(
+        _request(
+            requested_amount=Decimal("380000000"),
+            is_first_home_buyer=None,
+            is_multi_child_or_jeonse_fraud_victim=None,
+        ),
+        REGISTRY,
+    )
+
+    assert result.status is EvaluationStatus.UNKNOWN

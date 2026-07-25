@@ -26,12 +26,20 @@ def _loan_amount_within_tier(facts: Mapping[str, object]) -> bool | None:
         return None
     if requested_amount < Decimal("5000000"):
         return False
-    if owned_house_count >= 1:
-        is_regulated_region = bool(facts.get("is_regulated_region"))
-        limit = Decimal("200000000") if is_regulated_region else Decimal("300000000")
-    else:
-        limit = Decimal("500000000")
-    return requested_amount <= limit
+    if owned_house_count < 1:
+        return requested_amount <= Decimal("500000000")
+
+    # 1주택자: 200M 이내면 규제지역 여부와 무관하게 통과, 300M 초과면 무조건
+    # 탈락이다. 그 사이는 규제지역 여부를 알아야 판정할 수 있으므로 결측 시
+    # UNKNOWN을 반환한다(추측 금지).
+    if requested_amount <= Decimal("200000000"):
+        return True
+    if requested_amount > Decimal("300000000"):
+        return False
+    is_regulated_region = facts.get("is_regulated_region")
+    if is_regulated_region is None:
+        return None
+    return not is_regulated_region
 
 
 KB_STAR_JEONSE_LOAN_SGI_PACK = ProductRulePack(

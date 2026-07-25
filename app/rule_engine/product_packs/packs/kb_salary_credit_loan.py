@@ -26,11 +26,20 @@ def _not_excluded_applicant(facts: Mapping[str, object]) -> bool | None:
 
 
 def _loan_amount_within_tier(facts: Mapping[str, object]) -> bool | None:
+    # 종합통장자동대출 한도(1억원) 이내면 항상 통과, 무보증 한도(1.5억원) 초과면
+    # 항상 탈락이다. 그 사이는 종합통장자동대출 여부를 알아야 판정할 수 있으므로
+    # 결측 시 UNKNOWN을 반환한다(추측 금지).
     requested_amount = facts.get("requested_amount")
     if requested_amount is None:
         return None
-    limit = Decimal("100000000") if facts.get("is_overdraft_type") else Decimal("150000000")
-    return requested_amount <= limit
+    if requested_amount <= Decimal("100000000"):
+        return True
+    if requested_amount > Decimal("150000000"):
+        return False
+    is_overdraft_type = facts.get("is_overdraft_type")
+    if is_overdraft_type is None:
+        return None
+    return not is_overdraft_type
 
 
 KB_SALARY_CREDIT_LOAN_PACK = ProductRulePack(

@@ -1,8 +1,19 @@
 from collections.abc import Mapping
 from datetime import date
 from decimal import Decimal
+from typing import Literal
 
 from app.engines.loan.formulas import pmt
+
+# DSR 산정용 만기일시상환("01") 대출 목적. 마이데이터 은행-008/009 원본에는
+# "대출 목적" 필드가 없으므로 호출자가 명시적으로 넘겨야 한다(추측 금지).
+LoanCategory = Literal["jeonse", "credit", "mortgage"]
+
+# 신용대출 일시상환의 DSR 산정만기 = 5년(60개월) 분할상환 환산.
+# 웹서치로 여러 출처에서 일관되게 확인된 값 (2026-07-26 기준, 1차 규정 원문은
+# 미확보 — 은행연합회 "여신심사 선진화를 위한 모범규준" 원문 확인 전까지는
+# 잠정치로 취급할 것).
+_CREDIT_LOAN_DSR_CONVERSION_MONTHS = 60
 
 # 마이데이터 은행-008(대출 기본)·은행-009(대출 상세) 원본에서 "기존 대출의 월
 # 상환액"을 계산한다. DSR 분자(§13.2/부록 A-12)는 기존+신규 대출을 모두 포함
@@ -95,3 +106,49 @@ def existing_loan_monthly_payment(
     raise UnsupportedRepayMethodError(
         f"지원하지 않는 상환방식입니다: {repay_method!r} (mydata_design.md §8.2 MVP 범위 밖)"
     )
+
+
+def existing_loan_dsr_monthly_payment(
+    loan_basic: Mapping[str, object],
+    loan_detail: Mapping[str, object],
+    as_of: date,
+    loan_category: LoanCategory,
+) -> Decimal:
+    """DSR 분자(§13.2/부록 A-12)에 반영할 기존 대출의 월 상환액.
+
+    `existing_loan_monthly_payment`(실제 현금흐름)와 값이 갈리는 지점은
+    상환방식이 "01"(만기일시상환)일 때뿐이다 — DSR은 실제 이자만 내는 대출도
+    분할상환 가정으로 환산해 반영하는데, 그 환산 방식이 대출 목적별로 다르다:
+
+    - "jeonse"(전세자금대출): 실제 이자상환액만 반영(원금 미반영) — 실제
+      현금흐름과 동일한 값. 여러 출처에서 일관되게 확인됨.
+    - "credit"(신용대출): 5년(60개월) 분할상환으로 환산한 원리금균등 상환액
+      (`_CREDIT_LOAN_DSR_CONVERSION_MONTHS`). 여러 출처에서 일관되게 확인됨.
+    - "mortgage"(주택담보대출): 산정만기가 "10년 고정"이라는 출처와 "잔존만기"
+      라는 출처가 상충해 공식 근거를 확정하지 못했다. `UnsupportedRepayMethodError`
+      를 발생시킨다 — 팀이 1차 규정(은행연합회 모범규준 등)으로 확인한 뒤 구현할 것.
+
+    "02"/"04"/"05"(분할상환)는 실제 상환액이 곧 DSR 반영액이므로
+    `existing_loan_monthly_payment`와 동일한 값을 그대로 반환한다.
+    "08"(한도거래/마이너스통장)은 산정만기의 공식 근거를 확정하지 못해 계속
+    `UnsupportedRepayMethodError`를 발생시킨다.
+    """
+    repay_method = str(loan_basic["repay_method"])
+
+    if repay_method == "01":
+        balance_amt = Decimal(str(loan_detail["balance_amt"]))
+        annual_rate = Decimal(str(loan_basic["last_offered_rate"]))
+
+        if loan_category == "jeonse":
+            return balance_amt * annual_rate / Decimal(12)
+
+        if loan_category == "credit":
+            return pmt(balance_amt, annual_rate, _CREDIT_LOAN_DSR_CONVERSION_MONTHS)
+
+        raise UnsupportedRepayMethodError(
+            "주택담보대출 만기일시상환의 DSR 산정만기는 '10년 고정'과 '잔존만기' "
+            "설명이 출처마다 상충해 공식 근거를 확정하지 못했습니다. "
+            "은행연합회 모범규준 등 1차 출처로 확인 후 구현하세요."
+        )
+
+    return existing_loan_monthly_payment(loan_basic, loan_detail, as_of)

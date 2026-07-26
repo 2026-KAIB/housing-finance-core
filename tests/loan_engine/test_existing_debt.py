@@ -5,6 +5,7 @@ import pytest
 
 from app.engines.loan.existing_debt import (
     UnsupportedRepayMethodError,
+    existing_loan_dsr_monthly_payment,
     existing_loan_monthly_payment,
 )
 from app.engines.loan.formulas import pmt
@@ -129,3 +130,80 @@ def test_unrecognized_repay_method_is_unsupported() -> None:
 
     with pytest.raises(UnsupportedRepayMethodError, match="12"):
         existing_loan_monthly_payment(loan_basic, loan_detail, AS_OF)
+
+
+def test_dsr_jeonse_bullet_loan_is_interest_only() -> None:
+    # 전세자금대출은 만기일시상환이라도 DSR에 이자상환액만 반영한다(원금 미반영).
+    # 실제 현금흐름과 동일한 값 — 여러 출처에서 일관되게 확인됨.
+    loan_basic = {
+        "issue_date": "20250101",
+        "exp_date": "20270101",
+        "last_offered_rate": 0.05,
+        "repay_method": "01",
+    }
+    loan_detail = {"balance_amt": 100000000, "loan_principal": 100000000}
+
+    result = existing_loan_dsr_monthly_payment(loan_basic, loan_detail, AS_OF, "jeonse")
+
+    assert result == Decimal("100000000") * Decimal("0.05") / Decimal(12)
+
+
+def test_dsr_credit_bullet_loan_uses_5_year_conversion() -> None:
+    # 신용대출 일시상환은 DSR 산정 시 5년(60개월) 분할상환으로 환산한다.
+    loan_basic = {
+        "issue_date": "20250101",
+        "exp_date": "20270101",
+        "last_offered_rate": 0.05,
+        "repay_method": "01",
+    }
+    loan_detail = {"balance_amt": 100000000, "loan_principal": 100000000}
+
+    result = existing_loan_dsr_monthly_payment(loan_basic, loan_detail, AS_OF, "credit")
+
+    assert result == pmt(Decimal("100000000"), Decimal("0.05"), 60)
+    assert result != Decimal("100000000") * Decimal("0.05") / Decimal(12)
+
+
+def test_dsr_mortgage_bullet_loan_is_unsupported() -> None:
+    # 주담대 만기일시상환의 DSR 산정만기는 출처마다 상충(10년 고정 vs 잔존만기)
+    # 해 공식 근거를 확정하지 못했으므로 명시적으로 막아둔다.
+    loan_basic = {
+        "issue_date": "20250101",
+        "exp_date": "20270101",
+        "last_offered_rate": 0.05,
+        "repay_method": "01",
+    }
+    loan_detail = {"balance_amt": 100000000, "loan_principal": 100000000}
+
+    with pytest.raises(UnsupportedRepayMethodError, match="주택담보대출"):
+        existing_loan_dsr_monthly_payment(loan_basic, loan_detail, AS_OF, "mortgage")
+
+
+def test_dsr_credit_line_is_still_unsupported() -> None:
+    loan_basic = {
+        "issue_date": "20250101",
+        "exp_date": "20260101",
+        "last_offered_rate": 0.07,
+        "repay_method": "08",
+    }
+    loan_detail = {"balance_amt": 3000000, "loan_principal": 5000000}
+
+    with pytest.raises(UnsupportedRepayMethodError, match="한도거래"):
+        existing_loan_dsr_monthly_payment(loan_basic, loan_detail, AS_OF, "credit")
+
+
+def test_dsr_level_payment_loan_matches_cash_flow() -> None:
+    # 분할상환("02"/"04"/"05")은 실제 상환액이 곧 DSR 반영액이다 — loan_category와
+    # 무관하게 existing_loan_monthly_payment와 동일한 값을 반환해야 한다.
+    loan_basic = {
+        "issue_date": "20250810",
+        "exp_date": "20280810",
+        "last_offered_rate": 0.058,
+        "repay_method": "04",
+    }
+    loan_detail = {"balance_amt": 28400000, "loan_principal": 40000000}
+
+    cash_flow = existing_loan_monthly_payment(loan_basic, loan_detail, AS_OF)
+    dsr_value = existing_loan_dsr_monthly_payment(loan_basic, loan_detail, AS_OF, "credit")
+
+    assert dsr_value == cash_flow

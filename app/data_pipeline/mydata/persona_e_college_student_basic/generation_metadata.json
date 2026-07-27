@@ -1,0 +1,36 @@
+{
+  "purpose": "기대 결과를 지정하지 않고 대학생의 실제 입력값으로 예적금 상품 평가와 월세 보증금 마련 가능성을 확인한다.",
+  "provided_facts": {
+    "persona_name": "대학생1(기본형)",
+    "age": 25,
+    "military_service_status": "completed",
+    "living_arrangement": "부모님과 부모님 소유 주택에 거주",
+    "marital_status": "single",
+    "owns_property": false,
+    "monthly_income": 800000,
+    "monthly_average_expense": 700000,
+    "current_assets": 1000000,
+    "has_loans": false,
+    "tuition_payer": "parents",
+    "target_period": "약 2년",
+    "target_lease_deposit": 5000000,
+    "target_monthly_rent": 200000,
+    "employment_expected_to_continue": true
+  },
+  "generated_assumptions": {
+    "birth_date": "20010315",
+    "target_region": "30200",
+    "target_move_in_ym": "202807",
+    "target_management_fee": 50000,
+    "part_time_income_start_ym": "202509",
+    "applicant_type": "individual",
+    "is_first_payment": true,
+    "emergency_reserve": 700000,
+    "lump_sum_budget": 300000,
+    "bonus_achievement_probability": 0.5,
+    "contribution_timing": "end",
+    "maturity_tolerance_days": 180,
+    "risk_preference": "stability"
+  },
+  "expected_outcome_policy": "derive_from_engine"
+}

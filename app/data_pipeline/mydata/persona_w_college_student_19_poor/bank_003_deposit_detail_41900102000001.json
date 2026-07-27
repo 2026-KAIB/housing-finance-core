@@ -1,0 +1,14 @@
+{
+  "rsp_code": "00000",
+  "rsp_msg": "정상",
+  "search_timestamp": "20260724000002",
+  "detail_cnt": 1,
+  "detail_list": [
+    {
+      "currency_code": "KRW",
+      "balance_amt": 400000,
+      "withdrawable_amt": 400000,
+      "offered_rate": 0.001
+    }
+  ]
+}

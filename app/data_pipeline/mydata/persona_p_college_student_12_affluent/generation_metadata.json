@@ -1,0 +1,24 @@
+{
+  "persona_name": "대학생12(부유형)",
+  "persona_category": "affluent",
+  "character_summary": "전액장학금과 부모 지원으로 높은 저축여력 보유",
+  "purpose": "기대 결과를 미리 정하지 않고 해당 학생의 재무 사실로 예적금 평가와 월세 보증금 마련 가능성을 관찰한다.",
+  "provided_facts": {
+    "generation_request": "대학생 기본형·부유형·가난형 총 20명"
+  },
+  "generated_assumptions": {
+    "age": 22,
+    "monthly_income": 1800000,
+    "monthly_average_expense": 900000,
+    "monthly_debt_payment": 0,
+    "current_assets": 40000000,
+    "target_lease_deposit": 30000000,
+    "target_monthly_rent": 600000,
+    "target_move_in_ym": "202901",
+    "emergency_reserve": 2700000,
+    "lump_sum_budget": 3300000,
+    "monthly_savings_budget": 900000,
+    "bonus_achievement_probability": 0.7
+  },
+  "expected_outcome_policy": "derive_from_engine"
+}

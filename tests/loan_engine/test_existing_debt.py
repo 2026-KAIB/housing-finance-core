@@ -148,35 +148,58 @@ def test_dsr_jeonse_bullet_loan_is_interest_only() -> None:
     assert result == Decimal("100000000") * Decimal("0.05") / Decimal(12)
 
 
-def test_dsr_credit_bullet_loan_uses_5_year_conversion() -> None:
-    # 신용대출 일시상환은 DSR 산정 시 5년(60개월) 분할상환으로 환산한다.
+def test_dsr_credit_bullet_loan_uses_5_year_linear_conversion() -> None:
+    # 신용대출 일시상환은 원금을 5년(60개월) 선형분할 + 이자는 잔액 기준
+    # 실제 부담액을 더한다(원리금균등/PMT가 아니다 — 금융위 2017.11.26 발표
+    # 예시로 검증한 형태).
     loan_basic = {
         "issue_date": "20250101",
         "exp_date": "20270101",
-        "last_offered_rate": 0.05,
+        "last_offered_rate": 0.04,
         "repay_method": "01",
     }
-    loan_detail = {"balance_amt": 100000000, "loan_principal": 100000000}
+    loan_detail = {"balance_amt": 50000000, "loan_principal": 50000000}
 
     result = existing_loan_dsr_monthly_payment(loan_basic, loan_detail, AS_OF, "credit")
 
-    assert result == pmt(Decimal("100000000"), Decimal("0.05"), 60)
-    assert result != Decimal("100000000") * Decimal("0.05") / Decimal(12)
+    # 이자 200만원/년(5천만×4%) + 원금 1000만원/년(5천만/5년) = 1200만원/년 = 100만원/월
+    expected_annual = Decimal("2000000") + Decimal("10000000")
+    assert result == expected_annual / Decimal(12)
+    assert result != pmt(Decimal("50000000"), Decimal("0.04"), 60)
 
 
-def test_dsr_mortgage_bullet_loan_is_unsupported() -> None:
-    # 주담대 만기일시상환의 DSR 산정만기는 출처마다 상충(10년 고정 vs 잔존만기)
-    # 해 공식 근거를 확정하지 못했으므로 명시적으로 막아둔다.
+def test_dsr_mortgage_bullet_loan_caps_conversion_at_10_years() -> None:
+    # 실제 대출기간(20년)이 10년보다 길면 120개월로 상한을 건다.
     loan_basic = {
         "issue_date": "20250101",
-        "exp_date": "20270101",
-        "last_offered_rate": 0.05,
+        "exp_date": "20450101",
+        "last_offered_rate": 0.04,
+        "repay_method": "01",
+    }
+    loan_detail = {"balance_amt": 300000000, "loan_principal": 300000000}
+
+    result = existing_loan_dsr_monthly_payment(loan_basic, loan_detail, AS_OF, "mortgage")
+
+    monthly_interest = Decimal("300000000") * Decimal("0.04") / Decimal(12)
+    monthly_principal = Decimal("300000000") / Decimal(120)
+    assert result == monthly_principal + monthly_interest
+
+
+def test_dsr_mortgage_bullet_loan_uses_actual_term_when_shorter_than_10_years() -> None:
+    # 실제 대출기간(3년)이 10년보다 짧으면 실제 대출기간을 그대로 쓴다.
+    loan_basic = {
+        "issue_date": "20250101",
+        "exp_date": "20280101",
+        "last_offered_rate": 0.04,
         "repay_method": "01",
     }
     loan_detail = {"balance_amt": 100000000, "loan_principal": 100000000}
 
-    with pytest.raises(UnsupportedRepayMethodError, match="주택담보대출"):
-        existing_loan_dsr_monthly_payment(loan_basic, loan_detail, AS_OF, "mortgage")
+    result = existing_loan_dsr_monthly_payment(loan_basic, loan_detail, AS_OF, "mortgage")
+
+    monthly_interest = Decimal("100000000") * Decimal("0.04") / Decimal(12)
+    monthly_principal = Decimal("100000000") / Decimal(36)
+    assert result == monthly_principal + monthly_interest
 
 
 def test_dsr_credit_line_is_still_unsupported() -> None:

@@ -10,10 +10,17 @@ from app.engines.loan.formulas import pmt
 LoanCategory = Literal["jeonse", "credit", "mortgage"]
 
 # 신용대출 일시상환의 DSR 산정만기 = 5년(60개월) 분할상환 환산.
-# 웹서치로 여러 출처에서 일관되게 확인된 값 (2026-07-26 기준, 1차 규정 원문은
-# 미확보 — 은행연합회 "여신심사 선진화를 위한 모범규준" 원문 확인 전까지는
-# 잠정치로 취급할 것).
+# 출처: 금융위원회 "금융회사 여신심사 선진화 방안"(2017.11.26) + 금융감독원
+# "은행업감독업무시행세칙 등 5개 시행세칙 개정예고"(2023.4.7) — 부동산위키
+# 정리표(2026-07-27 확인)로 교차검증. 2017년 최초 발표 시에는 10년이었으나
+# 이후 개정으로 5년으로 단축되었다(정확한 개정 시행일은 미확인이나, 현재
+# 통용되는 값은 5년).
 _CREDIT_LOAN_DSR_CONVERSION_MONTHS = 60
+
+# 주담대 원금일시상환의 DSR 산정만기 상한 = 10년(120개월). 실제 대출기간이
+# 이보다 짧으면 실제 대출기간을 쓰고, 길면 120개월로 상한을 건다("최대 10년").
+# 출처: 위와 동일(부동산위키 "총부채원리금상환비율" 정리표, 2026-07-27 확인).
+_MORTGAGE_BULLET_DSR_MAX_CONVERSION_MONTHS = 120
 
 # 마이데이터 은행-008(대출 기본)·은행-009(대출 상세) 원본에서 "기존 대출의 월
 # 상환액"을 계산한다. DSR 분자(§13.2/부록 A-12)는 기존+신규 대출을 모두 포함
@@ -108,6 +115,23 @@ def existing_loan_monthly_payment(
     )
 
 
+def _linear_principal_plus_balance_interest(
+    loan_principal: Decimal,
+    balance_amt: Decimal,
+    annual_rate: Decimal,
+    conversion_months: int,
+) -> Decimal:
+    """원금은 대출총액을 산정만기로 선형 분할, 이자는 현재 잔액 기준 실제 부담액.
+
+    금융위 2017.11.26 발표 예시로 검증한 형태(원리금균등/PMT가 아님):
+    연봉 5천만, 연 4.0%, 대출총액 5천만, 산정만기 10년(당시) → 이자
+    200만원(5천만×4%) + 원금 500만원(5천만/10년) = 연 700만원.
+    """
+    monthly_principal = loan_principal / Decimal(conversion_months)
+    monthly_interest = balance_amt * annual_rate / Decimal(12)
+    return monthly_principal + monthly_interest
+
+
 def existing_loan_dsr_monthly_payment(
     loan_basic: Mapping[str, object],
     loan_detail: Mapping[str, object],
@@ -121,21 +145,27 @@ def existing_loan_dsr_monthly_payment(
     분할상환 가정으로 환산해 반영하는데, 그 환산 방식이 대출 목적별로 다르다:
 
     - "jeonse"(전세자금대출): 실제 이자상환액만 반영(원금 미반영) — 실제
-      현금흐름과 동일한 값. 여러 출처에서 일관되게 확인됨.
-    - "credit"(신용대출): 5년(60개월) 분할상환으로 환산한 원리금균등 상환액
-      (`_CREDIT_LOAN_DSR_CONVERSION_MONTHS`). 여러 출처에서 일관되게 확인됨.
-    - "mortgage"(주택담보대출): 산정만기가 "10년 고정"이라는 출처와 "잔존만기"
-      라는 출처가 상충해 공식 근거를 확정하지 못했다. `UnsupportedRepayMethodError`
-      를 발생시킨다 — 팀이 1차 규정(은행연합회 모범규준 등)으로 확인한 뒤 구현할 것.
+      현금흐름과 동일한 값.
+    - "credit"(신용대출): 원금은 5년(60개월) 선형 분할
+      (`_CREDIT_LOAN_DSR_CONVERSION_MONTHS`) + 이자는 잔액 기준 실제 부담액.
+    - "mortgage"(주택담보대출): 원금은 `min(실제 대출기간, 10년)`으로 선형 분할
+      (`_MORTGAGE_BULLET_DSR_MAX_CONVERSION_MONTHS`) + 이자는 잔액 기준 실제
+      부담액.
+
+    출처: 금융위원회 "금융회사 여신심사 선진화 방안"(2017.11.26) + 금융감독원
+    "은행업감독업무시행세칙 등 5개 시행세칙 개정예고"(2023.4.7) — 부동산위키
+    정리표로 교차검증(2026-07-27 확인).
 
     "02"/"04"/"05"(분할상환)는 실제 상환액이 곧 DSR 반영액이므로
     `existing_loan_monthly_payment`와 동일한 값을 그대로 반환한다.
-    "08"(한도거래/마이너스통장)은 산정만기의 공식 근거를 확정하지 못해 계속
-    `UnsupportedRepayMethodError`를 발생시킨다.
+    "08"(한도거래/마이너스통장)은 산정 기준이 "한도 전액"이라는 출처와 "실제
+    사용액"이라는 출처가 계속 상충해 `UnsupportedRepayMethodError`를
+    발생시킨다.
     """
     repay_method = str(loan_basic["repay_method"])
 
     if repay_method == "01":
+        loan_principal = Decimal(str(loan_detail["loan_principal"]))
         balance_amt = Decimal(str(loan_detail["balance_amt"]))
         annual_rate = Decimal(str(loan_basic["last_offered_rate"]))
 
@@ -143,12 +173,16 @@ def existing_loan_dsr_monthly_payment(
             return balance_amt * annual_rate / Decimal(12)
 
         if loan_category == "credit":
-            return pmt(balance_amt, annual_rate, _CREDIT_LOAN_DSR_CONVERSION_MONTHS)
+            return _linear_principal_plus_balance_interest(
+                loan_principal, balance_amt, annual_rate, _CREDIT_LOAN_DSR_CONVERSION_MONTHS
+            )
 
-        raise UnsupportedRepayMethodError(
-            "주택담보대출 만기일시상환의 DSR 산정만기는 '10년 고정'과 '잔존만기' "
-            "설명이 출처마다 상충해 공식 근거를 확정하지 못했습니다. "
-            "은행연합회 모범규준 등 1차 출처로 확인 후 구현하세요."
+        issue_date = _parse_date(str(loan_basic["issue_date"]))
+        exp_date = _parse_date(str(loan_basic["exp_date"]))
+        total_months = _months_between(issue_date, exp_date)
+        conversion_months = min(total_months, _MORTGAGE_BULLET_DSR_MAX_CONVERSION_MONTHS)
+        return _linear_principal_plus_balance_interest(
+            loan_principal, balance_amt, annual_rate, conversion_months
         )
 
     return existing_loan_monthly_payment(loan_basic, loan_detail, as_of)

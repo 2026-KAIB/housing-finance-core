@@ -42,6 +42,25 @@ def pmt(principal: Decimal, annual_rate: Decimal, months: int) -> Decimal:
     return principal * i * growth / (growth - 1)
 
 
+def principal_from_pmt(monthly_payment: Decimal, annual_rate: Decimal, months: int) -> Decimal:
+    """월 상환액 상한에서 역산한 원금 = pmt()의 역함수 (§13.3).
+
+    L = PMT × ((1+i)^n − 1) / (i(1+i)^n), i = 연이율 ÷ 12
+
+    DTI·DSR 한도는 "연간 상환액이 소득의 x% 이내"라는 **상환액 제약**이므로,
+    이를 금액 한도로 바꾸려면 상환액에서 원금을 되돌려야 한다(§9.1).
+    """
+    _require_non_negative(monthly_payment, "monthly_payment")
+    _require_non_negative(annual_rate, "annual_rate")
+    _require_positive(months, "months")
+
+    i = monthly_rate(annual_rate)
+    if i == 0:
+        return monthly_payment * Decimal(months)
+    growth = (1 + i) ** months
+    return monthly_payment * (growth - 1) / (i * growth)
+
+
 def dsr(
     *,
     existing_annual_debt_service: Decimal,

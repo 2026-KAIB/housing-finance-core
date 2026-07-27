@@ -237,3 +237,153 @@ def test_compute_loan_max_refuses_unknown_instead_of_returning_zero() -> None:
     # UNKNOWN을 0원으로 뭉개면 "한도 0"과 "한도 모름"이 구분되지 않는다.
     with pytest.raises(ValueError, match="확정되지 않았습니다"):
         compute_loan_max(adaptation)
+
+
+# --- 검수된 한도표를 거치는 경로 -------------------------------------------------
+# 위 테스트들은 한도표에 없는 가상 상품이라 정규식 파서만 탄다. 아래는 실제
+# 상품명으로 curated/loan_limits.py를 거쳐 계산까지 도달하는지 확인한다.
+
+CURATED_BASE = {
+    "source_type": "manual_pdf",
+    "fin_prdt_nm": "KB 신용대출",
+    "loan_lmt": (
+        "최대 3.5억원 이내 "
+        "(재직기간 1년미만 시 최대 1억원 이내, 종합통장자동대출은 최대 1.5억원 이내)"
+    ),
+}
+CURATED_OPTIONS = (
+    {
+        "fin_prdt_nm": "KB 신용대출",
+        "rpay_type_nm": "분할상환방식",
+        "lend_rate_type_nm": "변동금리",
+        "lend_rate_min": 5.0,
+        "lend_rate_max": 7.0,
+        "lend_rate_avg": 6.0,
+    },
+)
+CURATED_PACK = ProductRulePack(
+    product_name="KB 신용대출",
+    category=ProductCategory.CREDIT_LOAN,
+    version="test-1",
+    effective_start_date=date(2026, 1, 1),
+    effective_end_date=None,
+    rules=(
+        ComparisonRule(
+            code="TEST_MIN_AGE",
+            field_name="age",
+            operator=ComparisonOperator.GTE,
+            expected=19,
+            failure_reason="미성년자는 신청할 수 없습니다.",
+        ),
+    ),
+)
+
+
+def _route_curated(facts: dict[str, object]):
+    return route_product_candidates(
+        [
+            ProductCandidate(
+                product_name="KB 신용대출",
+                base_data=CURATED_BASE,
+                option_list=CURATED_OPTIONS,
+            )
+        ],
+        user_facts=facts,
+        as_of=AS_OF,
+        registry=ProductRulePackRegistry((CURATED_PACK,)),
+    )
+
+
+def _adapt_curated(facts: dict[str, object]):
+    return adapt_handoff_for_loan_max(
+        _route_curated(facts).forwardable[0],
+        borrower=BORROWER,
+        policy_limits=POLICY_LIMITS,
+        required_amount=Decimal("300000000"),
+        months=60,
+    )[0]
+
+
+def test_curated_table_resolves_a_limit_the_parser_cannot() -> None:
+    # 파서는 이 문장에서 숫자를 고를 수 없지만, 재직기간과 대출형태를 알면
+    # 한도가 3.5억으로 확정된다.
+    adaptation = _adapt_curated(
+        {"age": 32, "employment_months": 60, "is_overdraft_type": False}
+    )
+
+    assert adaptation.status is EvaluationStatus.PASS
+    assert adaptation.inputs is not None
+    assert adaptation.inputs.product_limit_amount == Decimal("350000000")
+    assert adaptation.assumptions == ()
+    assert compute_loan_max(adaptation) > 0
+
+
+def test_missing_conditions_produce_a_conservative_limit_with_a_recorded_assumption() -> None:
+    adaptation = _adapt_curated({"age": 32})
+
+    assert adaptation.status is EvaluationStatus.PASS
+    assert adaptation.inputs is not None
+    # 조건을 모르면 가능한 한도 중 최저값(1억)을 쓴다 — 과소평가는 안전하다.
+    assert adaptation.inputs.product_limit_amount == Decimal("100000000")
+    assert adaptation.assumptions != ()
+
+
+def test_conservative_limit_never_exceeds_the_fully_specified_one() -> None:
+    known = _adapt_curated({"age": 32, "employment_months": 60, "is_overdraft_type": False})
+    unknown = _adapt_curated({"age": 32})
+    assert known.inputs is not None
+    assert unknown.inputs is not None
+    assert compute_loan_max(unknown) <= compute_loan_max(known)
+
+
+def test_uncapped_product_is_bound_by_policy_limits_not_by_a_product_cap() -> None:
+    # "담보조사가격 ... 대출가능금액 이내"는 상품 상한이 없다는 뜻이므로,
+    # 상품 한도가 요청액과 같아져 LTV·DTI·DSR만 남는다.
+    base = {
+        "source_type": "manual_pdf",
+        "fin_prdt_nm": "KB 주택담보대출",
+        "loan_lmt": (
+            "담보조사가격 및 소득금액, 담보물건지 지역 등에 따른 대출가능금액 이내 "
+            "(통장자동대출 최고 3억원 이내)"
+        ),
+    }
+    pack = ProductRulePack(
+        product_name="KB 주택담보대출",
+        category=ProductCategory.MORTGAGE_LOAN,
+        version="test-1",
+        effective_start_date=date(2026, 1, 1),
+        effective_end_date=None,
+        rules=(
+            ComparisonRule(
+                code="TEST_MIN_AGE",
+                field_name="age",
+                operator=ComparisonOperator.GTE,
+                expected=19,
+                failure_reason="미성년자는 신청할 수 없습니다.",
+            ),
+        ),
+    )
+    routing = route_product_candidates(
+        [
+            ProductCandidate(
+                product_name="KB 주택담보대출",
+                base_data=base,
+                option_list=CURATED_OPTIONS,
+            )
+        ],
+        user_facts={"age": 32, "is_overdraft_type": False},
+        as_of=AS_OF,
+        registry=ProductRulePackRegistry((pack,)),
+    )
+    adaptation = adapt_handoff_for_loan_max(
+        routing.forwardable[0],
+        borrower=BORROWER,
+        policy_limits=POLICY_LIMITS,
+        required_amount=Decimal("300000000"),
+        months=360,
+    )[0]
+
+    assert adaptation.status is EvaluationStatus.PASS
+    assert adaptation.inputs is not None
+    assert adaptation.inputs.product_limit_amount == Decimal("300000000")
+    assert adaptation.assumptions == ()

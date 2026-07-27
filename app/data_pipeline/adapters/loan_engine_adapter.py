@@ -2,6 +2,11 @@ from collections.abc import Mapping
 from dataclasses import dataclass, field
 from decimal import Decimal
 
+from app.data_pipeline.curated.loan_limits import (
+    LimitKind,
+    ResolvedProductLimit,
+    resolve_product_limit,
+)
 from app.data_pipeline.normalizers.loan_product import (
     NormalizedLoanOption,
     normalize_loan_product,
@@ -19,9 +24,10 @@ from app.rule_engine.product_packs.models import EvaluationStatus
 # 절대 임의값으로 채우지 않는다.** loan_max()가 요구하는 값 중 원천 상품
 # 데이터에 아예 없는 것들이 있기 때문이다(부록 B-5):
 #
-#   - LTV·DTI 한도 금액: 상품별 데이터가 아니라 규제 상수표(policy/*.json) 소관.
-#     저장소에 아직 그 표가 없으므로 호출자가 `PolicyLimits`로 명시해 넘긴다.
+#   - LTV·DTI 한도 금액: 상품별 데이터가 아니라 규제 상수표 소관이다. 호출자가
+#     `app/regulations/mortgage_limits.py`로 구해 `PolicyLimits`에 담아 넘긴다.
 #   - 상품별 대출한도: baseList.loan_lmt 자유텍스트에서 확정되지 않으면 None.
+#     이 경우 검수된 한도표(curated/loan_limits.py)를 차주 facts와 함께 조회한다.
 #   - 기존 대출 연 상환액: 마이데이터에서 계산되는 값이라
 #     `BorrowerFinancialState`로 받는다(engines/loan/existing_debt.py 소관).
 
@@ -114,6 +120,9 @@ class LoanOptionAdaptation:
     inputs: LoanMaxInputs | None = None
     missing_inputs: tuple[str, ...] = field(default_factory=tuple)
     reasons: tuple[str, ...] = field(default_factory=tuple)
+    # 상품 한도를 확정하지 못해 더 낮은 값을 가정했다면 그 내역. 비어 있지 않은
+    # PASS는 "계산은 됐지만 과소평가일 수 있다"는 뜻이므로 결과에 함께 표시한다.
+    assumptions: tuple[str, ...] = field(default_factory=tuple)
 
 
 def adapt_handoff_for_loan_max(
@@ -156,11 +165,18 @@ def adapt_handoff_for_loan_max(
             ),
         )
 
+    limit = _resolve_limit_amount(
+        product_name,
+        parsed_limit=product.max_loan_amount,
+        facts=handoff.user_facts,
+        required_amount=required_amount,
+    )
+
     return tuple(
         _adapt_option(
             option,
             product_name=product_name,
-            product_limit_amount=product.max_loan_amount,
+            limit=limit,
             borrower=borrower,
             policy_limits=policy_limits,
             required_amount=required_amount,
@@ -171,36 +187,70 @@ def adapt_handoff_for_loan_max(
     )
 
 
+def _resolve_limit_amount(
+    product_name: str,
+    *,
+    parsed_limit: Decimal | None,
+    facts: Mapping[str, object],
+    required_amount: Decimal,
+) -> ResolvedProductLimit:
+    """상품 한도를 확정한다 — 검수된 한도표가 우선, 정규식 파서가 차선.
+
+    한도표를 먼저 보는 이유는 원문이 조건부 문구인 경우 파서가 구조적으로
+    답할 수 없기 때문이다(curated/loan_limits.py 상단 주석). 파서 값은 한도표에
+    아직 없는 상품을 위한 안전망으로만 남긴다.
+
+    `UNCAPPED`(상품 고유 상한 없음)는 `required_amount`로 환산한다. `loan_max()`의
+    탐색 상한이 `min(각 한도, required_amount)`이므로, 요청액과 같은 값을 넣으면
+    이 항목은 구속하지 않는 상태가 되어 LTV·DTI·DSR만 남는다.
+    """
+    resolved = resolve_product_limit(product_name, facts)
+    if resolved.kind is LimitKind.AMOUNT:
+        return resolved
+    if resolved.kind is LimitKind.UNCAPPED:
+        return ResolvedProductLimit(
+            kind=LimitKind.AMOUNT,
+            amount=required_amount,
+            assumptions=resolved.assumptions,
+            note=resolved.note,
+        )
+    if parsed_limit is not None:
+        return ResolvedProductLimit(
+            kind=LimitKind.AMOUNT,
+            amount=parsed_limit,
+            note="loan_lmt 원문에서 파싱한 단일 한도",
+        )
+    return resolved
+
+
 def _adapt_option(
     option: NormalizedLoanOption,
     *,
     product_name: str,
-    product_limit_amount: Decimal | None,
+    limit: ResolvedProductLimit,
     borrower: BorrowerFinancialState,
     policy_limits: PolicyLimits,
     required_amount: Decimal,
     months: int,
     rate_selection: str,
 ) -> LoanOptionAdaptation:
-    if product_limit_amount is None:
+    if limit.kind is not LimitKind.AMOUNT or limit.amount is None:
         return LoanOptionAdaptation(
             product_name=product_name,
             option=option,
             status=EvaluationStatus.UNKNOWN,
-            missing_inputs=("product_limit_amount",),
-            reasons=(
-                "baseList.loan_lmt에서 상품 한도를 숫자로 확정하지 못했습니다 "
-                "(조건부 한도가 섞여 있거나 담보조사가격 등에 의존).",
-            ),
+            missing_inputs=("product_limit_amount", *limit.missing_facts),
+            reasons=(limit.note or "상품 한도를 확정하지 못했습니다.",),
         )
 
     return LoanOptionAdaptation(
         product_name=product_name,
         option=option,
         status=EvaluationStatus.PASS,
+        assumptions=limit.assumptions,
         inputs=LoanMaxInputs(
             ltv_limit_amount=policy_limits.ltv_limit_amount,
-            product_limit_amount=product_limit_amount,
+            product_limit_amount=limit.amount,
             dti_limit_amount=policy_limits.dti_limit_amount,
             required_amount=required_amount,
             annual_rate=option.rate(rate_selection),

@@ -1,0 +1,24 @@
+{
+  "persona_name": "대학생13(부유형)",
+  "persona_category": "affluent",
+  "character_summary": "프리랜서 개발 고소득과 1억원대 금융자산 보유",
+  "purpose": "기대 결과를 미리 정하지 않고 해당 학생의 재무 사실로 예적금 평가와 월세 보증금 마련 가능성을 관찰한다.",
+  "provided_facts": {
+    "generation_request": "대학생 기본형·부유형·가난형 총 20명"
+  },
+  "generated_assumptions": {
+    "age": 26,
+    "monthly_income": 5000000,
+    "monthly_average_expense": 2000000,
+    "monthly_debt_payment": 0,
+    "current_assets": 120000000,
+    "target_lease_deposit": 80000000,
+    "target_monthly_rent": 1200000,
+    "target_move_in_ym": "202707",
+    "emergency_reserve": 6000000,
+    "lump_sum_budget": 14000000,
+    "monthly_savings_budget": 3000000,
+    "bonus_achievement_probability": 0.7
+  },
+  "expected_outcome_policy": "derive_from_engine"
+}

@@ -218,7 +218,13 @@ def validate(d):
 
 
 if __name__ == "__main__":
-    dirs = sorted(p for p in glob.glob(f"{ROOT}/*") if os.path.isdir(p))
+    # 목적: 실행기 import가 만든 __pycache__ 같은 보조 폴더를 페르소나로
+    # 오인하지 않고, 생성 규약인 persona_* 데이터만 검증한다.
+    dirs = sorted(
+        p
+        for p in glob.glob(f"{ROOT}/*")
+        if os.path.isdir(p) and os.path.basename(p).startswith("persona_")
+    )
     total_ok = total_fail = 0
     for d in dirs:
         r = validate(d)

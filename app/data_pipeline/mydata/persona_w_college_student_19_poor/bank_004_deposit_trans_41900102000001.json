@@ -1,0 +1,3137 @@
+{
+  "rsp_code": "00000",
+  "rsp_msg": "정상",
+  "trans_cnt": 313,
+  "trans_list": [
+    {
+      "trans_dtime": "20260721154224",
+      "trans_no": "00000313",
+      "trans_type": "02",
+      "trans_class": "체크카드",
+      "currency_code": "KRW",
+      "trans_amt": 24500,
+      "balance_amt": 400000,
+      "trans_memo": "서점"
+    },
+    {
+      "trans_dtime": "20260721111926",
+      "trans_no": "00000312",
+      "trans_type": "02",
+      "trans_class": "체크카드",
+      "currency_code": "KRW",
+      "trans_amt": 30500,
+      "balance_amt": 424500,
+      "trans_memo": "서점"
+    },
+    {
+      "trans_dtime": "20260720205816",
+      "trans_no": "00000311",
+      "trans_type": "02",
+      "trans_class": "체크카드",
+      "currency_code": "KRW",
+      "trans_amt": 18000,
+      "balance_amt": 455000,
+      "trans_memo": "교내 카페"
+    },
+    {
+      "trans_dtime": "20260720062500",
+      "trans_no": "00000310",
+      "trans_type": "02",
+      "trans_class": "자동이체",
+      "currency_code": "KRW",
+      "trans_amt": 80000,
+      "balance_amt": 473000,
+      "trans_memo": "한국장학재단 학자금대출 원리금"
+    },
+    {
+      "trans_dtime": "20260719150407",
+      "trans_no": "00000309",
+      "trans_type": "02",
+      "trans_class": "체크카드",
+      "currency_code": "KRW",
+      "trans_amt": 22500,
+      "balance_amt": 553000,
+      "trans_memo": "대학가 분식집"
+    },
+    {
+      "trans_dtime": "20260717061500",
+      "trans_no": "00000308",
+      "trans_type": "02",
+      "trans_class": "자동이체",
+      "currency_code": "KRW",
+      "trans_amt": 40000,
+      "balance_amt": 575500,
+      "trans_memo": "통신요금"
+    },
+    {
+      "trans_dtime": "20260716192150",
+      "trans_no": "00000307",
+      "trans_type": "02",
+      "trans_class": "체크카드",
+      "currency_code": "KRW",
+      "trans_amt": 19500,
+      "balance_amt": 615500,
+      "trans_memo": "교내 카페"
+    },
+    {
+      "trans_dtime": "20260715155711",
+      "trans_no": "00000306",
+      "trans_type": "02",
+      "trans_class": "체크카드",
+      "currency_code": "KRW",
+      "trans_amt": 28000,
+      "balance_amt": 635000,
+      "trans_memo": "동네 마트"
+    },
+    {
+      "trans_dtime": "20260714124257",
+      "trans_no": "00000305",
+      "trans_type": "02",
+      "trans_class": "체크카드",
+      "currency_code": "KRW",
+      "trans_amt": 22000,
+      "balance_amt": 663000,
+      "trans_memo": "서점"
+    },
+    {
+      "trans_dtime": "20260712063000",
+      "trans_no": "00000304",
+      "trans_type": "02",
+      "trans_class": "자동이체",
+      "currency_code": "KRW",
+      "trans_amt": 20000,
+      "balance_amt": 685000,
+      "trans_memo": "대학생 목표적금 이체"
+    },
+    {
+      "trans_dtime": "20260711101422",
+      "trans_no": "00000303",
+      "trans_type": "02",
+      "trans_class": "체크카드",
+      "currency_code": "KRW",
+      "trans_amt": 25500,
+      "balance_amt": 705000,
+      "trans_memo": "학교 학생식당"
+    },
+    {
+      "trans_dtime": "20260711090116",
+      "trans_no": "00000302",
+      "trans_type": "02",
+      "trans_class": "체크카드",
+      "currency_code": "KRW",
+      "trans_amt": 29000,
+      "balance_amt": 730500,
+      "trans_memo": "편의점"
+    },
+    {
+      "trans_dtime": "20260710174942",
+      "trans_no": "00000301",
+      "trans_type": "02",
+      "trans_class": "체크카드",
+      "currency_code": "KRW",
+      "trans_amt": 16000,
+      "balance_amt": 759500,
+      "trans_memo": "편의점"
+    },
+    {
+      "trans_dtime": "20260710130525",
+      "trans_no": "00000300",
+      "trans_type": "02",
+      "trans_class": "체크카드",
+      "currency_code": "KRW",
+      "trans_amt": 22000,
+      "balance_amt": 775500,
+      "trans_memo": "학교 학생식당"
+    },
+    {
+      "trans_dtime": "20260710113234",
+      "trans_no": "00000299",
+      "trans_type": "02",
+      "trans_class": "체크카드",
+      "currency_code": "KRW",
+      "trans_amt": 37500,
+      "balance_amt": 797500,
+      "trans_memo": "서점"
+    },
+    {
+      "trans_dtime": "20260710090000",
+      "trans_no": "00000298",
+      "trans_type": "03",
+      "trans_class": "인터넷뱅킹",
+      "currency_code": "KRW",
+      "trans_amt": 900000,
+      "balance_amt": 835000,
+      "trans_memo": "야간 편의점 아르바이트 급여"
+    },
+    {
+      "trans_dtime": "20260709160134",
+      "trans_no": "00000297",
+      "trans_type": "02",
+      "trans_class": "체크카드",
+      "currency_code": "KRW",
+      "trans_amt": 30500,
+      "balance_amt": -65000,
+      "trans_memo": "서점"
+    },
+    {
+      "trans_dtime": "20260708130336",
+      "trans_no": "00000296",
+      "trans_type": "02",
+      "trans_class": "체크카드",
+      "currency_code": "KRW",
+      "trans_amt": 22000,
+      "balance_amt": -34500,
+      "trans_memo": "대학가 분식집"
+    },
+    {
+      "trans_dtime": "20260703184501",
+      "trans_no": "00000295",
+      "trans_type": "02",
+      "trans_class": "체크카드",
+      "currency_code": "KRW",
+      "trans_amt": 20000,
+      "balance_amt": -12500,
+      "trans_memo": "동네 마트"
+    },
+    {
+      "trans_dtime": "20260703174820",
+      "trans_no": "00000294",
+      "trans_type": "02",
+      "trans_class": "체크카드",
+      "currency_code": "KRW",
+      "trans_amt": 31000,
+      "balance_amt": 7500,
+      "trans_memo": "학교 학생식당"
+    },
+    {
+      "trans_dtime": "20260702174432",
+      "trans_no": "00000293",
+      "trans_type": "02",
+      "trans_class": "체크카드",
+      "currency_code": "KRW",
+      "trans_amt": 32500,
+      "balance_amt": 38500,
+      "trans_memo": "서점"
+    },
+    {
+      "trans_dtime": "20260702061000",
+      "trans_no": "00000292",
+      "trans_type": "02",
+      "trans_class": "자동이체",
+      "currency_code": "KRW",
+      "trans_amt": 60000,
+      "balance_amt": 71000,
+      "trans_memo": "교통비"
+    },
+    {
+      "trans_dtime": "20260628060000",
+      "trans_no": "00000291",
+      "trans_type": "98",
+      "trans_class": "자동처리",
+      "currency_code": "KRW",
+      "trans_amt": 2086,
+      "balance_amt": 131000,
+      "trans_memo": "이자"
+    },
+    {
+      "trans_dtime": "20260625062000",
+      "trans_no": "00000290",
+      "trans_type": "02",
+      "trans_class": "자동이체",
+      "currency_code": "KRW",
+      "trans_amt": 200000,
+      "balance_amt": 128914,
+      "trans_memo": "가족 월세·생활비 분담"
+    },
+    {
+      "trans_dtime": "20260624113447",
+      "trans_no": "00000289",
+      "trans_type": "02",
+      "trans_class": "체크카드",
+      "currency_code": "KRW",
+      "trans_amt": 18500,
+      "balance_amt": 328914,
+      "trans_memo": "영화관"
+    },
+    {
+      "trans_dtime": "20260621214924",
+      "trans_no": "00000288",
+      "trans_type": "02",
+      "trans_class": "체크카드",
+      "currency_code": "KRW",
+      "trans_amt": 31500,
+      "balance_amt": 347414,
+      "trans_memo": "서점"
+    },
+    {
+      "trans_dtime": "20260620160500",
+      "trans_no": "00000287",
+      "trans_type": "02",
+      "trans_class": "체크카드",
+      "currency_code": "KRW",
+      "trans_amt": 35500,
+      "balance_amt": 378914,
+      "trans_memo": "동네 마트"
+    },
+    {
+      "trans_dtime": "20260620062500",
+      "trans_no": "00000286",
+      "trans_type": "02",
+      "trans_class": "자동이체",
+      "currency_code": "KRW",
+      "trans_amt": 80000,
+      "balance_amt": 414414,
+      "trans_memo": "한국장학재단 학자금대출 원리금"
+    },
+    {
+      "trans_dtime": "20260618101503",
+      "trans_no": "00000285",
+      "trans_type": "02",
+      "trans_class": "체크카드",
+      "currency_code": "KRW",
+      "trans_amt": 23000,
+      "balance_amt": 494414,
+      "trans_memo": "편의점"
+    },
+    {
+      "trans_dtime": "20260617130307",
+      "trans_no": "00000284",
+      "trans_type": "02",
+      "trans_class": "체크카드",
+      "currency_code": "KRW",
+      "trans_amt": 19500,
+      "balance_amt": 517414,
+      "trans_memo": "편의점"
+    },
+    {
+      "trans_dtime": "20260617061500",
+      "trans_no": "00000283",
+      "trans_type": "02",
+      "trans_class": "자동이체",
+      "currency_code": "KRW",
+      "trans_amt": 40000,
+      "balance_amt": 536914,
+      "trans_memo": "통신요금"
+    },
+    {
+      "trans_dtime": "20260615170531",
+      "trans_no": "00000282",
+      "trans_type": "02",
+      "trans_class": "체크카드",
+      "currency_code": "KRW",
+      "trans_amt": 22500,
+      "balance_amt": 576914,
+      "trans_memo": "대학가 분식집"
+    },
+    {
+      "trans_dtime": "20260613200921",
+      "trans_no": "00000281",
+      "trans_type": "02",
+      "trans_class": "체크카드",
+      "currency_code": "KRW",
+      "trans_amt": 20000,
+      "balance_amt": 599414,
+      "trans_memo": "교내 카페"
+    },
+    {
+      "trans_dtime": "20260613190928",
+      "trans_no": "00000280",
+      "trans_type": "02",
+      "trans_class": "체크카드",
+      "currency_code": "KRW",
+      "trans_amt": 27500,
+      "balance_amt": 619414,
+      "trans_memo": "영화관"
+    },
+    {
+      "trans_dtime": "20260612142410",
+      "trans_no": "00000279",
+      "trans_type": "02",
+      "trans_class": "체크카드",
+      "currency_code": "KRW",
+      "trans_amt": 31000,
+      "balance_amt": 646914,
+      "trans_memo": "교내 카페"
+    },
+    {
+      "trans_dtime": "20260612063000",
+      "trans_no": "00000278",
+      "trans_type": "02",
+      "trans_class": "자동이체",
+      "currency_code": "KRW",
+      "trans_amt": 20000,
+      "balance_amt": 677914,
+      "trans_memo": "대학생 목표적금 이체"
+    },
+    {
+      "trans_dtime": "20260611151029",
+      "trans_no": "00000277",
+      "trans_type": "02",
+      "trans_class": "체크카드",
+      "currency_code": "KRW",
+      "trans_amt": 23000,
+      "balance_amt": 697914,
+      "trans_memo": "학교 학생식당"
+    },
+    {
+      "trans_dtime": "20260611115648",
+      "trans_no": "00000276",
+      "trans_type": "02",
+      "trans_class": "체크카드",
+      "currency_code": "KRW",
+      "trans_amt": 37500,
+      "balance_amt": 720914,
+      "trans_memo": "서점"
+    },
+    {
+      "trans_dtime": "20260610090000",
+      "trans_no": "00000275",
+      "trans_type": "03",
+      "trans_class": "인터넷뱅킹",
+      "currency_code": "KRW",
+      "trans_amt": 900000,
+      "balance_amt": 758414,
+      "trans_memo": "야간 편의점 아르바이트 급여"
+    },
+    {
+      "trans_dtime": "20260608203117",
+      "trans_no": "00000274",
+      "trans_type": "02",
+      "trans_class": "체크카드",
+      "currency_code": "KRW",
+      "trans_amt": 33500,
+      "balance_amt": -141586,
+      "trans_memo": "서점"
+    },
+    {
+      "trans_dtime": "20260608191833",
+      "trans_no": "00000273",
+      "trans_type": "02",
+      "trans_class": "체크카드",
+      "currency_code": "KRW",
+      "trans_amt": 32000,
+      "balance_amt": -108086,
+      "trans_memo": "교내 카페"
+    },
+    {
+      "trans_dtime": "20260604215243",
+      "trans_no": "00000272",
+      "trans_type": "02",
+      "trans_class": "체크카드",
+      "currency_code": "KRW",
+      "trans_amt": 22000,
+      "balance_amt": -76086,
+      "trans_memo": "서점"
+    },
+    {
+      "trans_dtime": "20260604180509",
+      "trans_no": "00000271",
+      "trans_type": "02",
+      "trans_class": "체크카드",
+      "currency_code": "KRW",
+      "trans_amt": 38000,
+      "balance_amt": -54086,
+      "trans_memo": "편의점"
+    },
+    {
+      "trans_dtime": "20260602180025",
+      "trans_no": "00000270",
+      "trans_type": "02",
+      "trans_class": "체크카드",
+      "currency_code": "KRW",
+      "trans_amt": 28000,
+      "balance_amt": -16086,
+      "trans_memo": "편의점"
+    },
+    {
+      "trans_dtime": "20260602061000",
+      "trans_no": "00000269",
+      "trans_type": "02",
+      "trans_class": "자동이체",
+      "currency_code": "KRW",
+      "trans_amt": 60000,
+      "balance_amt": 11914,
+      "trans_memo": "교통비"
+    },
+    {
+      "trans_dtime": "20260601174826",
+      "trans_no": "00000268",
+      "trans_type": "02",
+      "trans_class": "체크카드",
+      "currency_code": "KRW",
+      "trans_amt": 30500,
+      "balance_amt": 71914,
+      "trans_memo": "학교 학생식당"
+    },
+    {
+      "trans_dtime": "20260601124701",
+      "trans_no": "00000267",
+      "trans_type": "02",
+      "trans_class": "체크카드",
+      "currency_code": "KRW",
+      "trans_amt": 26500,
+      "balance_amt": 102414,
+      "trans_memo": "대학가 분식집"
+    },
+    {
+      "trans_dtime": "20260526151504",
+      "trans_no": "00000266",
+      "trans_type": "02",
+      "trans_class": "체크카드",
+      "currency_code": "KRW",
+      "trans_amt": 27000,
+      "balance_amt": 128914,
+      "trans_memo": "교내 카페"
+    },
+    {
+      "trans_dtime": "20260526111753",
+      "trans_no": "00000265",
+      "trans_type": "02",
+      "trans_class": "체크카드",
+      "currency_code": "KRW",
+      "trans_amt": 30500,
+      "balance_amt": 155914,
+      "trans_memo": "서점"
+    },
+    {
+      "trans_dtime": "20260525062000",
+      "trans_no": "00000264",
+      "trans_type": "02",
+      "trans_class": "자동이체",
+      "currency_code": "KRW",
+      "trans_amt": 200000,
+      "balance_amt": 186414,
+      "trans_memo": "가족 월세·생활비 분담"
+    },
+    {
+      "trans_dtime": "20260523165535",
+      "trans_no": "00000263",
+      "trans_type": "02",
+      "trans_class": "체크카드",
+      "currency_code": "KRW",
+      "trans_amt": 17000,
+      "balance_amt": 386414,
+      "trans_memo": "영화관"
+    },
+    {
+      "trans_dtime": "20260522210537",
+      "trans_no": "00000262",
+      "trans_type": "02",
+      "trans_class": "체크카드",
+      "currency_code": "KRW",
+      "trans_amt": 28000,
+      "balance_amt": 403414,
+      "trans_memo": "교내 카페"
+    },
+    {
+      "trans_dtime": "20260522161609",
+      "trans_no": "00000261",
+      "trans_type": "02",
+      "trans_class": "체크카드",
+      "currency_code": "KRW",
+      "trans_amt": 18500,
+      "balance_amt": 431414,
+      "trans_memo": "서점"
+    },
+    {
+      "trans_dtime": "20260521200947",
+      "trans_no": "00000260",
+      "trans_type": "02",
+      "trans_class": "체크카드",
+      "currency_code": "KRW",
+      "trans_amt": 19500,
+      "balance_amt": 449914,
+      "trans_memo": "교내 카페"
+    },
+    {
+      "trans_dtime": "20260521162740",
+      "trans_no": "00000259",
+      "trans_type": "02",
+      "trans_class": "체크카드",
+      "currency_code": "KRW",
+      "trans_amt": 16000,
+      "balance_amt": 469414,
+      "trans_memo": "편의점"
+    },
+    {
+      "trans_dtime": "20260520151733",
+      "trans_no": "00000258",
+      "trans_type": "02",
+      "trans_class": "체크카드",
+      "currency_code": "KRW",
+      "trans_amt": 19500,
+      "balance_amt": 485414,
+      "trans_memo": "동네 마트"
+    },
+    {
+      "trans_dtime": "20260520121005",
+      "trans_no": "00000257",
+      "trans_type": "02",
+      "trans_class": "체크카드",
+      "currency_code": "KRW",
+      "trans_amt": 19000,
+      "balance_amt": 504914,
+      "trans_memo": "대학가 분식집"
+    },
+    {
+      "trans_dtime": "20260520062500",
+      "trans_no": "00000256",
+      "trans_type": "02",
+      "trans_class": "자동이체",
+      "currency_code": "KRW",
+      "trans_amt": 80000,
+      "balance_amt": 523914,
+      "trans_memo": "한국장학재단 학자금대출 원리금"
+    },
+    {
+      "trans_dtime": "20260518093953",
+      "trans_no": "00000255",
+      "trans_type": "02",
+      "trans_class": "체크카드",
+      "currency_code": "KRW",
+      "trans_amt": 24000,
+      "balance_amt": 603914,
+      "trans_memo": "학교 학생식당"
+    },
+    {
+      "trans_dtime": "20260517061500",
+      "trans_no": "00000254",
+      "trans_type": "02",
+      "trans_class": "자동이체",
+      "currency_code": "KRW",
+      "trans_amt": 40000,
+      "balance_amt": 627914,
+      "trans_memo": "통신요금"
+    },
+    {
+      "trans_dtime": "20260516112547",
+      "trans_no": "00000253",
+      "trans_type": "02",
+      "trans_class": "체크카드",
+      "currency_code": "KRW",
+      "trans_amt": 25000,
+      "balance_amt": 667914,
+      "trans_memo": "학교 학생식당"
+    },
+    {
+      "trans_dtime": "20260515093955",
+      "trans_no": "00000252",
+      "trans_type": "02",
+      "trans_class": "체크카드",
+      "currency_code": "KRW",
+      "trans_amt": 16000,
+      "balance_amt": 692914,
+      "trans_memo": "대학가 분식집"
+    },
+    {
+      "trans_dtime": "20260514152703",
+      "trans_no": "00000251",
+      "trans_type": "02",
+      "trans_class": "체크카드",
+      "currency_code": "KRW",
+      "trans_amt": 14000,
+      "balance_amt": 708914,
+      "trans_memo": "대학가 분식집"
+    },
+    {
+      "trans_dtime": "20260514100511",
+      "trans_no": "00000250",
+      "trans_type": "02",
+      "trans_class": "체크카드",
+      "currency_code": "KRW",
+      "trans_amt": 27500,
+      "balance_amt": 722914,
+      "trans_memo": "영화관"
+    },
+    {
+      "trans_dtime": "20260512063000",
+      "trans_no": "00000249",
+      "trans_type": "02",
+      "trans_class": "자동이체",
+      "currency_code": "KRW",
+      "trans_amt": 20000,
+      "balance_amt": 750414,
+      "trans_memo": "대학생 목표적금 이체"
+    },
+    {
+      "trans_dtime": "20260511190119",
+      "trans_no": "00000248",
+      "trans_type": "02",
+      "trans_class": "체크카드",
+      "currency_code": "KRW",
+      "trans_amt": 23500,
+      "balance_amt": 770414,
+      "trans_memo": "대학가 분식집"
+    },
+    {
+      "trans_dtime": "20260510163250",
+      "trans_no": "00000247",
+      "trans_type": "02",
+      "trans_class": "체크카드",
+      "currency_code": "KRW",
+      "trans_amt": 18500,
+      "balance_amt": 793914,
+      "trans_memo": "영화관"
+    },
+    {
+      "trans_dtime": "20260510121949",
+      "trans_no": "00000246",
+      "trans_type": "02",
+      "trans_class": "체크카드",
+      "currency_code": "KRW",
+      "trans_amt": 20500,
+      "balance_amt": 812414,
+      "trans_memo": "동네 마트"
+    },
+    {
+      "trans_dtime": "20260510090000",
+      "trans_no": "00000245",
+      "trans_type": "03",
+      "trans_class": "인터넷뱅킹",
+      "currency_code": "KRW",
+      "trans_amt": 900000,
+      "balance_amt": 832914,
+      "trans_memo": "야간 편의점 아르바이트 급여"
+    },
+    {
+      "trans_dtime": "20260508111932",
+      "trans_no": "00000244",
+      "trans_type": "02",
+      "trans_class": "체크카드",
+      "currency_code": "KRW",
+      "trans_amt": 26500,
+      "balance_amt": -67086,
+      "trans_memo": "편의점"
+    },
+    {
+      "trans_dtime": "20260504093033",
+      "trans_no": "00000243",
+      "trans_type": "02",
+      "trans_class": "체크카드",
+      "currency_code": "KRW",
+      "trans_amt": 32000,
+      "balance_amt": -40586,
+      "trans_memo": "동네 마트"
+    },
+    {
+      "trans_dtime": "20260503214537",
+      "trans_no": "00000242",
+      "trans_type": "02",
+      "trans_class": "체크카드",
+      "currency_code": "KRW",
+      "trans_amt": 25000,
+      "balance_amt": -8586,
+      "trans_memo": "동네 마트"
+    },
+    {
+      "trans_dtime": "20260502151710",
+      "trans_no": "00000241",
+      "trans_type": "02",
+      "trans_class": "체크카드",
+      "currency_code": "KRW",
+      "trans_amt": 28500,
+      "balance_amt": 16414,
+      "trans_memo": "영화관"
+    },
+    {
+      "trans_dtime": "20260502061000",
+      "trans_no": "00000240",
+      "trans_type": "02",
+      "trans_class": "자동이체",
+      "currency_code": "KRW",
+      "trans_amt": 60000,
+      "balance_amt": 44914,
+      "trans_memo": "교통비"
+    },
+    {
+      "trans_dtime": "20260501153713",
+      "trans_no": "00000239",
+      "trans_type": "02",
+      "trans_class": "체크카드",
+      "currency_code": "KRW",
+      "trans_amt": 24000,
+      "balance_amt": 104914,
+      "trans_memo": "학교 학생식당"
+    },
+    {
+      "trans_dtime": "20260428092117",
+      "trans_no": "00000238",
+      "trans_type": "02",
+      "trans_class": "체크카드",
+      "currency_code": "KRW",
+      "trans_amt": 29500,
+      "balance_amt": 128914,
+      "trans_memo": "영화관"
+    },
+    {
+      "trans_dtime": "20260425185716",
+      "trans_no": "00000237",
+      "trans_type": "02",
+      "trans_class": "체크카드",
+      "currency_code": "KRW",
+      "trans_amt": 24500,
+      "balance_amt": 158414,
+      "trans_memo": "서점"
+    },
+    {
+      "trans_dtime": "20260425160749",
+      "trans_no": "00000236",
+      "trans_type": "02",
+      "trans_class": "체크카드",
+      "currency_code": "KRW",
+      "trans_amt": 16000,
+      "balance_amt": 182914,
+      "trans_memo": "동네 마트"
+    },
+    {
+      "trans_dtime": "20260425125718",
+      "trans_no": "00000235",
+      "trans_type": "02",
+      "trans_class": "체크카드",
+      "currency_code": "KRW",
+      "trans_amt": 16500,
+      "balance_amt": 198914,
+      "trans_memo": "대학가 분식집"
+    },
+    {
+      "trans_dtime": "20260425062000",
+      "trans_no": "00000234",
+      "trans_type": "02",
+      "trans_class": "자동이체",
+      "currency_code": "KRW",
+      "trans_amt": 200000,
+      "balance_amt": 215414,
+      "trans_memo": "가족 월세·생활비 분담"
+    },
+    {
+      "trans_dtime": "20260421170515",
+      "trans_no": "00000233",
+      "trans_type": "02",
+      "trans_class": "체크카드",
+      "currency_code": "KRW",
+      "trans_amt": 23500,
+      "balance_amt": 415414,
+      "trans_memo": "서점"
+    },
+    {
+      "trans_dtime": "20260420062500",
+      "trans_no": "00000232",
+      "trans_type": "02",
+      "trans_class": "자동이체",
+      "currency_code": "KRW",
+      "trans_amt": 80000,
+      "balance_amt": 438914,
+      "trans_memo": "한국장학재단 학자금대출 원리금"
+    },
+    {
+      "trans_dtime": "20260419102356",
+      "trans_no": "00000231",
+      "trans_type": "02",
+      "trans_class": "체크카드",
+      "currency_code": "KRW",
+      "trans_amt": 23000,
+      "balance_amt": 518914,
+      "trans_memo": "동네 마트"
+    },
+    {
+      "trans_dtime": "20260418093523",
+      "trans_no": "00000230",
+      "trans_type": "02",
+      "trans_class": "체크카드",
+      "currency_code": "KRW",
+      "trans_amt": 27500,
+      "balance_amt": 541914,
+      "trans_memo": "서점"
+    },
+    {
+      "trans_dtime": "20260417215647",
+      "trans_no": "00000229",
+      "trans_type": "02",
+      "trans_class": "체크카드",
+      "currency_code": "KRW",
+      "trans_amt": 22000,
+      "balance_amt": 569414,
+      "trans_memo": "편의점"
+    },
+    {
+      "trans_dtime": "20260417173604",
+      "trans_no": "00000228",
+      "trans_type": "02",
+      "trans_class": "체크카드",
+      "currency_code": "KRW",
+      "trans_amt": 25500,
+      "balance_amt": 591414,
+      "trans_memo": "학교 학생식당"
+    },
+    {
+      "trans_dtime": "20260417152112",
+      "trans_no": "00000227",
+      "trans_type": "02",
+      "trans_class": "체크카드",
+      "currency_code": "KRW",
+      "trans_amt": 20500,
+      "balance_amt": 616914,
+      "trans_memo": "동네 마트"
+    },
+    {
+      "trans_dtime": "20260417061500",
+      "trans_no": "00000226",
+      "trans_type": "02",
+      "trans_class": "자동이체",
+      "currency_code": "KRW",
+      "trans_amt": 40000,
+      "balance_amt": 637414,
+      "trans_memo": "통신요금"
+    },
+    {
+      "trans_dtime": "20260416080949",
+      "trans_no": "00000225",
+      "trans_type": "02",
+      "trans_class": "체크카드",
+      "currency_code": "KRW",
+      "trans_amt": 31500,
+      "balance_amt": 677414,
+      "trans_memo": "대학가 분식집"
+    },
+    {
+      "trans_dtime": "20260414193107",
+      "trans_no": "00000224",
+      "trans_type": "02",
+      "trans_class": "체크카드",
+      "currency_code": "KRW",
+      "trans_amt": 20000,
+      "balance_amt": 708914,
+      "trans_memo": "편의점"
+    },
+    {
+      "trans_dtime": "20260414182407",
+      "trans_no": "00000223",
+      "trans_type": "02",
+      "trans_class": "체크카드",
+      "currency_code": "KRW",
+      "trans_amt": 23000,
+      "balance_amt": 728914,
+      "trans_memo": "서점"
+    },
+    {
+      "trans_dtime": "20260413115240",
+      "trans_no": "00000222",
+      "trans_type": "02",
+      "trans_class": "체크카드",
+      "currency_code": "KRW",
+      "trans_amt": 16500,
+      "balance_amt": 751914,
+      "trans_memo": "서점"
+    },
+    {
+      "trans_dtime": "20260412192142",
+      "trans_no": "00000221",
+      "trans_type": "02",
+      "trans_class": "체크카드",
+      "currency_code": "KRW",
+      "trans_amt": 28000,
+      "balance_amt": 768414,
+      "trans_memo": "영화관"
+    },
+    {
+      "trans_dtime": "20260412063000",
+      "trans_no": "00000220",
+      "trans_type": "02",
+      "trans_class": "자동이체",
+      "currency_code": "KRW",
+      "trans_amt": 20000,
+      "balance_amt": 796414,
+      "trans_memo": "대학생 목표적금 이체"
+    },
+    {
+      "trans_dtime": "20260411195447",
+      "trans_no": "00000219",
+      "trans_type": "02",
+      "trans_class": "체크카드",
+      "currency_code": "KRW",
+      "trans_amt": 23000,
+      "balance_amt": 816414,
+      "trans_memo": "동네 마트"
+    },
+    {
+      "trans_dtime": "20260410090000",
+      "trans_no": "00000218",
+      "trans_type": "03",
+      "trans_class": "인터넷뱅킹",
+      "currency_code": "KRW",
+      "trans_amt": 900000,
+      "balance_amt": 839414,
+      "trans_memo": "야간 편의점 아르바이트 급여"
+    },
+    {
+      "trans_dtime": "20260410083300",
+      "trans_no": "00000217",
+      "trans_type": "02",
+      "trans_class": "체크카드",
+      "currency_code": "KRW",
+      "trans_amt": 23000,
+      "balance_amt": -60586,
+      "trans_memo": "교내 카페"
+    },
+    {
+      "trans_dtime": "20260408201429",
+      "trans_no": "00000216",
+      "trans_type": "02",
+      "trans_class": "체크카드",
+      "currency_code": "KRW",
+      "trans_amt": 21000,
+      "balance_amt": -37586,
+      "trans_memo": "서점"
+    },
+    {
+      "trans_dtime": "20260408180643",
+      "trans_no": "00000215",
+      "trans_type": "02",
+      "trans_class": "체크카드",
+      "currency_code": "KRW",
+      "trans_amt": 31500,
+      "balance_amt": -16586,
+      "trans_memo": "대학가 분식집"
+    },
+    {
+      "trans_dtime": "20260407085549",
+      "trans_no": "00000214",
+      "trans_type": "02",
+      "trans_class": "체크카드",
+      "currency_code": "KRW",
+      "trans_amt": 20000,
+      "balance_amt": 14914,
+      "trans_memo": "학교 학생식당"
+    },
+    {
+      "trans_dtime": "20260406135023",
+      "trans_no": "00000213",
+      "trans_type": "02",
+      "trans_class": "체크카드",
+      "currency_code": "KRW",
+      "trans_amt": 15000,
+      "balance_amt": 34914,
+      "trans_memo": "대학가 분식집"
+    },
+    {
+      "trans_dtime": "20260402144146",
+      "trans_no": "00000212",
+      "trans_type": "02",
+      "trans_class": "체크카드",
+      "currency_code": "KRW",
+      "trans_amt": 19000,
+      "balance_amt": 49914,
+      "trans_memo": "대학가 분식집"
+    },
+    {
+      "trans_dtime": "20260402061000",
+      "trans_no": "00000211",
+      "trans_type": "02",
+      "trans_class": "자동이체",
+      "currency_code": "KRW",
+      "trans_amt": 60000,
+      "balance_amt": 68914,
+      "trans_memo": "교통비"
+    },
+    {
+      "trans_dtime": "20260328104939",
+      "trans_no": "00000210",
+      "trans_type": "02",
+      "trans_class": "체크카드",
+      "currency_code": "KRW",
+      "trans_amt": 26000,
+      "balance_amt": 128914,
+      "trans_memo": "대학가 분식집"
+    },
+    {
+      "trans_dtime": "20260328060000",
+      "trans_no": "00000209",
+      "trans_type": "98",
+      "trans_class": "자동처리",
+      "currency_code": "KRW",
+      "trans_amt": 2822,
+      "balance_amt": 154914,
+      "trans_memo": "이자"
+    },
+    {
+      "trans_dtime": "20260325185622",
+      "trans_no": "00000208",
+      "trans_type": "02",
+      "trans_class": "체크카드",
+      "currency_code": "KRW",
+      "trans_amt": 22000,
+      "balance_amt": 152092,
+      "trans_memo": "동네 마트"
+    },
+    {
+      "trans_dtime": "20260325062000",
+      "trans_no": "00000207",
+      "trans_type": "02",
+      "trans_class": "자동이체",
+      "currency_code": "KRW",
+      "trans_amt": 200000,
+      "balance_amt": 174092,
+      "trans_memo": "가족 월세·생활비 분담"
+    },
+    {
+      "trans_dtime": "20260322102552",
+      "trans_no": "00000206",
+      "trans_type": "02",
+      "trans_class": "체크카드",
+      "currency_code": "KRW",
+      "trans_amt": 30500,
+      "balance_amt": 374092,
+      "trans_memo": "동네 마트"
+    },
+    {
+      "trans_dtime": "20260321093828",
+      "trans_no": "00000205",
+      "trans_type": "02",
+      "trans_class": "체크카드",
+      "currency_code": "KRW",
+      "trans_amt": 28000,
+      "balance_amt": 404592,
+      "trans_memo": "대학가 분식집"
+    },
+    {
+      "trans_dtime": "20260320062500",
+      "trans_no": "00000204",
+      "trans_type": "02",
+      "trans_class": "자동이체",
+      "currency_code": "KRW",
+      "trans_amt": 80000,
+      "balance_amt": 432592,
+      "trans_memo": "한국장학재단 학자금대출 원리금"
+    },
+    {
+      "trans_dtime": "20260319121053",
+      "trans_no": "00000203",
+      "trans_type": "02",
+      "trans_class": "체크카드",
+      "currency_code": "KRW",
+      "trans_amt": 21500,
+      "balance_amt": 512592,
+      "trans_memo": "영화관"
+    },
+    {
+      "trans_dtime": "20260319093911",
+      "trans_no": "00000202",
+      "trans_type": "02",
+      "trans_class": "체크카드",
+      "currency_code": "KRW",
+      "trans_amt": 36500,
+      "balance_amt": 534092,
+      "trans_memo": "서점"
+    },
+    {
+      "trans_dtime": "20260317105131",
+      "trans_no": "00000201",
+      "trans_type": "02",
+      "trans_class": "체크카드",
+      "currency_code": "KRW",
+      "trans_amt": 24000,
+      "balance_amt": 570592,
+      "trans_memo": "서점"
+    },
+    {
+      "trans_dtime": "20260317061500",
+      "trans_no": "00000200",
+      "trans_type": "02",
+      "trans_class": "자동이체",
+      "currency_code": "KRW",
+      "trans_amt": 40000,
+      "balance_amt": 594592,
+      "trans_memo": "통신요금"
+    },
+    {
+      "trans_dtime": "20260316081536",
+      "trans_no": "00000199",
+      "trans_type": "02",
+      "trans_class": "체크카드",
+      "currency_code": "KRW",
+      "trans_amt": 24000,
+      "balance_amt": 634592,
+      "trans_memo": "서점"
+    },
+    {
+      "trans_dtime": "20260313212142",
+      "trans_no": "00000198",
+      "trans_type": "02",
+      "trans_class": "체크카드",
+      "currency_code": "KRW",
+      "trans_amt": 33000,
+      "balance_amt": 658592,
+      "trans_memo": "학교 학생식당"
+    },
+    {
+      "trans_dtime": "20260312105223",
+      "trans_no": "00000197",
+      "trans_type": "02",
+      "trans_class": "체크카드",
+      "currency_code": "KRW",
+      "trans_amt": 22500,
+      "balance_amt": 691592,
+      "trans_memo": "대학가 분식집"
+    },
+    {
+      "trans_dtime": "20260312063000",
+      "trans_no": "00000196",
+      "trans_type": "02",
+      "trans_class": "자동이체",
+      "currency_code": "KRW",
+      "trans_amt": 20000,
+      "balance_amt": 714092,
+      "trans_memo": "대학생 목표적금 이체"
+    },
+    {
+      "trans_dtime": "20260311143544",
+      "trans_no": "00000195",
+      "trans_type": "02",
+      "trans_class": "체크카드",
+      "currency_code": "KRW",
+      "trans_amt": 37000,
+      "balance_amt": 734092,
+      "trans_memo": "영화관"
+    },
+    {
+      "trans_dtime": "20260310204422",
+      "trans_no": "00000194",
+      "trans_type": "02",
+      "trans_class": "체크카드",
+      "currency_code": "KRW",
+      "trans_amt": 26500,
+      "balance_amt": 771092,
+      "trans_memo": "동네 마트"
+    },
+    {
+      "trans_dtime": "20260310090000",
+      "trans_no": "00000193",
+      "trans_type": "03",
+      "trans_class": "인터넷뱅킹",
+      "currency_code": "KRW",
+      "trans_amt": 900000,
+      "balance_amt": 797592,
+      "trans_memo": "야간 편의점 아르바이트 급여"
+    },
+    {
+      "trans_dtime": "20260309154452",
+      "trans_no": "00000192",
+      "trans_type": "02",
+      "trans_class": "체크카드",
+      "currency_code": "KRW",
+      "trans_amt": 27000,
+      "balance_amt": -102408,
+      "trans_memo": "동네 마트"
+    },
+    {
+      "trans_dtime": "20260309114231",
+      "trans_no": "00000191",
+      "trans_type": "02",
+      "trans_class": "체크카드",
+      "currency_code": "KRW",
+      "trans_amt": 29000,
+      "balance_amt": -75408,
+      "trans_memo": "서점"
+    },
+    {
+      "trans_dtime": "20260308211654",
+      "trans_no": "00000190",
+      "trans_type": "02",
+      "trans_class": "체크카드",
+      "currency_code": "KRW",
+      "trans_amt": 33500,
+      "balance_amt": -46408,
+      "trans_memo": "영화관"
+    },
+    {
+      "trans_dtime": "20260305211608",
+      "trans_no": "00000189",
+      "trans_type": "02",
+      "trans_class": "체크카드",
+      "currency_code": "KRW",
+      "trans_amt": 26500,
+      "balance_amt": -12908,
+      "trans_memo": "학교 학생식당"
+    },
+    {
+      "trans_dtime": "20260304094605",
+      "trans_no": "00000188",
+      "trans_type": "02",
+      "trans_class": "체크카드",
+      "currency_code": "KRW",
+      "trans_amt": 24500,
+      "balance_amt": 13592,
+      "trans_memo": "동네 마트"
+    },
+    {
+      "trans_dtime": "20260303131043",
+      "trans_no": "00000187",
+      "trans_type": "02",
+      "trans_class": "체크카드",
+      "currency_code": "KRW",
+      "trans_amt": 28000,
+      "balance_amt": 38092,
+      "trans_memo": "교내 카페"
+    },
+    {
+      "trans_dtime": "20260302061000",
+      "trans_no": "00000186",
+      "trans_type": "02",
+      "trans_class": "자동이체",
+      "currency_code": "KRW",
+      "trans_amt": 60000,
+      "balance_amt": 66092,
+      "trans_memo": "교통비"
+    },
+    {
+      "trans_dtime": "20260226094333",
+      "trans_no": "00000185",
+      "trans_type": "02",
+      "trans_class": "체크카드",
+      "currency_code": "KRW",
+      "trans_amt": 18000,
+      "balance_amt": 126092,
+      "trans_memo": "교내 카페"
+    },
+    {
+      "trans_dtime": "20260225062000",
+      "trans_no": "00000184",
+      "trans_type": "02",
+      "trans_class": "자동이체",
+      "currency_code": "KRW",
+      "trans_amt": 200000,
+      "balance_amt": 144092,
+      "trans_memo": "가족 월세·생활비 분담"
+    },
+    {
+      "trans_dtime": "20260224172113",
+      "trans_no": "00000183",
+      "trans_type": "02",
+      "trans_class": "체크카드",
+      "currency_code": "KRW",
+      "trans_amt": 30000,
+      "balance_amt": 344092,
+      "trans_memo": "서점"
+    },
+    {
+      "trans_dtime": "20260224122420",
+      "trans_no": "00000182",
+      "trans_type": "02",
+      "trans_class": "체크카드",
+      "currency_code": "KRW",
+      "trans_amt": 28000,
+      "balance_amt": 374092,
+      "trans_memo": "학교 학생식당"
+    },
+    {
+      "trans_dtime": "20260221164248",
+      "trans_no": "00000181",
+      "trans_type": "02",
+      "trans_class": "체크카드",
+      "currency_code": "KRW",
+      "trans_amt": 17000,
+      "balance_amt": 402092,
+      "trans_memo": "서점"
+    },
+    {
+      "trans_dtime": "20260220062500",
+      "trans_no": "00000180",
+      "trans_type": "02",
+      "trans_class": "자동이체",
+      "currency_code": "KRW",
+      "trans_amt": 80000,
+      "balance_amt": 419092,
+      "trans_memo": "한국장학재단 학자금대출 원리금"
+    },
+    {
+      "trans_dtime": "20260219200056",
+      "trans_no": "00000179",
+      "trans_type": "02",
+      "trans_class": "체크카드",
+      "currency_code": "KRW",
+      "trans_amt": 32000,
+      "balance_amt": 499092,
+      "trans_memo": "편의점"
+    },
+    {
+      "trans_dtime": "20260217112814",
+      "trans_no": "00000178",
+      "trans_type": "02",
+      "trans_class": "체크카드",
+      "currency_code": "KRW",
+      "trans_amt": 27000,
+      "balance_amt": 531092,
+      "trans_memo": "편의점"
+    },
+    {
+      "trans_dtime": "20260217080620",
+      "trans_no": "00000177",
+      "trans_type": "02",
+      "trans_class": "체크카드",
+      "currency_code": "KRW",
+      "trans_amt": 31000,
+      "balance_amt": 558092,
+      "trans_memo": "편의점"
+    },
+    {
+      "trans_dtime": "20260217061500",
+      "trans_no": "00000176",
+      "trans_type": "02",
+      "trans_class": "자동이체",
+      "currency_code": "KRW",
+      "trans_amt": 40000,
+      "balance_amt": 589092,
+      "trans_memo": "통신요금"
+    },
+    {
+      "trans_dtime": "20260215084914",
+      "trans_no": "00000175",
+      "trans_type": "02",
+      "trans_class": "체크카드",
+      "currency_code": "KRW",
+      "trans_amt": 30500,
+      "balance_amt": 629092,
+      "trans_memo": "학교 학생식당"
+    },
+    {
+      "trans_dtime": "20260214174052",
+      "trans_no": "00000174",
+      "trans_type": "02",
+      "trans_class": "체크카드",
+      "currency_code": "KRW",
+      "trans_amt": 30500,
+      "balance_amt": 659592,
+      "trans_memo": "영화관"
+    },
+    {
+      "trans_dtime": "20260213091300",
+      "trans_no": "00000173",
+      "trans_type": "02",
+      "trans_class": "체크카드",
+      "currency_code": "KRW",
+      "trans_amt": 32500,
+      "balance_amt": 690092,
+      "trans_memo": "편의점"
+    },
+    {
+      "trans_dtime": "20260212063000",
+      "trans_no": "00000172",
+      "trans_type": "02",
+      "trans_class": "자동이체",
+      "currency_code": "KRW",
+      "trans_amt": 20000,
+      "balance_amt": 722592,
+      "trans_memo": "대학생 목표적금 이체"
+    },
+    {
+      "trans_dtime": "20260211183149",
+      "trans_no": "00000171",
+      "trans_type": "02",
+      "trans_class": "체크카드",
+      "currency_code": "KRW",
+      "trans_amt": 23500,
+      "balance_amt": 742592,
+      "trans_memo": "대학가 분식집"
+    },
+    {
+      "trans_dtime": "20260210200629",
+      "trans_no": "00000170",
+      "trans_type": "02",
+      "trans_class": "체크카드",
+      "currency_code": "KRW",
+      "trans_amt": 20500,
+      "balance_amt": 766092,
+      "trans_memo": "교내 카페"
+    },
+    {
+      "trans_dtime": "20260210090000",
+      "trans_no": "00000169",
+      "trans_type": "03",
+      "trans_class": "인터넷뱅킹",
+      "currency_code": "KRW",
+      "trans_amt": 900000,
+      "balance_amt": 786592,
+      "trans_memo": "야간 편의점 아르바이트 급여"
+    },
+    {
+      "trans_dtime": "20260209123458",
+      "trans_no": "00000168",
+      "trans_type": "02",
+      "trans_class": "체크카드",
+      "currency_code": "KRW",
+      "trans_amt": 18000,
+      "balance_amt": -113408,
+      "trans_memo": "서점"
+    },
+    {
+      "trans_dtime": "20260209103504",
+      "trans_no": "00000167",
+      "trans_type": "02",
+      "trans_class": "체크카드",
+      "currency_code": "KRW",
+      "trans_amt": 19500,
+      "balance_amt": -95408,
+      "trans_memo": "편의점"
+    },
+    {
+      "trans_dtime": "20260208122658",
+      "trans_no": "00000166",
+      "trans_type": "02",
+      "trans_class": "체크카드",
+      "currency_code": "KRW",
+      "trans_amt": 20500,
+      "balance_amt": -75908,
+      "trans_memo": "서점"
+    },
+    {
+      "trans_dtime": "20260207131225",
+      "trans_no": "00000165",
+      "trans_type": "02",
+      "trans_class": "체크카드",
+      "currency_code": "KRW",
+      "trans_amt": 17000,
+      "balance_amt": -55408,
+      "trans_memo": "대학가 분식집"
+    },
+    {
+      "trans_dtime": "20260205110651",
+      "trans_no": "00000164",
+      "trans_type": "02",
+      "trans_class": "체크카드",
+      "currency_code": "KRW",
+      "trans_amt": 14500,
+      "balance_amt": -38408,
+      "trans_memo": "교내 카페"
+    },
+    {
+      "trans_dtime": "20260203201340",
+      "trans_no": "00000163",
+      "trans_type": "02",
+      "trans_class": "체크카드",
+      "currency_code": "KRW",
+      "trans_amt": 16500,
+      "balance_amt": -23908,
+      "trans_memo": "편의점"
+    },
+    {
+      "trans_dtime": "20260202214202",
+      "trans_no": "00000162",
+      "trans_type": "02",
+      "trans_class": "체크카드",
+      "currency_code": "KRW",
+      "trans_amt": 25000,
+      "balance_amt": -7408,
+      "trans_memo": "편의점"
+    },
+    {
+      "trans_dtime": "20260202061000",
+      "trans_no": "00000161",
+      "trans_type": "02",
+      "trans_class": "자동이체",
+      "currency_code": "KRW",
+      "trans_amt": 60000,
+      "balance_amt": 17592,
+      "trans_memo": "교통비"
+    },
+    {
+      "trans_dtime": "20260201172642",
+      "trans_no": "00000160",
+      "trans_type": "02",
+      "trans_class": "체크카드",
+      "currency_code": "KRW",
+      "trans_amt": 24500,
+      "balance_amt": 77592,
+      "trans_memo": "학교 학생식당"
+    },
+    {
+      "trans_dtime": "20260201120504",
+      "trans_no": "00000159",
+      "trans_type": "02",
+      "trans_class": "체크카드",
+      "currency_code": "KRW",
+      "trans_amt": 24000,
+      "balance_amt": 102092,
+      "trans_memo": "대학가 분식집"
+    },
+    {
+      "trans_dtime": "20260128203511",
+      "trans_no": "00000158",
+      "trans_type": "02",
+      "trans_class": "체크카드",
+      "currency_code": "KRW",
+      "trans_amt": 25500,
+      "balance_amt": 126092,
+      "trans_memo": "서점"
+    },
+    {
+      "trans_dtime": "20260125172705",
+      "trans_no": "00000157",
+      "trans_type": "02",
+      "trans_class": "체크카드",
+      "currency_code": "KRW",
+      "trans_amt": 17000,
+      "balance_amt": 151592,
+      "trans_memo": "대학가 분식집"
+    },
+    {
+      "trans_dtime": "20260125062000",
+      "trans_no": "00000156",
+      "trans_type": "02",
+      "trans_class": "자동이체",
+      "currency_code": "KRW",
+      "trans_amt": 200000,
+      "balance_amt": 168592,
+      "trans_memo": "가족 월세·생활비 분담"
+    },
+    {
+      "trans_dtime": "20260124205611",
+      "trans_no": "00000155",
+      "trans_type": "02",
+      "trans_class": "체크카드",
+      "currency_code": "KRW",
+      "trans_amt": 33500,
+      "balance_amt": 368592,
+      "trans_memo": "대학가 분식집"
+    },
+    {
+      "trans_dtime": "20260123174540",
+      "trans_no": "00000154",
+      "trans_type": "02",
+      "trans_class": "체크카드",
+      "currency_code": "KRW",
+      "trans_amt": 21500,
+      "balance_amt": 402092,
+      "trans_memo": "서점"
+    },
+    {
+      "trans_dtime": "20260121154629",
+      "trans_no": "00000153",
+      "trans_type": "02",
+      "trans_class": "체크카드",
+      "currency_code": "KRW",
+      "trans_amt": 20500,
+      "balance_amt": 423592,
+      "trans_memo": "서점"
+    },
+    {
+      "trans_dtime": "20260120134205",
+      "trans_no": "00000152",
+      "trans_type": "02",
+      "trans_class": "체크카드",
+      "currency_code": "KRW",
+      "trans_amt": 32000,
+      "balance_amt": 444092,
+      "trans_memo": "편의점"
+    },
+    {
+      "trans_dtime": "20260120062500",
+      "trans_no": "00000151",
+      "trans_type": "02",
+      "trans_class": "자동이체",
+      "currency_code": "KRW",
+      "trans_amt": 80000,
+      "balance_amt": 476092,
+      "trans_memo": "한국장학재단 학자금대출 원리금"
+    },
+    {
+      "trans_dtime": "20260118184520",
+      "trans_no": "00000150",
+      "trans_type": "02",
+      "trans_class": "체크카드",
+      "currency_code": "KRW",
+      "trans_amt": 25500,
+      "balance_amt": 556092,
+      "trans_memo": "영화관"
+    },
+    {
+      "trans_dtime": "20260117061500",
+      "trans_no": "00000149",
+      "trans_type": "02",
+      "trans_class": "자동이체",
+      "currency_code": "KRW",
+      "trans_amt": 40000,
+      "balance_amt": 581592,
+      "trans_memo": "통신요금"
+    },
+    {
+      "trans_dtime": "20260112183858",
+      "trans_no": "00000148",
+      "trans_type": "02",
+      "trans_class": "체크카드",
+      "currency_code": "KRW",
+      "trans_amt": 36000,
+      "balance_amt": 621592,
+      "trans_memo": "편의점"
+    },
+    {
+      "trans_dtime": "20260112160532",
+      "trans_no": "00000147",
+      "trans_type": "02",
+      "trans_class": "체크카드",
+      "currency_code": "KRW",
+      "trans_amt": 35500,
+      "balance_amt": 657592,
+      "trans_memo": "서점"
+    },
+    {
+      "trans_dtime": "20260112063000",
+      "trans_no": "00000146",
+      "trans_type": "02",
+      "trans_class": "자동이체",
+      "currency_code": "KRW",
+      "trans_amt": 20000,
+      "balance_amt": 693092,
+      "trans_memo": "대학생 목표적금 이체"
+    },
+    {
+      "trans_dtime": "20260110101109",
+      "trans_no": "00000145",
+      "trans_type": "02",
+      "trans_class": "체크카드",
+      "currency_code": "KRW",
+      "trans_amt": 19500,
+      "balance_amt": 713092,
+      "trans_memo": "편의점"
+    },
+    {
+      "trans_dtime": "20260110092523",
+      "trans_no": "00000144",
+      "trans_type": "02",
+      "trans_class": "체크카드",
+      "currency_code": "KRW",
+      "trans_amt": 28000,
+      "balance_amt": 732592,
+      "trans_memo": "동네 마트"
+    },
+    {
+      "trans_dtime": "20260110090000",
+      "trans_no": "00000143",
+      "trans_type": "03",
+      "trans_class": "인터넷뱅킹",
+      "currency_code": "KRW",
+      "trans_amt": 900000,
+      "balance_amt": 760592,
+      "trans_memo": "야간 편의점 아르바이트 급여"
+    },
+    {
+      "trans_dtime": "20260109212122",
+      "trans_no": "00000142",
+      "trans_type": "02",
+      "trans_class": "체크카드",
+      "currency_code": "KRW",
+      "trans_amt": 24500,
+      "balance_amt": -139408,
+      "trans_memo": "편의점"
+    },
+    {
+      "trans_dtime": "20260108135043",
+      "trans_no": "00000141",
+      "trans_type": "02",
+      "trans_class": "체크카드",
+      "currency_code": "KRW",
+      "trans_amt": 26500,
+      "balance_amt": -114908,
+      "trans_memo": "동네 마트"
+    },
+    {
+      "trans_dtime": "20260107161048",
+      "trans_no": "00000140",
+      "trans_type": "02",
+      "trans_class": "체크카드",
+      "currency_code": "KRW",
+      "trans_amt": 21500,
+      "balance_amt": -88408,
+      "trans_memo": "대학가 분식집"
+    },
+    {
+      "trans_dtime": "20260104132322",
+      "trans_no": "00000139",
+      "trans_type": "02",
+      "trans_class": "체크카드",
+      "currency_code": "KRW",
+      "trans_amt": 28000,
+      "balance_amt": -66908,
+      "trans_memo": "학교 학생식당"
+    },
+    {
+      "trans_dtime": "20260103151341",
+      "trans_no": "00000138",
+      "trans_type": "02",
+      "trans_class": "체크카드",
+      "currency_code": "KRW",
+      "trans_amt": 36000,
+      "balance_amt": -38908,
+      "trans_memo": "서점"
+    },
+    {
+      "trans_dtime": "20260102103517",
+      "trans_no": "00000137",
+      "trans_type": "02",
+      "trans_class": "체크카드",
+      "currency_code": "KRW",
+      "trans_amt": 22000,
+      "balance_amt": -2908,
+      "trans_memo": "교내 카페"
+    },
+    {
+      "trans_dtime": "20260102061000",
+      "trans_no": "00000136",
+      "trans_type": "02",
+      "trans_class": "자동이체",
+      "currency_code": "KRW",
+      "trans_amt": 60000,
+      "balance_amt": 19092,
+      "trans_memo": "교통비"
+    },
+    {
+      "trans_dtime": "20260101134530",
+      "trans_no": "00000135",
+      "trans_type": "02",
+      "trans_class": "체크카드",
+      "currency_code": "KRW",
+      "trans_amt": 20000,
+      "balance_amt": 79092,
+      "trans_memo": "동네 마트"
+    },
+    {
+      "trans_dtime": "20260101104234",
+      "trans_no": "00000134",
+      "trans_type": "02",
+      "trans_class": "체크카드",
+      "currency_code": "KRW",
+      "trans_amt": 27000,
+      "balance_amt": 99092,
+      "trans_memo": "대학가 분식집"
+    },
+    {
+      "trans_dtime": "20251228162347",
+      "trans_no": "00000133",
+      "trans_type": "02",
+      "trans_class": "체크카드",
+      "currency_code": "KRW",
+      "trans_amt": 23500,
+      "balance_amt": 126092,
+      "trans_memo": "서점"
+    },
+    {
+      "trans_dtime": "20251228142915",
+      "trans_no": "00000132",
+      "trans_type": "02",
+      "trans_class": "체크카드",
+      "currency_code": "KRW",
+      "trans_amt": 35000,
+      "balance_amt": 149592,
+      "trans_memo": "동네 마트"
+    },
+    {
+      "trans_dtime": "20251228060000",
+      "trans_no": "00000131",
+      "trans_type": "98",
+      "trans_class": "자동처리",
+      "currency_code": "KRW",
+      "trans_amt": 942,
+      "balance_amt": 184592,
+      "trans_memo": "이자"
+    },
+    {
+      "trans_dtime": "20251227201327",
+      "trans_no": "00000130",
+      "trans_type": "02",
+      "trans_class": "체크카드",
+      "currency_code": "KRW",
+      "trans_amt": 17000,
+      "balance_amt": 183650,
+      "trans_memo": "영화관"
+    },
+    {
+      "trans_dtime": "20251225162428",
+      "trans_no": "00000129",
+      "trans_type": "02",
+      "trans_class": "체크카드",
+      "currency_code": "KRW",
+      "trans_amt": 33500,
+      "balance_amt": 200650,
+      "trans_memo": "대학가 분식집"
+    },
+    {
+      "trans_dtime": "20251225062000",
+      "trans_no": "00000128",
+      "trans_type": "02",
+      "trans_class": "자동이체",
+      "currency_code": "KRW",
+      "trans_amt": 200000,
+      "balance_amt": 234150,
+      "trans_memo": "가족 월세·생활비 분담"
+    },
+    {
+      "trans_dtime": "20251220062500",
+      "trans_no": "00000127",
+      "trans_type": "02",
+      "trans_class": "자동이체",
+      "currency_code": "KRW",
+      "trans_amt": 80000,
+      "balance_amt": 434150,
+      "trans_memo": "한국장학재단 학자금대출 원리금"
+    },
+    {
+      "trans_dtime": "20251217061500",
+      "trans_no": "00000126",
+      "trans_type": "02",
+      "trans_class": "자동이체",
+      "currency_code": "KRW",
+      "trans_amt": 40000,
+      "balance_amt": 514150,
+      "trans_memo": "통신요금"
+    },
+    {
+      "trans_dtime": "20251216204208",
+      "trans_no": "00000125",
+      "trans_type": "02",
+      "trans_class": "체크카드",
+      "currency_code": "KRW",
+      "trans_amt": 34500,
+      "balance_amt": 554150,
+      "trans_memo": "서점"
+    },
+    {
+      "trans_dtime": "20251214145628",
+      "trans_no": "00000124",
+      "trans_type": "02",
+      "trans_class": "체크카드",
+      "currency_code": "KRW",
+      "trans_amt": 33500,
+      "balance_amt": 588650,
+      "trans_memo": "학교 학생식당"
+    },
+    {
+      "trans_dtime": "20251213203101",
+      "trans_no": "00000123",
+      "trans_type": "02",
+      "trans_class": "체크카드",
+      "currency_code": "KRW",
+      "trans_amt": 30000,
+      "balance_amt": 622150,
+      "trans_memo": "대학가 분식집"
+    },
+    {
+      "trans_dtime": "20251213182432",
+      "trans_no": "00000122",
+      "trans_type": "02",
+      "trans_class": "체크카드",
+      "currency_code": "KRW",
+      "trans_amt": 28500,
+      "balance_amt": 652150,
+      "trans_memo": "학교 학생식당"
+    },
+    {
+      "trans_dtime": "20251212063000",
+      "trans_no": "00000121",
+      "trans_type": "02",
+      "trans_class": "자동이체",
+      "currency_code": "KRW",
+      "trans_amt": 20000,
+      "balance_amt": 680650,
+      "trans_memo": "대학생 목표적금 이체"
+    },
+    {
+      "trans_dtime": "20251211120844",
+      "trans_no": "00000120",
+      "trans_type": "02",
+      "trans_class": "체크카드",
+      "currency_code": "KRW",
+      "trans_amt": 31000,
+      "balance_amt": 700650,
+      "trans_memo": "서점"
+    },
+    {
+      "trans_dtime": "20251210210612",
+      "trans_no": "00000119",
+      "trans_type": "02",
+      "trans_class": "체크카드",
+      "currency_code": "KRW",
+      "trans_amt": 22500,
+      "balance_amt": 731650,
+      "trans_memo": "동네 마트"
+    },
+    {
+      "trans_dtime": "20251210183114",
+      "trans_no": "00000118",
+      "trans_type": "02",
+      "trans_class": "체크카드",
+      "currency_code": "KRW",
+      "trans_amt": 34500,
+      "balance_amt": 754150,
+      "trans_memo": "서점"
+    },
+    {
+      "trans_dtime": "20251210171052",
+      "trans_no": "00000117",
+      "trans_type": "02",
+      "trans_class": "체크카드",
+      "currency_code": "KRW",
+      "trans_amt": 16000,
+      "balance_amt": 788650,
+      "trans_memo": "학교 학생식당"
+    },
+    {
+      "trans_dtime": "20251210090000",
+      "trans_no": "00000116",
+      "trans_type": "03",
+      "trans_class": "인터넷뱅킹",
+      "currency_code": "KRW",
+      "trans_amt": 900000,
+      "balance_amt": 804650,
+      "trans_memo": "야간 편의점 아르바이트 급여"
+    },
+    {
+      "trans_dtime": "20251208175016",
+      "trans_no": "00000115",
+      "trans_type": "02",
+      "trans_class": "체크카드",
+      "currency_code": "KRW",
+      "trans_amt": 23500,
+      "balance_amt": -95350,
+      "trans_memo": "편의점"
+    },
+    {
+      "trans_dtime": "20251208095023",
+      "trans_no": "00000114",
+      "trans_type": "02",
+      "trans_class": "체크카드",
+      "currency_code": "KRW",
+      "trans_amt": 16000,
+      "balance_amt": -71850,
+      "trans_memo": "영화관"
+    },
+    {
+      "trans_dtime": "20251205103908",
+      "trans_no": "00000113",
+      "trans_type": "02",
+      "trans_class": "체크카드",
+      "currency_code": "KRW",
+      "trans_amt": 21500,
+      "balance_amt": -55850,
+      "trans_memo": "편의점"
+    },
+    {
+      "trans_dtime": "20251203172658",
+      "trans_no": "00000112",
+      "trans_type": "02",
+      "trans_class": "체크카드",
+      "currency_code": "KRW",
+      "trans_amt": 20500,
+      "balance_amt": -34350,
+      "trans_memo": "동네 마트"
+    },
+    {
+      "trans_dtime": "20251203125500",
+      "trans_no": "00000111",
+      "trans_type": "02",
+      "trans_class": "체크카드",
+      "currency_code": "KRW",
+      "trans_amt": 26500,
+      "balance_amt": -13850,
+      "trans_memo": "영화관"
+    },
+    {
+      "trans_dtime": "20251202061000",
+      "trans_no": "00000110",
+      "trans_type": "02",
+      "trans_class": "자동이체",
+      "currency_code": "KRW",
+      "trans_amt": 60000,
+      "balance_amt": 12650,
+      "trans_memo": "교통비"
+    },
+    {
+      "trans_dtime": "20251201195218",
+      "trans_no": "00000109",
+      "trans_type": "02",
+      "trans_class": "체크카드",
+      "currency_code": "KRW",
+      "trans_amt": 21000,
+      "balance_amt": 72650,
+      "trans_memo": "영화관"
+    },
+    {
+      "trans_dtime": "20251201154430",
+      "trans_no": "00000108",
+      "trans_type": "02",
+      "trans_class": "체크카드",
+      "currency_code": "KRW",
+      "trans_amt": 31500,
+      "balance_amt": 93650,
+      "trans_memo": "대학가 분식집"
+    },
+    {
+      "trans_dtime": "20251128165536",
+      "trans_no": "00000107",
+      "trans_type": "02",
+      "trans_class": "체크카드",
+      "currency_code": "KRW",
+      "trans_amt": 15000,
+      "balance_amt": 125150,
+      "trans_memo": "대학가 분식집"
+    },
+    {
+      "trans_dtime": "20251125130409",
+      "trans_no": "00000106",
+      "trans_type": "02",
+      "trans_class": "체크카드",
+      "currency_code": "KRW",
+      "trans_amt": 31000,
+      "balance_amt": 140150,
+      "trans_memo": "대학가 분식집"
+    },
+    {
+      "trans_dtime": "20251125085115",
+      "trans_no": "00000105",
+      "trans_type": "02",
+      "trans_class": "체크카드",
+      "currency_code": "KRW",
+      "trans_amt": 20500,
+      "balance_amt": 171150,
+      "trans_memo": "대학가 분식집"
+    },
+    {
+      "trans_dtime": "20251125062000",
+      "trans_no": "00000104",
+      "trans_type": "02",
+      "trans_class": "자동이체",
+      "currency_code": "KRW",
+      "trans_amt": 200000,
+      "balance_amt": 191650,
+      "trans_memo": "가족 월세·생활비 분담"
+    },
+    {
+      "trans_dtime": "20251123204842",
+      "trans_no": "00000103",
+      "trans_type": "02",
+      "trans_class": "체크카드",
+      "currency_code": "KRW",
+      "trans_amt": 15000,
+      "balance_amt": 391650,
+      "trans_memo": "학교 학생식당"
+    },
+    {
+      "trans_dtime": "20251123125230",
+      "trans_no": "00000102",
+      "trans_type": "02",
+      "trans_class": "체크카드",
+      "currency_code": "KRW",
+      "trans_amt": 26000,
+      "balance_amt": 406650,
+      "trans_memo": "영화관"
+    },
+    {
+      "trans_dtime": "20251122135646",
+      "trans_no": "00000101",
+      "trans_type": "02",
+      "trans_class": "체크카드",
+      "currency_code": "KRW",
+      "trans_amt": 30000,
+      "balance_amt": 432650,
+      "trans_memo": "교내 카페"
+    },
+    {
+      "trans_dtime": "20251121195326",
+      "trans_no": "00000100",
+      "trans_type": "02",
+      "trans_class": "체크카드",
+      "currency_code": "KRW",
+      "trans_amt": 33000,
+      "balance_amt": 462650,
+      "trans_memo": "영화관"
+    },
+    {
+      "trans_dtime": "20251121133515",
+      "trans_no": "00000099",
+      "trans_type": "02",
+      "trans_class": "체크카드",
+      "currency_code": "KRW",
+      "trans_amt": 33000,
+      "balance_amt": 495650,
+      "trans_memo": "동네 마트"
+    },
+    {
+      "trans_dtime": "20251120062500",
+      "trans_no": "00000098",
+      "trans_type": "02",
+      "trans_class": "자동이체",
+      "currency_code": "KRW",
+      "trans_amt": 80000,
+      "balance_amt": 528650,
+      "trans_memo": "한국장학재단 학자금대출 원리금"
+    },
+    {
+      "trans_dtime": "20251118152221",
+      "trans_no": "00000097",
+      "trans_type": "02",
+      "trans_class": "체크카드",
+      "currency_code": "KRW",
+      "trans_amt": 19500,
+      "balance_amt": 608650,
+      "trans_memo": "교내 카페"
+    },
+    {
+      "trans_dtime": "20251118141339",
+      "trans_no": "00000096",
+      "trans_type": "02",
+      "trans_class": "체크카드",
+      "currency_code": "KRW",
+      "trans_amt": 31500,
+      "balance_amt": 628150,
+      "trans_memo": "동네 마트"
+    },
+    {
+      "trans_dtime": "20251118133733",
+      "trans_no": "00000095",
+      "trans_type": "02",
+      "trans_class": "체크카드",
+      "currency_code": "KRW",
+      "trans_amt": 18000,
+      "balance_amt": 659650,
+      "trans_memo": "동네 마트"
+    },
+    {
+      "trans_dtime": "20251117205904",
+      "trans_no": "00000094",
+      "trans_type": "02",
+      "trans_class": "체크카드",
+      "currency_code": "KRW",
+      "trans_amt": 18500,
+      "balance_amt": 677650,
+      "trans_memo": "편의점"
+    },
+    {
+      "trans_dtime": "20251117061500",
+      "trans_no": "00000093",
+      "trans_type": "02",
+      "trans_class": "자동이체",
+      "currency_code": "KRW",
+      "trans_amt": 40000,
+      "balance_amt": 696150,
+      "trans_memo": "통신요금"
+    },
+    {
+      "trans_dtime": "20251113115924",
+      "trans_no": "00000092",
+      "trans_type": "02",
+      "trans_class": "체크카드",
+      "currency_code": "KRW",
+      "trans_amt": 31000,
+      "balance_amt": 736150,
+      "trans_memo": "편의점"
+    },
+    {
+      "trans_dtime": "20251112085911",
+      "trans_no": "00000091",
+      "trans_type": "02",
+      "trans_class": "체크카드",
+      "currency_code": "KRW",
+      "trans_amt": 28000,
+      "balance_amt": 767150,
+      "trans_memo": "영화관"
+    },
+    {
+      "trans_dtime": "20251112063000",
+      "trans_no": "00000090",
+      "trans_type": "02",
+      "trans_class": "자동이체",
+      "currency_code": "KRW",
+      "trans_amt": 20000,
+      "balance_amt": 795150,
+      "trans_memo": "대학생 목표적금 이체"
+    },
+    {
+      "trans_dtime": "20251111112127",
+      "trans_no": "00000089",
+      "trans_type": "02",
+      "trans_class": "체크카드",
+      "currency_code": "KRW",
+      "trans_amt": 24500,
+      "balance_amt": 815150,
+      "trans_memo": "서점"
+    },
+    {
+      "trans_dtime": "20251110195037",
+      "trans_no": "00000088",
+      "trans_type": "02",
+      "trans_class": "체크카드",
+      "currency_code": "KRW",
+      "trans_amt": 23000,
+      "balance_amt": 839650,
+      "trans_memo": "영화관"
+    },
+    {
+      "trans_dtime": "20251110143816",
+      "trans_no": "00000087",
+      "trans_type": "02",
+      "trans_class": "체크카드",
+      "currency_code": "KRW",
+      "trans_amt": 14500,
+      "balance_amt": 862650,
+      "trans_memo": "대학가 분식집"
+    },
+    {
+      "trans_dtime": "20251110090000",
+      "trans_no": "00000086",
+      "trans_type": "03",
+      "trans_class": "인터넷뱅킹",
+      "currency_code": "KRW",
+      "trans_amt": 900000,
+      "balance_amt": 877150,
+      "trans_memo": "야간 편의점 아르바이트 급여"
+    },
+    {
+      "trans_dtime": "20251109203717",
+      "trans_no": "00000085",
+      "trans_type": "02",
+      "trans_class": "체크카드",
+      "currency_code": "KRW",
+      "trans_amt": 24500,
+      "balance_amt": -22850,
+      "trans_memo": "대학가 분식집"
+    },
+    {
+      "trans_dtime": "20251109201839",
+      "trans_no": "00000084",
+      "trans_type": "02",
+      "trans_class": "체크카드",
+      "currency_code": "KRW",
+      "trans_amt": 20500,
+      "balance_amt": 1650,
+      "trans_memo": "동네 마트"
+    },
+    {
+      "trans_dtime": "20251103163536",
+      "trans_no": "00000083",
+      "trans_type": "02",
+      "trans_class": "체크카드",
+      "currency_code": "KRW",
+      "trans_amt": 16000,
+      "balance_amt": 22150,
+      "trans_memo": "학교 학생식당"
+    },
+    {
+      "trans_dtime": "20251102162340",
+      "trans_no": "00000082",
+      "trans_type": "02",
+      "trans_class": "체크카드",
+      "currency_code": "KRW",
+      "trans_amt": 27000,
+      "balance_amt": 38150,
+      "trans_memo": "영화관"
+    },
+    {
+      "trans_dtime": "20251102061000",
+      "trans_no": "00000081",
+      "trans_type": "02",
+      "trans_class": "자동이체",
+      "currency_code": "KRW",
+      "trans_amt": 60000,
+      "balance_amt": 65150,
+      "trans_memo": "교통비"
+    },
+    {
+      "trans_dtime": "20251027100403",
+      "trans_no": "00000080",
+      "trans_type": "02",
+      "trans_class": "체크카드",
+      "currency_code": "KRW",
+      "trans_amt": 23000,
+      "balance_amt": 125150,
+      "trans_memo": "편의점"
+    },
+    {
+      "trans_dtime": "20251026093514",
+      "trans_no": "00000079",
+      "trans_type": "02",
+      "trans_class": "체크카드",
+      "currency_code": "KRW",
+      "trans_amt": 24500,
+      "balance_amt": 148150,
+      "trans_memo": "편의점"
+    },
+    {
+      "trans_dtime": "20251025164600",
+      "trans_no": "00000078",
+      "trans_type": "02",
+      "trans_class": "체크카드",
+      "currency_code": "KRW",
+      "trans_amt": 29500,
+      "balance_amt": 172650,
+      "trans_memo": "서점"
+    },
+    {
+      "trans_dtime": "20251025062000",
+      "trans_no": "00000077",
+      "trans_type": "02",
+      "trans_class": "자동이체",
+      "currency_code": "KRW",
+      "trans_amt": 200000,
+      "balance_amt": 202150,
+      "trans_memo": "가족 월세·생활비 분담"
+    },
+    {
+      "trans_dtime": "20251024155522",
+      "trans_no": "00000076",
+      "trans_type": "02",
+      "trans_class": "체크카드",
+      "currency_code": "KRW",
+      "trans_amt": 36000,
+      "balance_amt": 402150,
+      "trans_memo": "교내 카페"
+    },
+    {
+      "trans_dtime": "20251023091049",
+      "trans_no": "00000075",
+      "trans_type": "02",
+      "trans_class": "체크카드",
+      "currency_code": "KRW",
+      "trans_amt": 17000,
+      "balance_amt": 438150,
+      "trans_memo": "영화관"
+    },
+    {
+      "trans_dtime": "20251020062500",
+      "trans_no": "00000074",
+      "trans_type": "02",
+      "trans_class": "자동이체",
+      "currency_code": "KRW",
+      "trans_amt": 80000,
+      "balance_amt": 455150,
+      "trans_memo": "한국장학재단 학자금대출 원리금"
+    },
+    {
+      "trans_dtime": "20251017061500",
+      "trans_no": "00000073",
+      "trans_type": "02",
+      "trans_class": "자동이체",
+      "currency_code": "KRW",
+      "trans_amt": 40000,
+      "balance_amt": 535150,
+      "trans_memo": "통신요금"
+    },
+    {
+      "trans_dtime": "20251015153905",
+      "trans_no": "00000072",
+      "trans_type": "02",
+      "trans_class": "체크카드",
+      "currency_code": "KRW",
+      "trans_amt": 33500,
+      "balance_amt": 575150,
+      "trans_memo": "영화관"
+    },
+    {
+      "trans_dtime": "20251014183639",
+      "trans_no": "00000071",
+      "trans_type": "02",
+      "trans_class": "체크카드",
+      "currency_code": "KRW",
+      "trans_amt": 22000,
+      "balance_amt": 608650,
+      "trans_memo": "동네 마트"
+    },
+    {
+      "trans_dtime": "20251014130415",
+      "trans_no": "00000070",
+      "trans_type": "02",
+      "trans_class": "체크카드",
+      "currency_code": "KRW",
+      "trans_amt": 24000,
+      "balance_amt": 630650,
+      "trans_memo": "학교 학생식당"
+    },
+    {
+      "trans_dtime": "20251014094845",
+      "trans_no": "00000069",
+      "trans_type": "02",
+      "trans_class": "체크카드",
+      "currency_code": "KRW",
+      "trans_amt": 29500,
+      "balance_amt": 654650,
+      "trans_memo": "서점"
+    },
+    {
+      "trans_dtime": "20251013080854",
+      "trans_no": "00000068",
+      "trans_type": "02",
+      "trans_class": "체크카드",
+      "currency_code": "KRW",
+      "trans_amt": 22500,
+      "balance_amt": 684150,
+      "trans_memo": "교내 카페"
+    },
+    {
+      "trans_dtime": "20251012131749",
+      "trans_no": "00000067",
+      "trans_type": "02",
+      "trans_class": "체크카드",
+      "currency_code": "KRW",
+      "trans_amt": 24000,
+      "balance_amt": 706650,
+      "trans_memo": "편의점"
+    },
+    {
+      "trans_dtime": "20251012110629",
+      "trans_no": "00000066",
+      "trans_type": "02",
+      "trans_class": "체크카드",
+      "currency_code": "KRW",
+      "trans_amt": 27500,
+      "balance_amt": 730650,
+      "trans_memo": "서점"
+    },
+    {
+      "trans_dtime": "20251012063000",
+      "trans_no": "00000065",
+      "trans_type": "02",
+      "trans_class": "자동이체",
+      "currency_code": "KRW",
+      "trans_amt": 20000,
+      "balance_amt": 758150,
+      "trans_memo": "대학생 목표적금 이체"
+    },
+    {
+      "trans_dtime": "20251011190115",
+      "trans_no": "00000064",
+      "trans_type": "02",
+      "trans_class": "체크카드",
+      "currency_code": "KRW",
+      "trans_amt": 33000,
+      "balance_amt": 778150,
+      "trans_memo": "학교 학생식당"
+    },
+    {
+      "trans_dtime": "20251010090000",
+      "trans_no": "00000063",
+      "trans_type": "03",
+      "trans_class": "인터넷뱅킹",
+      "currency_code": "KRW",
+      "trans_amt": 900000,
+      "balance_amt": 811150,
+      "trans_memo": "야간 편의점 아르바이트 급여"
+    },
+    {
+      "trans_dtime": "20251009092028",
+      "trans_no": "00000062",
+      "trans_type": "02",
+      "trans_class": "체크카드",
+      "currency_code": "KRW",
+      "trans_amt": 32000,
+      "balance_amt": -88850,
+      "trans_memo": "영화관"
+    },
+    {
+      "trans_dtime": "20251004202246",
+      "trans_no": "00000061",
+      "trans_type": "02",
+      "trans_class": "체크카드",
+      "currency_code": "KRW",
+      "trans_amt": 25500,
+      "balance_amt": -56850,
+      "trans_memo": "영화관"
+    },
+    {
+      "trans_dtime": "20251004161253",
+      "trans_no": "00000060",
+      "trans_type": "02",
+      "trans_class": "체크카드",
+      "currency_code": "KRW",
+      "trans_amt": 25000,
+      "balance_amt": -31350,
+      "trans_memo": "교내 카페"
+    },
+    {
+      "trans_dtime": "20251004110205",
+      "trans_no": "00000059",
+      "trans_type": "02",
+      "trans_class": "체크카드",
+      "currency_code": "KRW",
+      "trans_amt": 36500,
+      "balance_amt": -6350,
+      "trans_memo": "영화관"
+    },
+    {
+      "trans_dtime": "20251002212743",
+      "trans_no": "00000058",
+      "trans_type": "02",
+      "trans_class": "체크카드",
+      "currency_code": "KRW",
+      "trans_amt": 35000,
+      "balance_amt": 30150,
+      "trans_memo": "학교 학생식당"
+    },
+    {
+      "trans_dtime": "20251002061000",
+      "trans_no": "00000057",
+      "trans_type": "02",
+      "trans_class": "자동이체",
+      "currency_code": "KRW",
+      "trans_amt": 60000,
+      "balance_amt": 65150,
+      "trans_memo": "교통비"
+    },
+    {
+      "trans_dtime": "20250928060000",
+      "trans_no": "00000056",
+      "trans_type": "98",
+      "trans_class": "자동처리",
+      "currency_code": "KRW",
+      "trans_amt": 3614,
+      "balance_amt": 125150,
+      "trans_memo": "이자"
+    },
+    {
+      "trans_dtime": "20250925062000",
+      "trans_no": "00000055",
+      "trans_type": "02",
+      "trans_class": "자동이체",
+      "currency_code": "KRW",
+      "trans_amt": 200000,
+      "balance_amt": 121536,
+      "trans_memo": "가족 월세·생활비 분담"
+    },
+    {
+      "trans_dtime": "20250923171920",
+      "trans_no": "00000054",
+      "trans_type": "02",
+      "trans_class": "체크카드",
+      "currency_code": "KRW",
+      "trans_amt": 20500,
+      "balance_amt": 321536,
+      "trans_memo": "대학가 분식집"
+    },
+    {
+      "trans_dtime": "20250923165119",
+      "trans_no": "00000053",
+      "trans_type": "02",
+      "trans_class": "체크카드",
+      "currency_code": "KRW",
+      "trans_amt": 19500,
+      "balance_amt": 342036,
+      "trans_memo": "서점"
+    },
+    {
+      "trans_dtime": "20250920062500",
+      "trans_no": "00000052",
+      "trans_type": "02",
+      "trans_class": "자동이체",
+      "currency_code": "KRW",
+      "trans_amt": 80000,
+      "balance_amt": 361536,
+      "trans_memo": "한국장학재단 학자금대출 원리금"
+    },
+    {
+      "trans_dtime": "20250918101252",
+      "trans_no": "00000051",
+      "trans_type": "02",
+      "trans_class": "체크카드",
+      "currency_code": "KRW",
+      "trans_amt": 21500,
+      "balance_amt": 441536,
+      "trans_memo": "대학가 분식집"
+    },
+    {
+      "trans_dtime": "20250917210021",
+      "trans_no": "00000050",
+      "trans_type": "02",
+      "trans_class": "체크카드",
+      "currency_code": "KRW",
+      "trans_amt": 20000,
+      "balance_amt": 463036,
+      "trans_memo": "영화관"
+    },
+    {
+      "trans_dtime": "20250917061500",
+      "trans_no": "00000049",
+      "trans_type": "02",
+      "trans_class": "자동이체",
+      "currency_code": "KRW",
+      "trans_amt": 40000,
+      "balance_amt": 483036,
+      "trans_memo": "통신요금"
+    },
+    {
+      "trans_dtime": "20250916195736",
+      "trans_no": "00000048",
+      "trans_type": "02",
+      "trans_class": "체크카드",
+      "currency_code": "KRW",
+      "trans_amt": 19000,
+      "balance_amt": 523036,
+      "trans_memo": "동네 마트"
+    },
+    {
+      "trans_dtime": "20250916134958",
+      "trans_no": "00000047",
+      "trans_type": "02",
+      "trans_class": "체크카드",
+      "currency_code": "KRW",
+      "trans_amt": 22000,
+      "balance_amt": 542036,
+      "trans_memo": "서점"
+    },
+    {
+      "trans_dtime": "20250916131412",
+      "trans_no": "00000046",
+      "trans_type": "02",
+      "trans_class": "체크카드",
+      "currency_code": "KRW",
+      "trans_amt": 22500,
+      "balance_amt": 564036,
+      "trans_memo": "서점"
+    },
+    {
+      "trans_dtime": "20250915114603",
+      "trans_no": "00000045",
+      "trans_type": "02",
+      "trans_class": "체크카드",
+      "currency_code": "KRW",
+      "trans_amt": 16000,
+      "balance_amt": 586536,
+      "trans_memo": "대학가 분식집"
+    },
+    {
+      "trans_dtime": "20250915104416",
+      "trans_no": "00000044",
+      "trans_type": "02",
+      "trans_class": "체크카드",
+      "currency_code": "KRW",
+      "trans_amt": 15500,
+      "balance_amt": 602536,
+      "trans_memo": "편의점"
+    },
+    {
+      "trans_dtime": "20250912124236",
+      "trans_no": "00000043",
+      "trans_type": "02",
+      "trans_class": "체크카드",
+      "currency_code": "KRW",
+      "trans_amt": 16500,
+      "balance_amt": 618036,
+      "trans_memo": "동네 마트"
+    },
+    {
+      "trans_dtime": "20250912063000",
+      "trans_no": "00000042",
+      "trans_type": "02",
+      "trans_class": "자동이체",
+      "currency_code": "KRW",
+      "trans_amt": 20000,
+      "balance_amt": 634536,
+      "trans_memo": "대학생 목표적금 이체"
+    },
+    {
+      "trans_dtime": "20250911165953",
+      "trans_no": "00000041",
+      "trans_type": "02",
+      "trans_class": "체크카드",
+      "currency_code": "KRW",
+      "trans_amt": 34000,
+      "balance_amt": 654536,
+      "trans_memo": "대학가 분식집"
+    },
+    {
+      "trans_dtime": "20250910200946",
+      "trans_no": "00000040",
+      "trans_type": "02",
+      "trans_class": "체크카드",
+      "currency_code": "KRW",
+      "trans_amt": 32500,
+      "balance_amt": 688536,
+      "trans_memo": "동네 마트"
+    },
+    {
+      "trans_dtime": "20250910090000",
+      "trans_no": "00000039",
+      "trans_type": "03",
+      "trans_class": "인터넷뱅킹",
+      "currency_code": "KRW",
+      "trans_amt": 900000,
+      "balance_amt": 721036,
+      "trans_memo": "야간 편의점 아르바이트 급여"
+    },
+    {
+      "trans_dtime": "20250909202624",
+      "trans_no": "00000038",
+      "trans_type": "02",
+      "trans_class": "체크카드",
+      "currency_code": "KRW",
+      "trans_amt": 28500,
+      "balance_amt": -178964,
+      "trans_memo": "학교 학생식당"
+    },
+    {
+      "trans_dtime": "20250909135507",
+      "trans_no": "00000037",
+      "trans_type": "02",
+      "trans_class": "체크카드",
+      "currency_code": "KRW",
+      "trans_amt": 21000,
+      "balance_amt": -150464,
+      "trans_memo": "영화관"
+    },
+    {
+      "trans_dtime": "20250908121252",
+      "trans_no": "00000036",
+      "trans_type": "02",
+      "trans_class": "체크카드",
+      "currency_code": "KRW",
+      "trans_amt": 18500,
+      "balance_amt": -129464,
+      "trans_memo": "교내 카페"
+    },
+    {
+      "trans_dtime": "20250906142751",
+      "trans_no": "00000035",
+      "trans_type": "02",
+      "trans_class": "체크카드",
+      "currency_code": "KRW",
+      "trans_amt": 33000,
+      "balance_amt": -110964,
+      "trans_memo": "편의점"
+    },
+    {
+      "trans_dtime": "20250905113803",
+      "trans_no": "00000034",
+      "trans_type": "02",
+      "trans_class": "체크카드",
+      "currency_code": "KRW",
+      "trans_amt": 28500,
+      "balance_amt": -77964,
+      "trans_memo": "동네 마트"
+    },
+    {
+      "trans_dtime": "20250904142725",
+      "trans_no": "00000033",
+      "trans_type": "02",
+      "trans_class": "체크카드",
+      "currency_code": "KRW",
+      "trans_amt": 35000,
+      "balance_amt": -49464,
+      "trans_memo": "교내 카페"
+    },
+    {
+      "trans_dtime": "20250903213114",
+      "trans_no": "00000032",
+      "trans_type": "02",
+      "trans_class": "체크카드",
+      "currency_code": "KRW",
+      "trans_amt": 33000,
+      "balance_amt": -14464,
+      "trans_memo": "서점"
+    },
+    {
+      "trans_dtime": "20250903101644",
+      "trans_no": "00000031",
+      "trans_type": "02",
+      "trans_class": "체크카드",
+      "currency_code": "KRW",
+      "trans_amt": 16500,
+      "balance_amt": 18536,
+      "trans_memo": "학교 학생식당"
+    },
+    {
+      "trans_dtime": "20250902183153",
+      "trans_no": "00000030",
+      "trans_type": "02",
+      "trans_class": "체크카드",
+      "currency_code": "KRW",
+      "trans_amt": 26500,
+      "balance_amt": 35036,
+      "trans_memo": "대학가 분식집"
+    },
+    {
+      "trans_dtime": "20250902061000",
+      "trans_no": "00000029",
+      "trans_type": "02",
+      "trans_class": "자동이체",
+      "currency_code": "KRW",
+      "trans_amt": 60000,
+      "balance_amt": 61536,
+      "trans_memo": "교통비"
+    },
+    {
+      "trans_dtime": "20250828125620",
+      "trans_no": "00000028",
+      "trans_type": "02",
+      "trans_class": "체크카드",
+      "currency_code": "KRW",
+      "trans_amt": 21500,
+      "balance_amt": 121536,
+      "trans_memo": "영화관"
+    },
+    {
+      "trans_dtime": "20250826164609",
+      "trans_no": "00000027",
+      "trans_type": "02",
+      "trans_class": "체크카드",
+      "currency_code": "KRW",
+      "trans_amt": 20000,
+      "balance_amt": 143036,
+      "trans_memo": "학교 학생식당"
+    },
+    {
+      "trans_dtime": "20250825062000",
+      "trans_no": "00000026",
+      "trans_type": "02",
+      "trans_class": "자동이체",
+      "currency_code": "KRW",
+      "trans_amt": 200000,
+      "balance_amt": 163036,
+      "trans_memo": "가족 월세·생활비 분담"
+    },
+    {
+      "trans_dtime": "20250824161452",
+      "trans_no": "00000025",
+      "trans_type": "02",
+      "trans_class": "체크카드",
+      "currency_code": "KRW",
+      "trans_amt": 16500,
+      "balance_amt": 363036,
+      "trans_memo": "영화관"
+    },
+    {
+      "trans_dtime": "20250822180738",
+      "trans_no": "00000024",
+      "trans_type": "02",
+      "trans_class": "체크카드",
+      "currency_code": "KRW",
+      "trans_amt": 19500,
+      "balance_amt": 379536,
+      "trans_memo": "서점"
+    },
+    {
+      "trans_dtime": "20250822153616",
+      "trans_no": "00000023",
+      "trans_type": "02",
+      "trans_class": "체크카드",
+      "currency_code": "KRW",
+      "trans_amt": 23500,
+      "balance_amt": 399036,
+      "trans_memo": "편의점"
+    },
+    {
+      "trans_dtime": "20250820120900",
+      "trans_no": "00000022",
+      "trans_type": "02",
+      "trans_class": "체크카드",
+      "currency_code": "KRW",
+      "trans_amt": 28500,
+      "balance_amt": 422536,
+      "trans_memo": "동네 마트"
+    },
+    {
+      "trans_dtime": "20250820062500",
+      "trans_no": "00000021",
+      "trans_type": "02",
+      "trans_class": "자동이체",
+      "currency_code": "KRW",
+      "trans_amt": 80000,
+      "balance_amt": 451036,
+      "trans_memo": "한국장학재단 학자금대출 원리금"
+    },
+    {
+      "trans_dtime": "20250819114233",
+      "trans_no": "00000020",
+      "trans_type": "02",
+      "trans_class": "체크카드",
+      "currency_code": "KRW",
+      "trans_amt": 24000,
+      "balance_amt": 531036,
+      "trans_memo": "대학가 분식집"
+    },
+    {
+      "trans_dtime": "20250817204624",
+      "trans_no": "00000019",
+      "trans_type": "02",
+      "trans_class": "체크카드",
+      "currency_code": "KRW",
+      "trans_amt": 21500,
+      "balance_amt": 555036,
+      "trans_memo": "편의점"
+    },
+    {
+      "trans_dtime": "20250817061500",
+      "trans_no": "00000018",
+      "trans_type": "02",
+      "trans_class": "자동이체",
+      "currency_code": "KRW",
+      "trans_amt": 40000,
+      "balance_amt": 576536,
+      "trans_memo": "통신요금"
+    },
+    {
+      "trans_dtime": "20250816180905",
+      "trans_no": "00000017",
+      "trans_type": "02",
+      "trans_class": "체크카드",
+      "currency_code": "KRW",
+      "trans_amt": 16500,
+      "balance_amt": 616536,
+      "trans_memo": "대학가 분식집"
+    },
+    {
+      "trans_dtime": "20250815123636",
+      "trans_no": "00000016",
+      "trans_type": "02",
+      "trans_class": "체크카드",
+      "currency_code": "KRW",
+      "trans_amt": 35500,
+      "balance_amt": 633036,
+      "trans_memo": "대학가 분식집"
+    },
+    {
+      "trans_dtime": "20250814201806",
+      "trans_no": "00000015",
+      "trans_type": "02",
+      "trans_class": "체크카드",
+      "currency_code": "KRW",
+      "trans_amt": 20000,
+      "balance_amt": 668536,
+      "trans_memo": "대학가 분식집"
+    },
+    {
+      "trans_dtime": "20250814153432",
+      "trans_no": "00000014",
+      "trans_type": "02",
+      "trans_class": "체크카드",
+      "currency_code": "KRW",
+      "trans_amt": 19500,
+      "balance_amt": 688536,
+      "trans_memo": "서점"
+    },
+    {
+      "trans_dtime": "20250814125005",
+      "trans_no": "00000013",
+      "trans_type": "02",
+      "trans_class": "체크카드",
+      "currency_code": "KRW",
+      "trans_amt": 21500,
+      "balance_amt": 708036,
+      "trans_memo": "영화관"
+    },
+    {
+      "trans_dtime": "20250812110646",
+      "trans_no": "00000012",
+      "trans_type": "02",
+      "trans_class": "체크카드",
+      "currency_code": "KRW",
+      "trans_amt": 17000,
+      "balance_amt": 729536,
+      "trans_memo": "교내 카페"
+    },
+    {
+      "trans_dtime": "20250812081924",
+      "trans_no": "00000011",
+      "trans_type": "02",
+      "trans_class": "체크카드",
+      "currency_code": "KRW",
+      "trans_amt": 24500,
+      "balance_amt": 746536,
+      "trans_memo": "동네 마트"
+    },
+    {
+      "trans_dtime": "20250812063000",
+      "trans_no": "00000010",
+      "trans_type": "02",
+      "trans_class": "자동이체",
+      "currency_code": "KRW",
+      "trans_amt": 20000,
+      "balance_amt": 771036,
+      "trans_memo": "대학생 목표적금 이체"
+    },
+    {
+      "trans_dtime": "20250810142903",
+      "trans_no": "00000009",
+      "trans_type": "02",
+      "trans_class": "체크카드",
+      "currency_code": "KRW",
+      "trans_amt": 19000,
+      "balance_amt": 791036,
+      "trans_memo": "영화관"
+    },
+    {
+      "trans_dtime": "20250810090000",
+      "trans_no": "00000008",
+      "trans_type": "03",
+      "trans_class": "인터넷뱅킹",
+      "currency_code": "KRW",
+      "trans_amt": 900000,
+      "balance_amt": 810036,
+      "trans_memo": "야간 편의점 아르바이트 급여"
+    },
+    {
+      "trans_dtime": "20250808194201",
+      "trans_no": "00000007",
+      "trans_type": "02",
+      "trans_class": "체크카드",
+      "currency_code": "KRW",
+      "trans_amt": 16000,
+      "balance_amt": -89964,
+      "trans_memo": "대학가 분식집"
+    },
+    {
+      "trans_dtime": "20250808092215",
+      "trans_no": "00000006",
+      "trans_type": "02",
+      "trans_class": "체크카드",
+      "currency_code": "KRW",
+      "trans_amt": 24500,
+      "balance_amt": -73964,
+      "trans_memo": "동네 마트"
+    },
+    {
+      "trans_dtime": "20250806173024",
+      "trans_no": "00000005",
+      "trans_type": "02",
+      "trans_class": "체크카드",
+      "currency_code": "KRW",
+      "trans_amt": 17000,
+      "balance_amt": -49464,
+      "trans_memo": "대학가 분식집"
+    },
+    {
+      "trans_dtime": "20250805184710",
+      "trans_no": "00000004",
+      "trans_type": "02",
+      "trans_class": "체크카드",
+      "currency_code": "KRW",
+      "trans_amt": 34000,
+      "balance_amt": -32464,
+      "trans_memo": "교내 카페"
+    },
+    {
+      "trans_dtime": "20250805184143",
+      "trans_no": "00000003",
+      "trans_type": "02",
+      "trans_class": "체크카드",
+      "currency_code": "KRW",
+      "trans_amt": 32000,
+      "balance_amt": 1536,
+      "trans_memo": "편의점"
+    },
+    {
+      "trans_dtime": "20250805102402",
+      "trans_no": "00000002",
+      "trans_type": "02",
+      "trans_class": "체크카드",
+      "currency_code": "KRW",
+      "trans_amt": 28000,
+      "balance_amt": 33536,
+      "trans_memo": "편의점"
+    },
+    {
+      "trans_dtime": "20250802061000",
+      "trans_no": "00000001",
+      "trans_type": "02",
+      "trans_class": "자동이체",
+      "currency_code": "KRW",
+      "trans_amt": 60000,
+      "balance_amt": 61536,
+      "trans_memo": "교통비"
+    }
+  ]
+}

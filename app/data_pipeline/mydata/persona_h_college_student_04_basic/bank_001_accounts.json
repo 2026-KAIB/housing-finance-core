@@ -1,0 +1,27 @@
+{
+  "rsp_code": "00000",
+  "rsp_msg": "정상",
+  "search_timestamp": "20260724000000",
+  "reg_date": "20240102",
+  "account_cnt": 2,
+  "account_list": [
+    {
+      "account_num": "40400102000001",
+      "is_consent": true,
+      "prod_name": "KB국민 대학생 생활통장",
+      "account_type": "1001",
+      "account_status": "01",
+      "is_foreign_deposit": false,
+      "is_minus": false
+    },
+    {
+      "account_num": "40400102000002",
+      "is_consent": true,
+      "prod_name": "KB 대학생 목표적금",
+      "account_type": "1003",
+      "account_status": "01",
+      "is_foreign_deposit": false,
+      "is_minus": false
+    }
+  ]
+}

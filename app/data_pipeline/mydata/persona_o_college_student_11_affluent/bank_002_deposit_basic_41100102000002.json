@@ -1,0 +1,16 @@
+{
+  "rsp_code": "00000",
+  "rsp_msg": "정상",
+  "search_timestamp": "20260724000003",
+  "basic_cnt": 1,
+  "basic_list": [
+    {
+      "currency_code": "KRW",
+      "saving_method": "03",
+      "issue_date": "20250102",
+      "exp_date": "20280102",
+      "commit_amt": 36000000,
+      "monthly_paid_in_amt": 1000000
+    }
+  ]
+}

@@ -1,0 +1,19 @@
+{
+  "as_of": "20260728",
+  "applicant_type": "individual",
+  "is_first_payment": true,
+  "fund_needed_date": "20280128",
+  "monthly_savings_budget": 1800000,
+  "lump_sum_budget": 6400000,
+  "emergency_reserve": 3600000,
+  "bonus_achievement_probability": 0.7,
+  "contribution_timing": "end",
+  "maturity_tolerance_days": 180,
+  "liquidity_preference": "medium",
+  "accepts_principal_risk": false,
+  "existing_institution_deposits": {
+    "0010927": 50000000
+  },
+  "maximum_recommended_products": 3,
+  "expected_outcome": null
+}

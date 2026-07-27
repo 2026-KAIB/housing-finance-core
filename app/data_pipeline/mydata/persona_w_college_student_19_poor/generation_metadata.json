@@ -1,0 +1,24 @@
+{
+  "persona_name": "대학생19(가난형)",
+  "persona_category": "poor",
+  "character_summary": "가족 생활비와 학자금대출 상환을 함께 부담",
+  "purpose": "기대 결과를 미리 정하지 않고 해당 학생의 재무 사실로 예적금 평가와 월세 보증금 마련 가능성을 관찰한다.",
+  "provided_facts": {
+    "generation_request": "대학생 기본형·부유형·가난형 총 20명"
+  },
+  "generated_assumptions": {
+    "age": 26,
+    "monthly_income": 900000,
+    "monthly_average_expense": 800000,
+    "monthly_debt_payment": 80000,
+    "current_assets": 450000,
+    "target_lease_deposit": 5000000,
+    "target_monthly_rent": 230000,
+    "target_move_in_ym": "202907",
+    "emergency_reserve": 400000,
+    "lump_sum_budget": 0,
+    "monthly_savings_budget": 20000,
+    "bonus_achievement_probability": 0.3
+  },
+  "expected_outcome_policy": "derive_from_engine"
+}

@@ -60,6 +60,7 @@ from app.engines.savings.portfolio_models import (
     SavingsPortfolioResult,
     SavingsPortfolioStatus,
 )
+from app.regulations.deposit_protection import resolve_deposit_protection_limit
 from app.rule_engine.product_packs.handoff import (
     ProductEngineHandoff,
     route_product_candidates,
@@ -79,13 +80,23 @@ from app.rule_engine.product_packs.rules import (
 
 @dataclass(frozen=True)
 class CommonTestPolicy:
-    """사람 데이터와 분리해 보고서에 남기는 재현 가능한 테스트 공통값."""
+    """사람 데이터와 분리해 보고서에 남기는 재현 가능한 테스트 공통값.
+
+    여기 있는 것은 **내부 모델 값**(가중치)과 세율뿐이다. 예금자보호 한도는
+    법이 정하는 규제 상수이므로 이 자리에 리터럴로 두지 않는다 — 그렇게 뒀더니
+    2025-09-01 상향(5천만원 → 1억원)을 11개월 동안 아무도 알아채지 못했다.
+    `deposit_protection_limit()`이 기준일을 받아 규제표에서 읽는다.
+    """
 
     tax_rate: Decimal = Decimal("0.154")
-    deposit_protection_limit: Decimal = Decimal("50000000")
     maturity_risk_weight: Decimal = Decimal("0.2")
     concentration_risk_weight: Decimal = Decimal("0.2")
     liquidity_shortfall_weight: Decimal = Decimal("0.2")
+
+    @staticmethod
+    def deposit_protection_limit(as_of: date) -> Decimal:
+        """기준일에 유효한 예금자보호 한도(`regulations/deposit_protection.py`)."""
+        return resolve_deposit_protection_limit(as_of=as_of)
 
 
 @dataclass(frozen=True)
@@ -280,6 +291,9 @@ def _build_evaluated_candidates(
     }
     fund_needed_date = _date_yyyymmdd(preferences["fund_needed_date"])
     liquidity_score = _liquidity_score(preferences["liquidity_preference"])
+    protection_limit = common_policy.deposit_protection_limit(
+        _date_yyyymmdd(preferences["as_of"])
+    )
     evaluated: list[EvaluatedCandidate] = []
     product_option_indexes: Counter[object] = Counter()
     for handoff, _adaptation, calculation in calculations:
@@ -303,7 +317,7 @@ def _build_evaluated_candidates(
                     institution_code,
                     Decimal(0),
                 ),
-                deposit_protection_limit=(common_policy.deposit_protection_limit),
+                deposit_protection_limit=protection_limit,
             )
         )
         minimum, maximum = _allocation_bounds(handoff)
@@ -344,7 +358,9 @@ def _portfolio_input(
             str(code): _decimal(amount)
             for code, amount in preferences["existing_institution_deposits"].items()
         },
-        deposit_protection_limit=common_policy.deposit_protection_limit,
+        deposit_protection_limit=common_policy.deposit_protection_limit(
+            _date_yyyymmdd(preferences["as_of"])
+        ),
         policy=SavingsPortfolioPolicy(
             max_products=int(preferences["maximum_recommended_products"]),
             maturity_risk_weight=common_policy.maturity_risk_weight,

@@ -125,7 +125,11 @@ def simulate_loan_options(
     규제 한도를 확정하지 못하면 상품 판정으로 넘어가지 않고 즉시 결측을 보고한다.
     LTV를 모르는 채 계산한 금액은 의미가 없고, 그걸 상품별로 늘어놓으면 근거 없는
     숫자만 늘어나기 때문이다.
+
+    지역 관련 facts는 `request`의 값으로 **덮어쓴다**(`_align_region_facts`).
     """
+    user_facts = _align_region_facts(request)
+
     ltv = resolve_ltv_limit_amount(
         house_price=request.house_price,
         zone=request.zone,
@@ -173,7 +177,7 @@ def simulate_loan_options(
     routing_kwargs = {"registry": registry} if registry is not None else {}
     routing = route_product_candidates(
         list(candidates),
-        user_facts=request.user_facts,
+        user_facts=user_facts,
         as_of=request.as_of,
         **routing_kwargs,  # type: ignore[arg-type]
     )
@@ -237,6 +241,26 @@ def simulate_loan_options(
         policy_sources=sources + tuple(stress_sources),
         notes=_regulation_notes(ltv, dti_ratio, request),
     )
+
+
+# Rule Pack과 상품 한도표가 지역을 판단할 때 쓰는 facts 키. 이 값들이 요청의
+# `zone`/`is_capital_region`과 어긋나면 같은 차주에게 앞뒤가 안 맞는 결과가 나온다
+# — LTV는 규제지역 40%로 계산하면서 상품 한도는 비규제 3억을 쓰는 식이다.
+_REGION_FACT_KEYS = ("is_regulated_region", "is_capital_region")
+
+
+def _align_region_facts(request: LoanSimulationRequest) -> Mapping[str, object]:
+    """지역 facts를 요청의 규제지역 판정에 맞춰 덮어쓴다.
+
+    호출자가 채워 넣은 값을 신뢰하지 않는 이유는, 지역 구분의 근거가 하나여야
+    하기 때문이다. `zone`은 지정 목록(`regulated_regions.py`)에서 나온 값이고
+    facts는 사람이 채우는 값이라 어긋날 수 있다. 근거가 둘이면 어느 쪽이 맞는지
+    답할 수 없으므로 표에서 나온 쪽으로 통일한다.
+    """
+    aligned = dict(request.user_facts)
+    aligned["is_regulated_region"] = request.zone is not RegulationZone.NON_REGULATED
+    aligned["is_capital_region"] = request.is_capital_region
+    return aligned
 
 
 # Rule Pack 카테고리 → 스트레스 금리 구분. 주담대만 지역별로 다르고 나머지는

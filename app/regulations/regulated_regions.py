@@ -227,6 +227,13 @@ def is_capital_region_code(region_code: str) -> bool | None:
     return region_code.strip()[:2] in CAPITAL_REGION_PREFIXES
 
 
+_CAPITAL_SIDO = frozenset({"서울특별시", "인천광역시", "경기도"})
+
+
+def _is_capital_sido(sido: str) -> bool:
+    return sido in _CAPITAL_SIDO
+
+
 def is_valid_region_code(region_code: str) -> bool:
     """5자리 숫자이면서 앞 2자리가 실재하는 시·도 코드인지."""
     code = region_code.strip()
@@ -272,7 +279,9 @@ def resolve_region(
             matches = [row for row in _BY_NAME.get(region_name, []) if row.covers(as_of)]
     elif region_name is not None:
         matches = [row for row in _BY_NAME.get(region_name, []) if row.covers(as_of)]
-        capital = True if matches else None
+        # 이름만 주어졌을 때 수도권 여부는 코드가 아니라 지정 데이터의 시·도에서
+        # 파생한다. "지정됐으니 수도권"이라고 단정하면 지방이 지정될 때 틀린다.
+        capital = _is_capital_sido(matches[0].sido) if matches else None
         if not matches:
             return ResolvedRegion(
                 zone=None,

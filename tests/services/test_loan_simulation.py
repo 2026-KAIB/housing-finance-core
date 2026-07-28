@@ -7,6 +7,7 @@ from app.data_pipeline.adapters.loan_engine_adapter import (
     PolicyLimits,
     adapt_handoff_for_loan_max,
 )
+from app.data_pipeline.curated.loan_limits import resolve_product_limit
 from app.engines.loan.formulas import loan_max
 from app.regulations.mortgage_limits import (
     DTI_RATIOS,
@@ -14,6 +15,7 @@ from app.regulations.mortgage_limits import (
     RegulationZone,
     resolve_dti_limit_amount,
 )
+from app.regulations.regulated_regions import ResolvedRegion
 from app.rule_engine.product_packs.handoff import ProductCandidate, route_product_candidates
 from app.rule_engine.product_packs.models import (
     ProductCategory,
@@ -23,6 +25,8 @@ from app.rule_engine.product_packs.registry import ProductRulePackRegistry
 from app.rule_engine.product_packs.rules import ComparisonOperator, ComparisonRule
 from app.services.loan_simulation import (
     LoanSimulationRequest,
+    _align_region_facts,
+    build_request_for_region,
     simulate_loan_options,
     summarize,
 )
@@ -402,3 +406,103 @@ class TestStressDsrIsApplied:
     def test_stress_source_is_recorded(self) -> None:
         result = _run()
         assert any("스트레스" in source for source in result.policy_sources)
+
+
+class TestRegionFactsCannotContradictTheZone:
+    """지역 구분의 근거는 하나여야 한다.
+
+    `zone`은 지정 목록에서 나온 값이고 `user_facts`의 지역 키는 사람이 채운다.
+    어긋나면 LTV는 규제지역 40%로 계산하면서 상품 한도는 비규제 3억을 쓰는
+    자기모순이 생긴다. 요청의 값으로 덮어써 근거를 하나로 만든다.
+    """
+
+    def test_facts_are_overwritten_from_the_request(self) -> None:
+        request = _request(
+            user_facts={"age": 34, "is_regulated_region": False, "is_capital_region": False},
+            zone=RegulationZone.SPECULATION_OVERHEATED,
+            is_capital_region=True,
+        )
+        aligned = _align_region_facts(request)
+        assert aligned["is_regulated_region"] is True
+        assert aligned["is_capital_region"] is True
+
+    def test_non_regulated_zone_clears_the_flag(self) -> None:
+        request = _request(
+            user_facts={"age": 34, "is_regulated_region": True},
+            zone=RegulationZone.NON_REGULATED,
+            is_capital_region=False,
+        )
+        aligned = _align_region_facts(request)
+        assert aligned["is_regulated_region"] is False
+
+    def test_other_facts_are_left_alone(self) -> None:
+        request = _request(user_facts={"age": 34, "employment_months": 60})
+        aligned = _align_region_facts(request)
+        assert aligned["age"] == 34
+        assert aligned["employment_months"] == 60
+
+    def test_a_lie_in_the_facts_cannot_change_the_product_limit(self) -> None:
+        facts = {
+            "owned_house_count": 1,
+            "lease_deposit": Decimal("500000000"),
+            "is_regulated_region": False,  # 거짓말
+        }
+        honest = {**facts, "is_regulated_region": True}
+        limits = {
+            resolve_product_limit(
+                "KB스타 전세자금대출(SGI_서울보증보험)",
+                _align_region_facts(
+                    _request(user_facts=f, zone=RegulationZone.SPECULATION_OVERHEATED)
+                ),
+            ).amount
+            for f in (facts, honest)
+        }
+        assert limits == {Decimal("200000000")}
+
+
+class TestBuildRequestForRegion:
+    def test_a_regulated_code_fills_the_zone(self) -> None:
+        request = build_request_for_region(
+            region_code="11680",
+            as_of=_AS_OF,
+            borrower=_BORROWER,
+            user_facts={"age": 34, "is_overdraft_type": False},
+            house_price=Decimal("800000000"),
+            housing_status=HousingStatus.NO_HOUSE,
+            required_amount=Decimal("300000000"),
+            months=360,
+        )
+        assert isinstance(request, LoanSimulationRequest)
+        assert request.zone is RegulationZone.SPECULATION_OVERHEATED
+        assert request.is_capital_region is True
+
+    def test_a_local_code_fills_non_regulated(self) -> None:
+        request = build_request_for_region(
+            region_code="30200",
+            as_of=_AS_OF,
+            borrower=_BORROWER,
+            user_facts={"age": 34, "is_overdraft_type": False},
+            house_price=Decimal("800000000"),
+            housing_status=HousingStatus.NO_HOUSE,
+            required_amount=Decimal("300000000"),
+            months=360,
+        )
+        assert isinstance(request, LoanSimulationRequest)
+        assert request.zone is RegulationZone.NON_REGULATED
+        assert request.is_capital_region is False
+
+    def test_an_unresolvable_region_returns_the_reason_not_a_request(self) -> None:
+        # 임의로 비규제로 채우면 LTV 70%가 적용돼 한도가 크게 과대평가된다.
+        result = build_request_for_region(
+            region_code="99999",
+            as_of=_AS_OF,
+            borrower=_BORROWER,
+            user_facts={"age": 34},
+            house_price=Decimal("800000000"),
+            housing_status=HousingStatus.NO_HOUSE,
+            required_amount=Decimal("300000000"),
+            months=360,
+        )
+        assert isinstance(result, ResolvedRegion)
+        assert not result.is_resolved
+        assert result.note is not None

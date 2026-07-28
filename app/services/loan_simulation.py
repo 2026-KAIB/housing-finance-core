@@ -20,6 +20,7 @@ from app.regulations.mortgage_limits import (
     resolve_dti_limit_amount,
     resolve_ltv_limit_amount,
 )
+from app.regulations.regulated_regions import ResolvedRegion, resolve_region
 from app.regulations.stress_dsr import (
     StressLoanKind,
     StressRate,
@@ -292,6 +293,30 @@ def _regulation_notes(
         f"(적용된 안전기준 {request.borrower.safe_dsr * 100:.0f}%는 서비스 내부 기준)"
     )
     return tuple(notes)
+
+
+def build_request_for_region(
+    *,
+    region_code: str | None = None,
+    region_name: str | None = None,
+    as_of: date,
+    **fields: object,
+) -> LoanSimulationRequest | ResolvedRegion:
+    """행정구역코드로 규제지역 구분을 채워 요청을 만든다.
+
+    지역을 확정하지 못하면 요청 대신 그 사유(`ResolvedRegion`)를 돌려준다 —
+    임의로 비규제로 채우면 LTV 70%가 적용돼 한도가 크게 과대평가된다.
+    """
+    region = resolve_region(as_of=as_of, region_code=region_code, region_name=region_name)
+    if not region.is_resolved:
+        return region
+    assert region.zone is not None and region.is_capital_region is not None
+    return LoanSimulationRequest(
+        zone=region.zone,
+        is_capital_region=region.is_capital_region,
+        as_of=as_of,
+        **fields,  # type: ignore[arg-type]
+    )
 
 
 def summarize(result: LoanSimulationResult) -> Sequence[str]:

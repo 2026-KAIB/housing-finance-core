@@ -20,8 +20,18 @@ from app.regulations.mortgage_limits import (
     resolve_dti_limit_amount,
     resolve_ltv_limit_amount,
 )
-from app.rule_engine.product_packs.handoff import ProductCandidate, route_product_candidates
-from app.rule_engine.product_packs.models import EvaluationStatus
+from app.regulations.stress_dsr import (
+    StressLoanKind,
+    StressRate,
+    get_stress_rate,
+    resolve_stress_region,
+)
+from app.rule_engine.product_packs.handoff import (
+    ProductCandidate,
+    ProductEngineHandoff,
+    route_product_candidates,
+)
+from app.rule_engine.product_packs.models import EvaluationStatus, ProductCategory
 from app.rule_engine.product_packs.registry import ProductRulePackRegistry
 
 # 규제표 → 상품 판정 → 어댑터 → 계산까지를 하나의 요청으로 잇는 조립 계층이다.
@@ -63,6 +73,9 @@ class LoanSimulationRequest:
     rate_selection: str = "avg"
     for_house_purchase: bool = True
     allow_unverified_regulation: bool = False
+    # 신용대출 스트레스 금리는 잔액 1억원 초과 시에만 붙는다. 모르면 신용대출을
+    # 계산하지 못한다 — 0으로 뭉개면 한도가 과대평가되기 때문이다.
+    credit_loan_balance: Decimal | None = None
 
 
 @dataclass(frozen=True)
@@ -168,7 +181,31 @@ def simulate_loan_options(
     unresolved: list[LoanOptionAdaptation] = []
     rejected: list[LoanOptionAdaptation] = []
 
+    stress_sources: list[str] = []
+
     for handoff in (*routing.forwardable, *routing.rejected, *routing.needs_review):
+        stress = _resolve_stress_rate(handoff, request)
+
+        # 자격 판정에서 이미 탈락한 상품은 스트레스 금리가 없어도 그대로 넘긴다 —
+        # 탈락 사유를 "입력 부족"으로 바꿔 버리면 이유가 흐려진다.
+        if stress is None and handoff.status is EvaluationStatus.PASS:
+            unresolved.append(
+                LoanOptionAdaptation(
+                    product_name=handoff.product.product_name,
+                    option=None,
+                    status=EvaluationStatus.UNKNOWN,
+                    missing_inputs=("stress_dsr_rate",),
+                    reasons=(
+                        "스트레스 DSR 가산금리를 확정하지 못했습니다. "
+                        "적용하지 않고 계산하면 한도가 과대평가됩니다.",
+                    ),
+                )
+            )
+            continue
+
+        if stress is not None and stress.source not in stress_sources:
+            stress_sources.append(stress.source)
+
         for adaptation in adapt_handoff_for_loan_max(
             handoff,
             borrower=request.borrower,
@@ -177,6 +214,7 @@ def simulate_loan_options(
             months=request.months,
             rate_selection=request.rate_selection,
             dti_limit_resolver=resolve_dti,
+            dsr_rate_add_on=None if stress is None else stress.rate,
         ):
             if adaptation.status is EvaluationStatus.FAIL:
                 rejected.append(adaptation)
@@ -194,8 +232,42 @@ def simulate_loan_options(
         rejected=tuple(rejected),
         ltv=ltv,
         policy_as_of=request.as_of,
-        policy_sources=sources,
+        policy_sources=sources + tuple(stress_sources),
         notes=_regulation_notes(ltv, dti_ratio, request),
+    )
+
+
+# Rule Pack 카테고리 → 스트레스 금리 구분. 주담대만 지역별로 다르고 나머지는
+# "주담대 외" 한 묶음이지만, 신용대출은 잔액 조건이 붙어 따로 둔다.
+_STRESS_KIND_BY_CATEGORY: dict[ProductCategory, StressLoanKind] = {
+    ProductCategory.MORTGAGE_LOAN: StressLoanKind.MORTGAGE,
+    ProductCategory.CREDIT_LOAN: StressLoanKind.CREDIT,
+    ProductCategory.JEONSE_LOAN: StressLoanKind.OTHER,
+}
+
+
+def _resolve_stress_rate(
+    handoff: ProductEngineHandoff,
+    request: LoanSimulationRequest,
+) -> StressRate | None:
+    """이 상품에 적용할 스트레스 DSR 가산금리를 찾는다.
+
+    확정하지 못하면 None이며, 호출부는 0으로 대체하지 않고 계산을 포기한다 —
+    스트레스를 빠뜨리면 한도가 **과대**평가되기 때문이다. 다른 결측들이 과소평가
+    방향이라 보수적 하한으로 처리되는 것과 반대다.
+    """
+    kind = _STRESS_KIND_BY_CATEGORY.get(handoff.rule_result.category)
+    if kind is None:
+        return None
+    return get_stress_rate(
+        resolve_stress_region(
+            is_capital_region=request.is_capital_region,
+            is_regulated_region=request.zone is not RegulationZone.NON_REGULATED,
+        ),
+        kind,
+        as_of=request.as_of,
+        credit_loan_balance=request.credit_loan_balance,
+        allow_unverified=request.allow_unverified_regulation,
     )
 
 

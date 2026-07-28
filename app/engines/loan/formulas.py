@@ -100,6 +100,7 @@ def loan_max(
     post_purchase_monthly_expense: Decimal,
     other_existing_monthly_debt_service: Decimal,
     buffer_target: Decimal,
+    dsr_annual_rate: Decimal | None = None,
     epsilon: Decimal = Decimal("100000"),
 ) -> Decimal:
     """대출 가능액 이분 탐색 (DESIGN SSOT 부록 A-2).
@@ -110,6 +111,13 @@ def loan_max(
     최대 대출액을 찾을 때까지 이분 탐색한다. L 증가 → pmt·dsr 증가, 월 잉여
     감소로 feasible은 L에 대해 단조이므로 이분 탐색이 유효하다(A-2 원문).
 
+    **금리는 두 곳에 쓰이며 서로 다를 수 있다.** `dsr_annual_rate`를 주면 DSR
+    판정에만 그 금리를 쓰고, 월 현금흐름(Buffer) 판정에는 언제나 실제 금리인
+    `annual_rate`를 쓴다. 스트레스 DSR이 정확히 이 구조다 — 심사는 가산금리를
+    올린 기준으로 하되 차주가 실제로 내는 돈은 실제 금리 기준이기 때문이다
+    (`app/regulations/stress_dsr.py`). 주지 않으면 두 판정 모두 실제 금리를 쓰며,
+    이는 스트레스 금리를 적용하지 않는다는 뜻이므로 **한도가 과대평가된다.**
+
     반환값은 항상 실제 가능한 최대 대출액 이하이며(보수적 하향값), 오차는
     epsilon 미만이다 — epsilon 단위로 절사하는 정책은 호출하는 쪽이 정한다.
     """
@@ -117,6 +125,14 @@ def loan_max(
     _require_positive(months, "months")
     _require_non_negative(annual_rate, "annual_rate")
     _require_positive(annual_income, "annual_income")
+
+    assessment_rate = annual_rate if dsr_annual_rate is None else dsr_annual_rate
+    _require_non_negative(assessment_rate, "dsr_annual_rate")
+    if assessment_rate < annual_rate:
+        raise ValueError(
+            "dsr_annual_rate는 실제 금리보다 낮을 수 없습니다 "
+            f"(annual_rate={annual_rate}, dsr_annual_rate={assessment_rate})."
+        )
     for name, value in (
         ("ltv_limit_amount", ltv_limit_amount),
         ("product_limit_amount", product_limit_amount),
@@ -136,10 +152,14 @@ def loan_max(
 
     while (hi - lo) > epsilon:
         candidate = (lo + hi) / 2
+        # 실제 상환액(현금흐름 판정용)과 심사용 상환액(DSR 판정용)을 나눈다.
         new_pmt = pmt(candidate, annual_rate, months)
+        assessed_pmt = (
+            new_pmt if assessment_rate == annual_rate else pmt(candidate, assessment_rate, months)
+        )
         candidate_dsr = dsr(
             existing_annual_debt_service=existing_annual_debt_service,
-            new_annual_debt_service=new_pmt * 12,
+            new_annual_debt_service=assessed_pmt * 12,
             annual_income=annual_income,
         )
         monthly_surplus = (

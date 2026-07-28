@@ -94,6 +94,9 @@ class LoanMaxInputs:
     post_purchase_monthly_expense: Decimal
     other_existing_monthly_debt_service: Decimal
     buffer_target: Decimal
+    # DSR 판정에만 쓰는 심사 금리(스트레스 DSR). None이면 실제 금리로 판정하며,
+    # 그때는 스트레스가 미적용이므로 한도가 과대평가된다.
+    dsr_annual_rate: Decimal | None = None
 
     def as_kwargs(self) -> dict[str, object]:
         return {
@@ -103,6 +106,7 @@ class LoanMaxInputs:
             "required_amount": self.required_amount,
             "annual_rate": self.annual_rate,
             "months": self.months,
+            "dsr_annual_rate": self.dsr_annual_rate,
             "existing_annual_debt_service": self.existing_annual_debt_service,
             "annual_income": self.annual_income,
             "safe_dsr": self.safe_dsr,
@@ -146,6 +150,7 @@ def adapt_handoff_for_loan_max(
     months: int,
     rate_selection: str = "avg",
     dti_limit_resolver: DtiLimitResolver | None = None,
+    dsr_rate_add_on: Decimal | None = None,
 ) -> tuple[LoanOptionAdaptation, ...]:
     """PASS 판정된 대출 상품 하나를 옵션별 `loan_max()` 입력으로 변환한다.
 
@@ -157,6 +162,12 @@ def adapt_handoff_for_loan_max(
     넘기지 않으면 `policy_limits.dti_limit_amount`를 모든 옵션에 공통으로 쓰는데,
     이는 옵션 금리가 서로 다를 때 틀린 값이 된다. 규제 모듈을 여기서 직접 부르지
     않고 함수로 받는 이유는, 이 어댑터가 규제표를 모르도록 유지하기 위해서다.
+
+    `dsr_rate_add_on`은 스트레스 DSR 가산금리다. 주면 DSR 판정에만 실제 금리에
+    더해 쓰고, 월 현금흐름 판정에는 실제 금리를 그대로 쓴다. **주지 않으면
+    스트레스를 적용하지 않으므로 한도가 과대평가된다** — 호출자가 규제표
+    (`app/regulations/stress_dsr.py`)에서 구해 넘기고, 구하지 못하면 계산을
+    포기하는 쪽이 맞다.
     """
     product_name = handoff.product.product_name
 
@@ -201,6 +212,7 @@ def adapt_handoff_for_loan_max(
             months=months,
             rate_selection=rate_selection,
             dti_limit_resolver=dti_limit_resolver,
+            dsr_rate_add_on=dsr_rate_add_on,
         )
         for option in product.options
     )
@@ -255,6 +267,7 @@ def _adapt_option(
     months: int,
     rate_selection: str,
     dti_limit_resolver: DtiLimitResolver | None = None,
+    dsr_rate_add_on: Decimal | None = None,
 ) -> LoanOptionAdaptation:
     if limit.kind is not LimitKind.AMOUNT or limit.amount is None:
         return LoanOptionAdaptation(
@@ -295,6 +308,9 @@ def _adapt_option(
             dti_limit_amount=dti_limit_amount,
             required_amount=required_amount,
             annual_rate=annual_rate,
+            dsr_annual_rate=(
+                None if dsr_rate_add_on is None else annual_rate + dsr_rate_add_on
+            ),
             months=months,
             existing_annual_debt_service=borrower.existing_annual_debt_service,
             annual_income=borrower.annual_income,

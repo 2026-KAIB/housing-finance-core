@@ -2,14 +2,19 @@ from dataclasses import replace
 from datetime import date
 from decimal import Decimal
 
-from app.data_pipeline.adapters.loan_engine_adapter import BorrowerFinancialState
+from app.data_pipeline.adapters.loan_engine_adapter import (
+    BorrowerFinancialState,
+    PolicyLimits,
+    adapt_handoff_for_loan_max,
+)
+from app.engines.loan.formulas import loan_max
 from app.regulations.mortgage_limits import (
     DTI_RATIOS,
     HousingStatus,
     RegulationZone,
     resolve_dti_limit_amount,
 )
-from app.rule_engine.product_packs.handoff import ProductCandidate
+from app.rule_engine.product_packs.handoff import ProductCandidate, route_product_candidates
 from app.rule_engine.product_packs.models import (
     ProductCategory,
     ProductRulePack,
@@ -280,3 +285,120 @@ class TestConservativeAssumptionsSurvive:
         unknown = _run(user_facts={"age": 34})
         assert known.best is not None and unknown.best is not None
         assert unknown.best.amount <= known.best.amount
+
+
+class TestStressDsrIsApplied:
+    """스트레스 DSR — 이 저장소에서 유일하게 **과대평가** 방향인 결측이다.
+
+    다른 결측은 빠뜨리면 한도가 낮게 나와 안전하지만, 스트레스 금리를 빠뜨리면
+    실제로 못 빌리는 금액을 빌릴 수 있다고 말하게 된다. 그래서 확정하지 못하면
+    보수적 하한으로 넘어가지 않고 계산을 포기한다.
+    """
+
+    def test_stress_lowers_the_mortgage_limit(self) -> None:
+        result = _run()
+        best = result.best
+        assert best is not None and best.option is not None
+
+        # 같은 입력으로 스트레스만 빼고 직접 계산한 값보다 반드시 낮아야 한다.
+        stressed_inputs = next(
+            adaptation.inputs
+            for adaptation in adapt_handoff_for_loan_max(
+                route_product_candidates(
+                    _candidates(),
+                    user_facts={"age": 34, "is_overdraft_type": False},
+                    as_of=_AS_OF,
+                    registry=ProductRulePackRegistry((_PACK,)),
+                ).forwardable[0],
+                borrower=_BORROWER,
+                policy_limits=PolicyLimits(
+                    ltv_limit_amount=Decimal("320000000"),
+                    dti_limit_amount=Decimal("395000000"),
+                ),
+                required_amount=Decimal("300000000"),
+                months=360,
+            )
+            if adaptation.inputs is not None
+            and adaptation.inputs.annual_rate == best.option.rate("avg")
+        )
+        assert stressed_inputs.dsr_annual_rate is None
+        unstressed_amount = loan_max(**stressed_inputs.as_kwargs())  # type: ignore[arg-type]
+
+        assert best.amount < unstressed_amount, (
+            f"스트레스 적용 결과 {best.amount:,.0f}원이 미적용 "
+            f"{unstressed_amount:,.0f}원보다 낮지 않습니다."
+        )
+
+    def test_capital_region_is_stressed_more_than_local(self) -> None:
+        # 지방 0.75%p vs 수도권·규제지역 3.0%p — 같은 차주라도 한도가 달라진다.
+        capital = _run(
+            zone=RegulationZone.SPECULATION_OVERHEATED,
+            is_capital_region=True,
+            housing_status=HousingStatus.FIRST_HOME_BUYER,
+        )
+        local = _run(
+            zone=RegulationZone.NON_REGULATED,
+            is_capital_region=False,
+            housing_status=HousingStatus.NO_HOUSE,
+        )
+        assert capital.best is not None and local.best is not None
+        assert capital.best.amount < local.best.amount
+
+    def test_a_product_without_a_resolvable_stress_rate_is_not_calculated(self) -> None:
+        # 전세대출('주담대 외')은 1차 출처를 확인하지 못해 미검증이다.
+        jeonse_pack = ProductRulePack(
+            product_name="KB스타 전세자금대출(SGI_서울보증보험)",
+            category=ProductCategory.JEONSE_LOAN,
+            version="test-1",
+            effective_start_date=date(2026, 1, 1),
+            effective_end_date=None,
+            rules=(
+                ComparisonRule(
+                    code="TEST_MIN_AGE",
+                    field_name="age",
+                    operator=ComparisonOperator.GTE,
+                    expected=19,
+                    failure_reason="미성년자는 신청할 수 없습니다.",
+                ),
+            ),
+        )
+        base = {
+            "source_type": "manual_pdf",
+            "fin_prdt_nm": "KB스타 전세자금대출(SGI_서울보증보험)",
+            "loan_lmt": (
+                "최소 5백만원 이상 최대 5억원 이하 (임차보증금액의 80% 이내, "
+                "1주택자 최대 3억원 이내, 규제지역 1주택자 2억원 제한)"
+            ),
+        }
+        candidate = ProductCandidate(
+            product_name="KB스타 전세자금대출(SGI_서울보증보험)",
+            base_data=base,
+            option_list=_OPTIONS,
+        )
+        facts = {
+            "age": 34,
+            "owned_house_count": 0,
+            "is_regulated_region": True,
+            "lease_deposit": Decimal("400000000"),
+        }
+
+        blocked = simulate_loan_options(
+            _request(user_facts=facts),
+            [candidate],
+            registry=ProductRulePackRegistry((jeonse_pack,)),
+        )
+        assert blocked.executable == ()
+        assert blocked.unresolved
+        assert "stress_dsr_rate" in blocked.unresolved[0].missing_inputs
+
+        # 미검증 사용을 명시적으로 허용하면 계산된다.
+        allowed = simulate_loan_options(
+            _request(user_facts=facts, allow_unverified_regulation=True),
+            [candidate],
+            registry=ProductRulePackRegistry((jeonse_pack,)),
+        )
+        assert allowed.executable
+
+    def test_stress_source_is_recorded(self) -> None:
+        result = _run()
+        assert any("스트레스" in source for source in result.policy_sources)

@@ -1,4 +1,4 @@
-from collections.abc import Mapping
+from collections.abc import Callable, Mapping
 from dataclasses import dataclass, field
 from decimal import Decimal
 
@@ -32,6 +32,10 @@ from app.rule_engine.product_packs.models import EvaluationStatus
 #     `BorrowerFinancialState`로 받는다(engines/loan/existing_debt.py 소관).
 
 
+# (연이율, 개월수) -> DTI 한도 금액. 확정할 수 없으면 None.
+DtiLimitResolver = Callable[[Decimal, int], Decimal | None]
+
+
 @dataclass(frozen=True)
 class BorrowerFinancialState:
     """대출 가능액 계산에 필요한 차주 재무 상태(부록 A-2 입력).
@@ -60,12 +64,17 @@ class PolicyLimits:
 
     비율(LTV 70% 등)이 아니라 금액이다 — 비율→금액 환산은 주택가격·규제지역에
     따라 달라지므로 `loan_max()`의 책임이 아니며(formulas.py 주석) 이 어댑터의
-    책임도 아니다. 아직 `policy/*.json` 규제 상수표가 저장소에 없으므로
-    호출자가 기준일·출처와 함께 구해서 넘겨야 한다(§20, 부록 B-5).
+    책임도 아니다. 호출자가 기준일·출처와 함께 구해서 넘긴다(§20, 부록 B-5).
+
+    LTV는 주택가격만으로 정해지므로 옵션과 무관하게 하나면 된다. 반면 **DTI는
+    옵션마다 다르다** — DTI 상한은 연 원리금 기준이고 거기서 원금을 역산하려면
+    금리와 만기가 필요한데, 그 둘이 옵션별로 다르기 때문이다. 그래서 고정
+    금액(`dti_limit_amount`) 대신 옵션별 환산 함수를 넘기는 쪽이 정확하다
+    (`adapt_handoff_for_loan_max(dti_limit_resolver=...)`).
     """
 
     ltv_limit_amount: Decimal
-    dti_limit_amount: Decimal
+    dti_limit_amount: Decimal | None = None
 
 
 @dataclass(frozen=True)
@@ -136,12 +145,18 @@ def adapt_handoff_for_loan_max(
     required_amount: Decimal,
     months: int,
     rate_selection: str = "avg",
+    dti_limit_resolver: DtiLimitResolver | None = None,
 ) -> tuple[LoanOptionAdaptation, ...]:
     """PASS 판정된 대출 상품 하나를 옵션별 `loan_max()` 입력으로 변환한다.
 
     옵션(담보유형·상환방식·금리유형 조합)마다 금리가 다르므로 결과도 옵션 수만큼
     나온다. 판정이 PASS가 아니면 계산을 시도하지 않고 그 상태를 그대로 돌려준다 —
     자격 판정은 Rule Pack의 책임이고 어댑터가 뒤집지 않는다(§13.1).
+
+    `dti_limit_resolver`를 넘기면 DTI 한도를 옵션의 금리·만기로 매번 환산한다.
+    넘기지 않으면 `policy_limits.dti_limit_amount`를 모든 옵션에 공통으로 쓰는데,
+    이는 옵션 금리가 서로 다를 때 틀린 값이 된다. 규제 모듈을 여기서 직접 부르지
+    않고 함수로 받는 이유는, 이 어댑터가 규제표를 모르도록 유지하기 위해서다.
     """
     product_name = handoff.product.product_name
 
@@ -185,6 +200,7 @@ def adapt_handoff_for_loan_max(
             required_amount=required_amount,
             months=months,
             rate_selection=rate_selection,
+            dti_limit_resolver=dti_limit_resolver,
         )
         for option in product.options
     )
@@ -238,6 +254,7 @@ def _adapt_option(
     required_amount: Decimal,
     months: int,
     rate_selection: str,
+    dti_limit_resolver: DtiLimitResolver | None = None,
 ) -> LoanOptionAdaptation:
     if limit.kind is not LimitKind.AMOUNT or limit.amount is None:
         return LoanOptionAdaptation(
@@ -246,6 +263,24 @@ def _adapt_option(
             status=EvaluationStatus.UNKNOWN,
             missing_inputs=("product_limit_amount", *limit.missing_facts),
             reasons=(limit.note or "상품 한도를 확정하지 못했습니다.",),
+        )
+
+    annual_rate = option.rate(rate_selection)
+
+    # DTI 한도는 이 옵션의 금리·만기로 환산해야 한다. 환산기가 없으면 옵션
+    # 공통값으로 물러서지만, 그 값조차 없으면 임의로 채우지 않고 UNKNOWN이다.
+    if dti_limit_resolver is not None:
+        dti_limit_amount = dti_limit_resolver(annual_rate, months)
+    else:
+        dti_limit_amount = policy_limits.dti_limit_amount
+
+    if dti_limit_amount is None:
+        return LoanOptionAdaptation(
+            product_name=product_name,
+            option=option,
+            status=EvaluationStatus.UNKNOWN,
+            missing_inputs=("dti_limit_amount",),
+            reasons=("DTI 한도를 확정하지 못했습니다.",),
         )
 
     return LoanOptionAdaptation(
@@ -257,9 +292,9 @@ def _adapt_option(
         inputs=LoanMaxInputs(
             ltv_limit_amount=policy_limits.ltv_limit_amount,
             product_limit_amount=limit.amount,
-            dti_limit_amount=policy_limits.dti_limit_amount,
+            dti_limit_amount=dti_limit_amount,
             required_amount=required_amount,
-            annual_rate=option.rate(rate_selection),
+            annual_rate=annual_rate,
             months=months,
             existing_annual_debt_service=borrower.existing_annual_debt_service,
             annual_income=borrower.annual_income,

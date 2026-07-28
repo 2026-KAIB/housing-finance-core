@@ -37,16 +37,16 @@ class TestLtvRatioLookup:
         assert ratio.ratio == Decimal("0")
 
     def test_unverified_ratio_is_withheld_by_default(self) -> None:
-        # 조정대상지역 단독 지정 구간은 1차 출처를 확인하지 못했다.
+        # 비규제지역 생애최초 80%는 6·27의 반대해석이라 1차 출처가 없다.
         assert (
             get_ltv_ratio(
-                RegulationZone.ADJUSTMENT_TARGET, HousingStatus.NO_HOUSE, as_of=_TODAY
+                RegulationZone.NON_REGULATED, HousingStatus.FIRST_HOME_BUYER, as_of=_TODAY
             )
             is None
         )
         allowed = get_ltv_ratio(
-            RegulationZone.ADJUSTMENT_TARGET,
-            HousingStatus.NO_HOUSE,
+            RegulationZone.NON_REGULATED,
+            HousingStatus.FIRST_HOME_BUYER,
             as_of=_TODAY,
             allow_unverified=True,
         )
@@ -135,13 +135,73 @@ class TestLtvLimitAmount:
     def test_unknown_combination_returns_no_amount(self) -> None:
         resolved = resolve_ltv_limit_amount(
             house_price=Decimal("1000000000"),
-            zone=RegulationZone.ADJUSTMENT_TARGET,
-            status=HousingStatus.NO_HOUSE,
-            is_capital_region=True,
+            zone=RegulationZone.NON_REGULATED,
+            status=HousingStatus.FIRST_HOME_BUYER,
+            is_capital_region=False,
             as_of=_TODAY,
         )
         assert resolved.amount is None
         assert resolved.missing_inputs == ("ltv_ratio",)
+
+
+class TestRegulatedZonesShareTheSameLtv:
+    """26·6·30은 투기과열지구와 조정대상지역을 "규제지역"으로 묶어 다루며
+    둘에 다른 LTV를 적용하지 않는다. 조정대상지역만 50%로 남아 있던 것은 오류다."""
+
+    @pytest.mark.parametrize(
+        "status",
+        [HousingStatus.NO_HOUSE, HousingStatus.ONE_HOUSE_DISPOSAL_PLEDGED],
+    )
+    def test_both_regulated_zones_are_forty_percent_from_july_2026(
+        self, status: HousingStatus
+    ) -> None:
+        for zone in (RegulationZone.SPECULATION_OVERHEATED, RegulationZone.ADJUSTMENT_TARGET):
+            ratio = get_ltv_ratio(zone, status, as_of=date(2026, 7, 1))
+            assert ratio is not None, zone
+            assert ratio.ratio == Decimal("0.40"), zone
+            assert ratio.verified is True, zone
+
+    def test_first_home_buyer_keeps_the_relaxed_seventy_percent(self) -> None:
+        for zone in (RegulationZone.SPECULATION_OVERHEATED, RegulationZone.ADJUSTMENT_TARGET):
+            ratio = get_ltv_ratio(zone, HousingStatus.FIRST_HOME_BUYER, as_of=date(2026, 7, 1))
+            assert ratio is not None, zone
+            assert ratio.ratio == Decimal("0.70"), zone
+
+    def test_the_superseded_fifty_percent_stops_applying_on_the_effective_date(self) -> None:
+        # 낡은 값이 새 대책 이후에도 계속 조회되던 것이 이 이력 구조를 만든 이유다.
+        before = get_ltv_ratio(
+            RegulationZone.ADJUSTMENT_TARGET,
+            HousingStatus.NO_HOUSE,
+            as_of=date(2026, 6, 30),
+            allow_unverified=True,
+        )
+        assert before is not None
+        assert before.ratio == Decimal("0.50")
+        assert before.verified is False
+
+        after = get_ltv_ratio(
+            RegulationZone.ADJUSTMENT_TARGET,
+            HousingStatus.NO_HOUSE,
+            as_of=date(2026, 7, 1),
+            allow_unverified=True,
+        )
+        assert after is not None
+        assert after.ratio == Decimal("0.40")
+
+    def test_grandfathered_borrower_can_be_priced_at_the_earlier_date(self) -> None:
+        # 경과규정: 6/30까지 신청·계약을 마친 차주는 종전 규정을 적용받는다.
+        # `as_of`에 그 기준일을 넘기면 이력에서 당시 값이 나온다.
+        grandfathered = get_ltv_ratio(
+            RegulationZone.ADJUSTMENT_TARGET,
+            HousingStatus.NO_HOUSE,
+            as_of=date(2026, 6, 30),
+            allow_unverified=True,
+        )
+        current = get_ltv_ratio(
+            RegulationZone.ADJUSTMENT_TARGET, HousingStatus.NO_HOUSE, as_of=_TODAY
+        )
+        assert grandfathered is not None and current is not None
+        assert grandfathered.ratio > current.ratio
 
 
 class TestDtiLimitAmount:
@@ -179,3 +239,49 @@ class TestDtiLimitAmount:
                 annual_rate=Decimal("0.04"),
                 months=360,
             )
+
+
+class TestDtiInputValidation:
+    """잘못된 입력은 조용히 큰 한도로 흘러나오지 말고 즉시 걸려야 한다."""
+
+    _BASE = {
+        "annual_income": Decimal("60000000"),
+        "dti_ratio": Decimal("0.5"),
+        "other_annual_interest": Decimal("0"),
+        "annual_rate": Decimal("0.04"),
+        "months": 360,
+    }
+
+    @pytest.mark.parametrize(
+        ("field_name", "value"),
+        [
+            ("annual_income", Decimal("0")),
+            ("annual_income", Decimal("-60000000")),
+            ("dti_ratio", Decimal("-0.5")),
+            ("dti_ratio", Decimal("1.5")),
+            ("other_annual_interest", Decimal("-1000000")),
+            ("annual_rate", Decimal("-0.04")),
+            ("months", 0),
+            ("months", -12),
+        ],
+    )
+    def test_invalid_input_raises(self, field_name: str, value: object) -> None:
+        with pytest.raises(ValueError, match=field_name):
+            resolve_dti_limit_amount(**{**self._BASE, field_name: value})  # type: ignore[arg-type]
+
+    def test_validation_runs_before_the_zero_allowance_shortcut(self) -> None:
+        # 기존 이자만으로 DTI를 소진해 0원이 나오는 경우에도, 금리·기간이
+        # 잘못됐다면 0원 결과 뒤에 오류가 묻히면 안 된다.
+        with pytest.raises(ValueError, match="months"):
+            resolve_dti_limit_amount(
+                annual_income=Decimal("60000000"),
+                dti_ratio=Decimal("0.5"),
+                other_annual_interest=Decimal("50000000"),
+                annual_rate=Decimal("0.04"),
+                months=0,
+            )
+
+    def test_a_valid_boundary_ratio_is_accepted(self) -> None:
+        # 0과 1은 유효 범위의 경계이므로 막으면 안 된다.
+        assert resolve_dti_limit_amount(**{**self._BASE, "dti_ratio": Decimal("0")}).amount == 0
+        assert resolve_dti_limit_amount(**{**self._BASE, "dti_ratio": Decimal("1")}).amount > 0

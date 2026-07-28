@@ -20,6 +20,8 @@ from app.data_pipeline.curated.loan_limits import (
 # 저장소에 커밋하지 않기로 한 원천 데이터라 CI에는 없을 수 있다.
 
 _SOURCE_JSON = Path(__file__).resolve().parents[2] / "selected_23_products.json"
+_SNAPSHOT_JSON = Path(__file__).resolve().parent / "fixtures" / "loan_limit_source_snapshot.json"
+_SNAPSHOT = json.loads(_SNAPSHOT_JSON.read_text(encoding="utf-8"))
 _LOAN_CATEGORIES = ("주택담보대출", "전세자금대출", "개인신용대출")
 
 
@@ -216,6 +218,11 @@ def _rule_facts(limit: ProductLoanLimit) -> tuple[str, ...]:
     return tuple(names)
 
 
+# 조건부 규칙이 있는 상품만 속성 테스트 대상이다. 규칙이 없으면 결측될 조건도
+# 없으므로 skip을 남기는 대신 애초에 파라미터에서 뺀다.
+_CONDITIONAL_LIMITS = tuple(limit for limit in PRODUCT_LOAN_LIMITS if _rule_facts(limit))
+
+
 class TestPartialInputNeverExceedsFullInput:
     """부분 결측 결과는 그와 모순되지 않는 모든 완전입력 결과 이하여야 한다.
 
@@ -223,11 +230,9 @@ class TestPartialInputNeverExceedsFullInput:
     회귀를 막지만, 새 상품이나 새 규칙이 추가될 때 잡아 주는 것은 이 쪽이다.
     """
 
-    @pytest.mark.parametrize("limit", PRODUCT_LOAN_LIMITS, ids=lambda x: x.product_name)
+    @pytest.mark.parametrize("limit", _CONDITIONAL_LIMITS, ids=lambda x: x.product_name)
     def test_conservative_result_is_a_lower_bound(self, limit: ProductLoanLimit) -> None:
         rule_facts = _rule_facts(limit)
-        if not rule_facts:
-            pytest.skip("조건부 규칙이 없는 상품입니다.")
 
         # 비율 한도는 결측 시 UNKNOWN이므로 기준값은 항상 채워 둔다.
         fixed: dict[str, object] = {}
@@ -276,28 +281,47 @@ class TestRatioCapsRefuseToGuess:
 
 
 class TestTableIntegrity:
+    """한도표가 원천 `loan_lmt`와 어긋나지 않는지 확인한다.
+
+    저장소에 커밋된 스냅샷으로 검사하므로 CI에서도 항상 돈다. 예전에는 원천
+    JSON이 없으면 skip돼서, 상품명이나 원문이 바뀌어도 낡은 한도표가 그대로
+    통과했다.
+    """
+
     def test_every_loan_product_in_the_source_data_is_covered(self) -> None:
-        if not _SOURCE_JSON.exists():
-            pytest.skip("selected_23_products.json이 없어 원문 대조를 건너뜁니다.")
-        data = json.loads(_SOURCE_JSON.read_text(encoding="utf-8"))
-        source_names = {
-            product["baseList"]["fin_prdt_nm"]
-            for category in _LOAN_CATEGORIES
-            for product in data["categories"][category]
-        }
+        source_names = {product["product_name"] for product in _SNAPSHOT["products"]}
         covered = {limit.product_name for limit in PRODUCT_LOAN_LIMITS}
         assert source_names == covered
 
     def test_source_text_matches_the_original_loan_lmt(self) -> None:
+        for product in _SNAPSHOT["products"]:
+            limit = get_product_loan_limit(product["product_name"])
+            assert limit is not None, product["product_name"]
+            assert limit.source_text == product["loan_lmt_raw"], product["product_name"]
+
+
+class TestSnapshotMatchesTheRealSourceData:
+    """스냅샷이 원천 JSON과 갈라지지 않았는지 확인한다.
+
+    스냅샷 자체가 낡으면 위 대조가 무의미해지므로, 원천 파일이 있는 개발 환경에
+    한해 한 번 더 검사한다. CI에는 원천 파일이 없어 skip된다 — 여기서 skip되는
+    것은 안전하다. 정작 중요한 한도표 대조는 스냅샷으로 이미 끝났기 때문이다.
+    """
+
+    def test_snapshot_is_not_stale(self) -> None:
         if not _SOURCE_JSON.exists():
-            pytest.skip("selected_23_products.json이 없어 원문 대조를 건너뜁니다.")
+            pytest.skip("selected_23_products.json이 없어 스냅샷 최신성 확인을 건너뜁니다.")
         data = json.loads(_SOURCE_JSON.read_text(encoding="utf-8"))
-        for category in _LOAN_CATEGORIES:
-            for product in data["categories"][category]:
-                base = product["baseList"]
-                limit = get_product_loan_limit(base["fin_prdt_nm"])
-                assert limit is not None, base["fin_prdt_nm"]
-                assert limit.source_text == base["loan_lmt"], base["fin_prdt_nm"]
+        actual = {
+            product["baseList"]["fin_prdt_nm"]: product["baseList"]["loan_lmt"]
+            for category in _LOAN_CATEGORIES
+            for product in data["categories"][category]
+        }
+        snapshot = {p["product_name"]: p["loan_lmt_raw"] for p in _SNAPSHOT["products"]}
+        assert snapshot == actual, (
+            "원천 데이터가 스냅샷과 다릅니다. "
+            f"{_SNAPSHOT_JSON.name}을 다시 만들고 한도표를 함께 갱신하세요."
+        )
 
     def test_no_rule_exceeds_its_products_default_cap(self) -> None:
         # 조건부 한도가 기본 한도보다 높은 것은 보금자리론의 우대 구간뿐이며,

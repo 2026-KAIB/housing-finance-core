@@ -428,7 +428,7 @@ EMERGENCY_PACK = ProductRulePack(
 )
 
 
-def _adapt_emergency(policy_limits: PolicyLimits):
+def _adapt_emergency(policy_limits: PolicyLimits, required_amount: str = "3000000"):
     routing = route_product_candidates(
         [
             ProductCandidate(
@@ -445,7 +445,7 @@ def _adapt_emergency(policy_limits: PolicyLimits):
         routing.forwardable[0],
         borrower=BORROWER,
         policy_limits=policy_limits,
-        required_amount=Decimal("3000000"),
+        required_amount=Decimal(required_amount),
         months=12,
     )[0]
 
@@ -456,13 +456,9 @@ def test_minimum_amount_reaches_the_adaptation() -> None:
 
 
 def test_result_below_the_product_minimum_is_not_executable() -> None:
-    # LTV 한도를 30만원으로 조여 계산 결과를 최소금액(50만원) 아래로 만든다.
-    adaptation = _adapt_emergency(
-        PolicyLimits(
-            ltv_limit_amount=Decimal("300000"),
-            dti_limit_amount=Decimal("400000000"),
-        )
-    )
+    # 요청금액을 30만원으로 조여 계산 결과를 최소금액(50만원) 아래로 만든다.
+    # LTV로 조이면 안 된다 — 신용대출은 LTV 규제 대상이 아니라 무시된다.
+    adaptation = _adapt_emergency(POLICY_LIMITS, required_amount="300000")
     computation = compute_loan_option(adaptation)
 
     assert computation.amount < Decimal("500000")

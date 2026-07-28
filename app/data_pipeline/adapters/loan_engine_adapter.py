@@ -13,7 +13,7 @@ from app.data_pipeline.normalizers.loan_product import (
 )
 from app.engines.loan.formulas import buffer, loan_max
 from app.rule_engine.product_packs.handoff import ProductEngineHandoff
-from app.rule_engine.product_packs.models import EvaluationStatus
+from app.rule_engine.product_packs.models import EvaluationStatus, ProductCategory
 
 # Rule Pack 판정(`route_product_candidates()`)을 통과한 대출 상품을 대출 계산
 # 엔진(`formulas.loan_max()`)의 입력으로 조립한다. product_packs/README.md의
@@ -34,6 +34,12 @@ from app.rule_engine.product_packs.models import EvaluationStatus
 
 # (연이율, 개월수) -> DTI 한도 금액. 확정할 수 없으면 None.
 DtiLimitResolver = Callable[[Decimal, int], Decimal | None]
+
+# LTV(담보인정비율)와 DTI(총부채상환비율)는 **주택담보대출 규제**다. 신용대출·
+# 전세대출에 주택가격 기반 상한을 씌우면 존재하지 않는 규칙이 만들어진다 —
+# 예전에는 1.5억 주택을 사는 차주의 신용대출 한도가 6천만원(=1.5억×40%)으로
+# 잘렸다. 반대로 DSR은 차주단위 규제라 대출 종류를 가리지 않고 걸린다.
+LTV_DTI_APPLICABLE_CATEGORIES = frozenset({ProductCategory.MORTGAGE_LOAN})
 
 
 @dataclass(frozen=True)
@@ -217,6 +223,7 @@ def adapt_handoff_for_loan_max(
         _adapt_option(
             option,
             product_name=product_name,
+            category=handoff.rule_result.category,
             limit=limit,
             borrower=borrower,
             policy_limits=policy_limits,
@@ -272,6 +279,7 @@ def _adapt_option(
     option: NormalizedLoanOption,
     *,
     product_name: str,
+    category: ProductCategory,
     limit: ResolvedProductLimit,
     borrower: BorrowerFinancialState,
     policy_limits: PolicyLimits,
@@ -292,21 +300,33 @@ def _adapt_option(
 
     annual_rate = option.rate(rate_selection)
 
-    # DTI 한도는 이 옵션의 금리·만기로 환산해야 한다. 환산기가 없으면 옵션
-    # 공통값으로 물러서지만, 그 값조차 없으면 임의로 채우지 않고 UNKNOWN이다.
-    if dti_limit_resolver is not None:
-        dti_limit_amount = dti_limit_resolver(annual_rate, months)
-    else:
-        dti_limit_amount = policy_limits.dti_limit_amount
+    # 이 상품이 LTV·DTI 규제 대상인가. 대상이 아니면 두 상한을 `required_amount`로
+    # 환산해 구속하지 않게 만든다 — `loan_max()`의 탐색 상한이
+    # `min(각 한도, required_amount)`이므로 결과에 영향이 없는 것이 산술적으로
+    # 보장된다. 큰 상수를 넣는 방식은 오타 한 번에 진짜 상한을 지워 버린다.
+    # (UNCAPPED를 다루는 `_resolve_limit_amount()`와 같은 관용구다.)
+    regulated_by_ltv_dti = category in LTV_DTI_APPLICABLE_CATEGORIES
 
-    if dti_limit_amount is None:
-        return LoanOptionAdaptation(
-            product_name=product_name,
-            option=option,
-            status=EvaluationStatus.UNKNOWN,
-            missing_inputs=("dti_limit_amount",),
-            reasons=("DTI 한도를 확정하지 못했습니다.",),
-        )
+    if not regulated_by_ltv_dti:
+        ltv_limit_amount = required_amount
+        dti_limit_amount: Decimal | None = required_amount
+    else:
+        ltv_limit_amount = policy_limits.ltv_limit_amount
+        # DTI 한도는 이 옵션의 금리·만기로 환산해야 한다. 환산기가 없으면 옵션
+        # 공통값으로 물러서지만, 그 값조차 없으면 임의로 채우지 않고 UNKNOWN이다.
+        if dti_limit_resolver is not None:
+            dti_limit_amount = dti_limit_resolver(annual_rate, months)
+        else:
+            dti_limit_amount = policy_limits.dti_limit_amount
+
+        if dti_limit_amount is None:
+            return LoanOptionAdaptation(
+                product_name=product_name,
+                option=option,
+                status=EvaluationStatus.UNKNOWN,
+                missing_inputs=("dti_limit_amount",),
+                reasons=("DTI 한도를 확정하지 못했습니다.",),
+            )
 
     return LoanOptionAdaptation(
         product_name=product_name,
@@ -315,7 +335,7 @@ def _adapt_option(
         assumptions=limit.assumptions,
         product_minimum_amount=limit.minimum_amount,
         inputs=LoanMaxInputs(
-            ltv_limit_amount=policy_limits.ltv_limit_amount,
+            ltv_limit_amount=ltv_limit_amount,
             product_limit_amount=limit.amount,
             dti_limit_amount=dti_limit_amount,
             required_amount=required_amount,

@@ -53,6 +53,10 @@ class ResolvedProductLimit:
     assumptions: tuple[str, ...] = field(default_factory=tuple)
     missing_facts: tuple[str, ...] = field(default_factory=tuple)
     note: str | None = None
+    # 상품 최소 실행금액. 상한이 아니라 하한이며, 계산된 대출가능액이 이보다
+    # 작으면 그 상품은 실행할 수 없다. 상한과 함께 실어 보내는 이유는 이 값이
+    # 계산 **이후** 판정에 필요한데 그 시점에는 한도표에 접근할 수 없기 때문이다.
+    minimum_amount: Decimal | None = None
 
     @property
     def is_conservative(self) -> bool:
@@ -98,40 +102,50 @@ class ProductLoanLimit:
 
         규칙은 선언 순서대로 평가하며 먼저 True가 된 규칙이 이긴다. 따라서
         더 낮은(엄격한) 조건을 앞에 선언한다.
+
+        **앞선 규칙이 None이면 뒤의 True도 확정이 아니다.** 판단하지 못한 규칙이
+        실제로는 참일 수 있고, 그렇다면 그쪽이 먼저 적용돼 더 낮은 한도가 된다.
+        그래서 True를 만나도 그 금액을 확정으로 쓰지 않고 남은 가능성에 합쳐
+        최저값을 고른다 — 과소평가는 안전하지만 과대평가는 아니다.
         """
-        decided: Decimal | None = None
-        decided_description = self.default_description
-        uncertain_amounts: list[Decimal] = []
-        uncertain_descriptions: list[str] = []
+        # 아직 배제하지 못한 (한도, 근거). 판단 못 한 규칙이 여기 쌓인다.
+        candidates: list[tuple[Decimal, str]] = []
         missing: list[str] = []
+        certain: tuple[Decimal, str] | None = None
 
         for rule in self.rules:
             verdict = rule.applies(facts)
             if verdict is True:
-                decided = rule.amount
-                decided_description = rule.description
+                certain = (rule.amount, rule.description)
                 break
             if verdict is None:
-                uncertain_amounts.append(rule.amount)
-                uncertain_descriptions.append(rule.description)
+                candidates.append((rule.amount, rule.description))
                 missing.extend(name for name in rule.required_facts if facts.get(name) is None)
 
-        assumptions: list[str] = []
-        if decided is not None:
-            base: Decimal | None = decided
-        elif not uncertain_amounts:
-            base = self.default_amount
+        # True인 규칙이 없으면 기본 한도가 남은 가능성이다. default_amount가
+        # None(UNCAPPED)이면 유한한 가능성이 아니므로 후보에 넣지 않는다.
+        if certain is not None:
+            fallback: tuple[Decimal, str] | None = certain
+        elif self.default_amount is not None:
+            fallback = (self.default_amount, self.default_description)
         else:
-            # 조건을 확인하지 못했다. 적용 가능성이 남은 한도와 기본 한도 중
-            # 가장 낮은 값을 쓴다 — 과소평가는 안전하지만 과대평가는 아니다.
-            candidates = list(uncertain_amounts)
-            if self.default_amount is not None:
-                candidates.append(self.default_amount)
-            base = min(candidates)
+            fallback = None
+
+        assumptions: list[str] = []
+        base: Decimal | None
+        if not candidates:
+            base, decided_description = fallback if fallback is not None else (
+                None,
+                self.default_description,
+            )
+        else:
+            pool = candidates if fallback is None else [*candidates, fallback]
+            base, decided_description = min(pool, key=lambda item: item[0])
+            unresolved = ", ".join(sorted(set(missing))) or "일부 조건"
             assumptions.append(
-                f"{', '.join(sorted(set(missing)))} 미확인 → "
+                f"{unresolved} 미확인 → "
                 f"가능한 한도 중 최저({_format_won(base)}) 적용 "
-                f"[{'; '.join(uncertain_descriptions)}]"
+                f"[{'; '.join(description for _, description in pool)}]"
             )
 
         if self.deposit_ratio is not None:
@@ -145,12 +159,14 @@ class ProductLoanLimit:
                 kind=LimitKind.UNCAPPED,
                 assumptions=tuple(assumptions),
                 note=decided_description,
+                minimum_amount=self.min_amount,
             )
         return ResolvedProductLimit(
             kind=LimitKind.AMOUNT,
             amount=base,
             assumptions=tuple(assumptions),
             note=decided_description,
+            minimum_amount=self.min_amount,
         )
 
     def _apply_deposit_ratio(

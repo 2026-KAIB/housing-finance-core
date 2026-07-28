@@ -1,3 +1,4 @@
+import itertools
 import json
 from decimal import Decimal
 from pathlib import Path
@@ -7,6 +8,7 @@ import pytest
 from app.data_pipeline.curated.loan_limits import (
     PRODUCT_LOAN_LIMITS,
     LimitKind,
+    ProductLoanLimit,
     get_product_loan_limit,
     resolve_product_limit,
 )
@@ -149,6 +151,112 @@ class TestMissingConditionsFallBackToTheLowestTier:
         )
         assert resolved.amount == Decimal("200000000")
         assert resolved.is_conservative
+
+
+class TestPartiallyKnownConditionsStillPickTheLowest:
+    """일부 조건만 아는 경우 — 뒤 규칙이 True여도 확정으로 쓰면 안 된다.
+
+    앞선 규칙을 판단하지 못했다면 그 규칙이 실제로 참일 수 있고, 그렇다면
+    더 낮은 한도가 먼저 적용된다. 회귀 대상이던 실제 결함이다.
+    """
+
+    def test_overdraft_credit_loan_without_employment_months(self) -> None:
+        # 재직 1년 미만이면 1억, 1년 이상 마통이면 1.5억. 재직기간을 모르므로 1억.
+        resolved = resolve_product_limit("KB 신용대출", {"is_overdraft_type": True})
+        assert resolved.amount == Decimal("100000000")
+        assert resolved.is_conservative
+        assert "employment_months" in resolved.assumptions[0]
+
+    def test_sgi_one_house_owner_without_region(self) -> None:
+        # 규제지역이면 2억, 비규제면 3억. 지역을 모르므로 2억.
+        resolved = resolve_product_limit(
+            "KB스타 전세자금대출(SGI_서울보증보험)",
+            {"owned_house_count": 1, "lease_deposit": Decimal("500000000")},
+        )
+        assert resolved.amount == Decimal("200000000")
+        assert resolved.is_conservative
+        assert "is_regulated_region" in resolved.assumptions[0]
+
+    def test_bogeumjari_multi_child_without_first_home_flag(self) -> None:
+        # 4억(다자녀)과 4.2억(생애최초) 중 4억. 금액뿐 아니라 가정도 남아야 한다.
+        resolved = resolve_product_limit(
+            "한국주택금융공사 아낌e-보금자리론",
+            {"is_multi_child_or_jeonse_fraud_victim": True},
+        )
+        assert resolved.amount == Decimal("400000000")
+        assert resolved.is_conservative
+        assert "is_first_home_buyer" in resolved.assumptions[0]
+
+    def test_a_conservative_result_always_records_an_assumption(self) -> None:
+        # 값만 맞고 근거가 없으면 사용자가 어느 쪽으로 틀렸는지 알 수 없다.
+        for product_name, facts in (
+            ("KB 신용대출", {"is_overdraft_type": True}),
+            ("한국주택금융공사 아낌e-보금자리론", {"is_multi_child_or_jeonse_fraud_victim": True}),
+        ):
+            resolved = resolve_product_limit(product_name, facts)
+            assert resolved.assumptions, product_name
+
+
+# 속성 테스트용 후보값. 각 fact가 규칙 분기를 실제로 가르는 값이어야 한다.
+_FACT_CANDIDATES: dict[str, tuple[object, ...]] = {
+    "employment_months": (6, 60),
+    "is_first_home_buyer": (True, False),
+    "is_multi_child_or_jeonse_fraud_victim": (True, False),
+    "is_newlywed_or_multi_child": (True, False),
+    "is_overdraft_type": (True, False),
+    "is_regulated_region": (True, False),
+    "owned_house_count": (0, 1, 2),
+}
+
+
+def _rule_facts(limit: ProductLoanLimit) -> tuple[str, ...]:
+    names: list[str] = []
+    for rule in limit.rules:
+        names.extend(name for name in rule.required_facts if name not in names)
+    return tuple(names)
+
+
+class TestPartialInputNeverExceedsFullInput:
+    """부분 결측 결과는 그와 모순되지 않는 모든 완전입력 결과 이하여야 한다.
+
+    이 모듈의 안전 계약을 상품 전체에 대해 전수 확인한다. 개별 사례 테스트는
+    회귀를 막지만, 새 상품이나 새 규칙이 추가될 때 잡아 주는 것은 이 쪽이다.
+    """
+
+    @pytest.mark.parametrize("limit", PRODUCT_LOAN_LIMITS, ids=lambda x: x.product_name)
+    def test_conservative_result_is_a_lower_bound(self, limit: ProductLoanLimit) -> None:
+        rule_facts = _rule_facts(limit)
+        if not rule_facts:
+            pytest.skip("조건부 규칙이 없는 상품입니다.")
+
+        # 비율 한도는 결측 시 UNKNOWN이므로 기준값은 항상 채워 둔다.
+        fixed: dict[str, object] = {}
+        if limit.deposit_ratio_fact is not None:
+            fixed[limit.deposit_ratio_fact] = Decimal("10000000000")
+
+        for omitted in range(1, len(rule_facts) + 1):
+            for hidden in itertools.combinations(rule_facts, omitted):
+                known = [name for name in rule_facts if name not in hidden]
+                for values in itertools.product(*(_FACT_CANDIDATES[n] for n in known)):
+                    partial = {**fixed, **dict(zip(known, values, strict=True))}
+                    conservative = limit.resolve(partial)
+                    if conservative.kind is not LimitKind.AMOUNT:
+                        continue
+                    assert conservative.amount is not None
+
+                    # 가려 둔 fact를 모든 값으로 채운 완전입력과 비교한다.
+                    for filled in itertools.product(*(_FACT_CANDIDATES[n] for n in hidden)):
+                        full = limit.resolve({**partial, **dict(zip(hidden, filled, strict=True))})
+                        if full.kind is not LimitKind.AMOUNT or full.amount is None:
+                            continue
+                        assert conservative.amount <= full.amount, (
+                            f"{limit.product_name}: {partial} → {conservative.amount:,.0f}원이 "
+                            f"완전입력 {full.amount:,.0f}원보다 큽니다."
+                        )
+                        if conservative.amount < full.amount:
+                            assert conservative.assumptions, (
+                                f"{limit.product_name}: 낮춘 결과에 가정 기록이 없습니다."
+                            )
 
 
 class TestRatioCapsRefuseToGuess:

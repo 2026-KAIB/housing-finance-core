@@ -51,6 +51,18 @@ class BorrowerFinancialState:
     other_existing_monthly_debt_service: Decimal
     monthly_essential_expense: Decimal
     safe_dsr: Decimal
+    # 기존 대출의 연간 **이자만**. DTI 분자는 기타 대출을 이자만 세는 반면
+    # `existing_annual_debt_service`(DSR용)는 원금까지 센다. 두 값을 뭉치면
+    # DTI 계산이 틀리므로 따로 받는다. 없으면 DSR용 값으로 대체하는데, 더 많이
+    # 빼는 셈이라 DTI 한도를 낮게 잡는다(과소평가 = 안전).
+    existing_annual_interest: Decimal | None = None
+
+    @property
+    def dti_other_annual_interest(self) -> Decimal:
+        """DTI 분자에 넣을 기타 부채 연 이자."""
+        if self.existing_annual_interest is not None:
+            return self.existing_annual_interest
+        return self.existing_annual_debt_service
 
     @property
     def buffer_target(self) -> Decimal:

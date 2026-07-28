@@ -161,7 +161,8 @@ def simulate_loan_options(
         return resolve_dti_limit_amount(
             annual_income=request.borrower.annual_income,
             dti_ratio=dti_ratio.ratio,
-            other_annual_interest=request.borrower.existing_annual_debt_service,
+            # DTI 분자는 기타 대출을 **이자만** 센다(DSR은 원금까지).
+            other_annual_interest=request.borrower.dti_other_annual_interest,
             annual_rate=annual_rate,
             months=months,
         ).amount

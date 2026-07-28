@@ -508,3 +508,24 @@ def test_compute_loan_option_carries_conservative_assumptions_through() -> None:
 
     assert computation.assumptions == adaptation.assumptions
     assert computation.assumptions != ()
+
+
+class TestDtiUsesInterestOnly:
+    """DTI 분자는 기타 대출을 이자만 세고, DSR은 원금까지 센다(KB 자료 계산식).
+
+    두 값을 뭉치면 DTI가 틀린다. 이자만 따로 받고, 없으면 DSR용 값으로
+    대체하되 그 방향이 과소평가(안전)임을 고정한다.
+    """
+
+    def test_interest_only_field_is_used_when_present(self) -> None:
+        borrower = replace(BORROWER, existing_annual_interest=Decimal("2000000"))
+        assert borrower.dti_other_annual_interest == Decimal("2000000")
+
+    def test_falls_back_to_the_dsr_figure_when_absent(self) -> None:
+        assert BORROWER.existing_annual_interest is None
+        assert BORROWER.dti_other_annual_interest == BORROWER.existing_annual_debt_service
+
+    def test_the_fallback_never_overstates_the_dti_allowance(self) -> None:
+        # 원리금은 이자보다 크므로 더 많이 빼게 되고, DTI 한도는 낮아진다.
+        with_interest = replace(BORROWER, existing_annual_interest=Decimal("2000000"))
+        assert with_interest.dti_other_annual_interest < BORROWER.dti_other_annual_interest

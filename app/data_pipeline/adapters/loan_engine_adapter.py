@@ -123,6 +123,9 @@ class LoanOptionAdaptation:
     # 상품 한도를 확정하지 못해 더 낮은 값을 가정했다면 그 내역. 비어 있지 않은
     # PASS는 "계산은 됐지만 과소평가일 수 있다"는 뜻이므로 결과에 함께 표시한다.
     assumptions: tuple[str, ...] = field(default_factory=tuple)
+    # 상품 최소 실행금액(있는 경우). `loan_max()` 입력이 아니라 계산 **결과**를
+    # 판정하는 데 쓰므로 `LoanMaxInputs`가 아니라 여기에 싣는다.
+    product_minimum_amount: Decimal | None = None
 
 
 def adapt_handoff_for_loan_max(
@@ -213,12 +216,14 @@ def _resolve_limit_amount(
             amount=required_amount,
             assumptions=resolved.assumptions,
             note=resolved.note,
+            minimum_amount=resolved.minimum_amount,
         )
     if parsed_limit is not None:
         return ResolvedProductLimit(
             kind=LimitKind.AMOUNT,
             amount=parsed_limit,
             note="loan_lmt 원문에서 파싱한 단일 한도",
+            minimum_amount=resolved.minimum_amount,
         )
     return resolved
 
@@ -248,6 +253,7 @@ def _adapt_option(
         option=option,
         status=EvaluationStatus.PASS,
         assumptions=limit.assumptions,
+        product_minimum_amount=limit.minimum_amount,
         inputs=LoanMaxInputs(
             ltv_limit_amount=policy_limits.ltv_limit_amount,
             product_limit_amount=limit.amount,
@@ -266,11 +272,39 @@ def _adapt_option(
     )
 
 
+@dataclass(frozen=True)
+class LoanComputation:
+    """대출 가능액 계산 결과와 그 실행 가능 여부.
+
+    `status`는 계산된 금액을 실제로 빌릴 수 있는지를 뜻한다:
+    - PASS: 실행 가능.
+    - FAIL: 금액은 계산됐지만 상품 최소 실행금액에 미달해 실행할 수 없다.
+
+    금액을 최소금액까지 끌어올리는 선택지는 없다 — 그렇게 하면 애초에 금액을
+    낮춘 DSR·LTV·현금흐름 제약을 위반하게 되므로 상품을 제외하는 것이 맞다.
+    """
+
+    product_name: str
+    option: NormalizedLoanOption | None
+    status: EvaluationStatus
+    amount: Decimal
+    product_minimum_amount: Decimal | None = None
+    assumptions: tuple[str, ...] = field(default_factory=tuple)
+    reasons: tuple[str, ...] = field(default_factory=tuple)
+
+    @property
+    def is_executable(self) -> bool:
+        return self.status is EvaluationStatus.PASS
+
+
 def compute_loan_max(adaptation: LoanOptionAdaptation) -> Decimal:
     """PASS 상태의 어댑터 결과로 대출 가능액을 계산한다(부록 A-2).
 
     PASS가 아닌 결과를 넘기면 `ValueError`다 — UNKNOWN을 0원으로 뭉개면
     "한도가 0"과 "한도를 모름"이 구분되지 않기 때문이다.
+
+    이 함수는 금액만 돌려주며 **상품 최소 실행금액을 판정하지 않는다.** 상품
+    비교 결과를 만들 때는 `compute_loan_option()`을 쓸 것.
     """
     if adaptation.status is not EvaluationStatus.PASS or adaptation.inputs is None:
         raise ValueError(
@@ -278,6 +312,40 @@ def compute_loan_max(adaptation: LoanOptionAdaptation) -> Decimal:
             f"(status={adaptation.status}, missing={adaptation.missing_inputs})."
         )
     return loan_max(**adaptation.inputs.as_kwargs())  # type: ignore[arg-type]
+
+
+def compute_loan_option(adaptation: LoanOptionAdaptation) -> LoanComputation:
+    """대출 가능액을 계산하고 상품 최소 실행금액까지 판정한다.
+
+    Rule Pack은 **요청금액**이 최소금액 이상인지만 본다. 그런데 소득·DSR·현금흐름
+    때문에 계산 결과가 요청금액보다 작아질 수 있고, 그 결과가 최소금액에 미달하면
+    판정은 PASS인데 실제로는 실행할 수 없는 상품이 된다. 그 구멍을 여기서 막는다.
+    """
+    amount = compute_loan_max(adaptation)
+    minimum = adaptation.product_minimum_amount
+
+    if minimum is not None and amount < minimum:
+        return LoanComputation(
+            product_name=adaptation.product_name,
+            option=adaptation.option,
+            status=EvaluationStatus.FAIL,
+            amount=amount,
+            product_minimum_amount=minimum,
+            assumptions=adaptation.assumptions,
+            reasons=(
+                f"계산된 대출가능액 {amount:,.0f}원이 상품 최소 실행금액 "
+                f"{minimum:,.0f}원보다 작습니다.",
+            ),
+        )
+
+    return LoanComputation(
+        product_name=adaptation.product_name,
+        option=adaptation.option,
+        status=EvaluationStatus.PASS,
+        amount=amount,
+        product_minimum_amount=minimum,
+        assumptions=adaptation.assumptions,
+    )
 
 
 def _rule_reasons(handoff: ProductEngineHandoff) -> tuple[str, ...]:

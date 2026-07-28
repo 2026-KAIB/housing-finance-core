@@ -227,6 +227,16 @@ def is_capital_region_code(region_code: str) -> bool | None:
     return region_code.strip()[:2] in CAPITAL_REGION_PREFIXES
 
 
+SEOUL_PREFIX = "11"
+
+
+def is_seoul_code(region_code: str) -> bool | None:
+    """서울 여부. DTI 비율이 서울 50% / 수도권 그 외 60%로 갈리므로 필요하다."""
+    if not is_valid_region_code(region_code):
+        return None
+    return region_code.strip()[:2] == SEOUL_PREFIX
+
+
 _CAPITAL_SIDO = frozenset({"서울특별시", "인천광역시", "경기도"})
 
 
@@ -320,9 +330,13 @@ def resolve_region(
         if any(row.zone is RegulationZone.SPECULATION_OVERHEATED for row in matches)
         else RegulationZone.ADJUSTMENT_TARGET
     )
+    # 여기 오는 세 경로 모두 `capital`을 확정하고 온다(코드 → 접두사, 이름 →
+    # 지정 데이터의 시·도). "모르면 수도권이라 치자"로 메우지 않는다 — 그 습관이
+    # 남아 있으면 경로가 하나 늘 때 되살아난다.
+    assert capital is not None
     return ResolvedRegion(
         zone=zone,
-        is_capital_region=capital if capital is not None else True,
+        is_capital_region=capital,
         name=resolved_name,
         sources=tuple(dict.fromkeys(row.source for row in matches)),
     )

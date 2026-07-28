@@ -261,21 +261,77 @@ MORTGAGE_HARD_CAP_TIERS: tuple[tuple[Decimal | None, Decimal], ...] = (
 )
 MORTGAGE_HARD_CAP_EFFECTIVE_FROM = date(2025, 10, 16)
 
+class DtiRegion(StrEnum):
+    """DTI 비율을 가르는 지역 구분.
+
+    LTV의 `RegulationZone`과 축이 다르다 — DTI는 규제지역 여부가 아니라
+    서울/수도권/그 밖으로 갈린다. 그래서 별도 구분이 필요하지만, 값은
+    반드시 같은 지역 사실에서 파생돼야 한다(services 계층이 그 일을 한다).
+    """
+
+    SEOUL = "SEOUL"
+    CAPITAL_REGION = "CAPITAL_REGION"  # 수도권 중 서울 외(인천·경기)
+    NON_CAPITAL = "NON_CAPITAL"  # 비수도권 — DTI 규제 대상이 아니다
+
+
 # DTI 비율(SSOT §13.2.2 / 부록 A-14). 은행이 아니라 감독규정이 정한다.
-DTI_RATIOS: dict[str, RegulatoryRatio] = {
-    "SEOUL": RegulatoryRatio(
-        ratio=Decimal("0.50"),
-        source="은행업감독업무시행세칙 (SSOT §13.2.2 / A-14)",
-        effective_from=date(2018, 10, 31),
-        note="서울 50%",
+# LTV와 같은 이력 구조를 쓴다 — 시행일만 붙여 두고 아무도 읽지 않으면
+# 낡은 값이 새 대책 이후에도 계속 조회된다.
+DTI_RATIO_HISTORY: dict[DtiRegion, tuple[RegulatoryRatio, ...]] = {
+    DtiRegion.SEOUL: (
+        RegulatoryRatio(
+            ratio=Decimal("0.50"),
+            source="은행업감독업무시행세칙 (SSOT §13.2.2 / A-14)",
+            effective_from=date(2018, 10, 31),
+            note="서울 50%",
+        ),
     ),
-    "CAPITAL_REGION": RegulatoryRatio(
-        ratio=Decimal("0.60"),
-        source="은행업감독업무시행세칙 (SSOT §13.2.2 / A-14)",
-        effective_from=date(2018, 10, 31),
-        note="수도권(서울 외) 60%",
+    DtiRegion.CAPITAL_REGION: (
+        RegulatoryRatio(
+            ratio=Decimal("0.60"),
+            source="은행업감독업무시행세칙 (SSOT §13.2.2 / A-14)",
+            effective_from=date(2018, 10, 31),
+            note="수도권(서울 외) 60%",
+        ),
     ),
+    # 비수도권은 DTI 규제 대상이 아니다. 빈 이력이 아니라 키 자체를 두지 않고
+    # `resolve_dti_ratio()`가 "적용 대상 아님"으로 명시해 돌려준다.
 }
+
+
+@dataclass(frozen=True)
+class ResolvedDtiRatio:
+    """DTI 비율 조회 결과.
+
+    "적용 대상이 아니다"와 "모른다"를 구분한다 — 상품 한도표의
+    `UNCAPPED` vs `UNKNOWN`과 같은 구분이다. 둘을 뭉개면 비수도권 차주가
+    "DTI를 확정하지 못했습니다"로 계산 자체를 못 하게 되거나, 반대로
+    시점을 못 찾은 값이 "규제 없음"으로 새어 나가 한도가 과대평가된다.
+    """
+
+    ratio: RegulatoryRatio | None = None
+    applies: bool = True
+    note: str | None = None
+
+    @property
+    def is_resolved(self) -> bool:
+        return not self.applies or self.ratio is not None
+
+
+def resolve_dti_ratio(region: DtiRegion, *, as_of: date) -> ResolvedDtiRatio:
+    """`as_of` 시점에 이 지역 구분에 적용되는 DTI 비율."""
+    history = DTI_RATIO_HISTORY.get(region)
+    if history is None:
+        return ResolvedDtiRatio(
+            applies=False,
+            note=f"{region}은(는) DTI 규제 대상 지역이 아닙니다(DTI는 수도권 규제).",
+        )
+    for ratio in history:
+        if ratio.covers(as_of):
+            return ResolvedDtiRatio(ratio=ratio)
+    return ResolvedDtiRatio(
+        note=f"{region}의 DTI 비율 중 {as_of.isoformat()} 시점을 덮는 구간이 없습니다.",
+    )
 
 # 1금융권 차주단위 DSR 상한. `safe_dsr`(서비스 내부 안전기준)과 혼동 금지.
 BANK_DSR_LIMIT = RegulatoryRatio(

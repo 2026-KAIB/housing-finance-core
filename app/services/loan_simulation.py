@@ -13,14 +13,16 @@ from app.data_pipeline.adapters.loan_engine_adapter import (
 )
 from app.regulations.mortgage_limits import (
     BANK_DSR_LIMIT,
-    DTI_RATIOS,
+    DtiRegion,
     HousingStatus,
     RegulationZone,
+    ResolvedDtiRatio,
     ResolvedPolicyLimit,
     resolve_dti_limit_amount,
+    resolve_dti_ratio,
     resolve_ltv_limit_amount,
 )
-from app.regulations.regulated_regions import ResolvedRegion, resolve_region
+from app.regulations.regulated_regions import ResolvedRegion, is_seoul_code, resolve_region
 from app.regulations.stress_dsr import (
     StressLoanKind,
     StressRate,
@@ -70,7 +72,10 @@ class LoanSimulationRequest:
     required_amount: Decimal
     months: int
     as_of: date
-    dti_region: str = "SEOUL"
+    # None이면 `is_capital_region`에서 파생한다. 지역 사실의 출처를 하나로
+    # 유지하기 위한 것이다 — 예전에는 기본값이 "SEOUL" 문자열이라 대전 차주에게도
+    # 서울 DTI 50%가 붙었다. 명시할 때는 `is_capital_region`과 모순되면 안 된다.
+    dti_region: DtiRegion | None = None
     rate_selection: str = "avg"
     for_house_purchase: bool = True
     allow_unverified_regulation: bool = False
@@ -140,13 +145,13 @@ def simulate_loan_options(
         allow_unverified=request.allow_unverified_regulation,
     )
 
-    dti_ratio = DTI_RATIOS.get(request.dti_region)
-    sources = tuple(ltv.sources) + ((dti_ratio.source,) if dti_ratio is not None else ())
+    dti = resolve_dti_ratio(resolve_dti_region(request), as_of=request.as_of)
+    sources = tuple(ltv.sources) + ((dti.ratio.source,) if dti.ratio is not None else ())
 
     missing: list[str] = []
     if ltv.amount is None:
         missing.extend(ltv.missing_inputs or ("ltv_limit_amount",))
-    if dti_ratio is None:
+    if not dti.is_resolved:
         missing.append("dti_ratio")
 
     if missing:
@@ -155,12 +160,20 @@ def simulate_loan_options(
             policy_as_of=request.as_of,
             policy_sources=sources,
             missing_inputs=tuple(dict.fromkeys(missing)),
-            notes=_regulation_notes(ltv, dti_ratio, request),
+            notes=_regulation_notes(ltv, dti, request),
         )
 
-    assert ltv.amount is not None and dti_ratio is not None
+    assert ltv.amount is not None
+
+    dti_ratio = dti.ratio
 
     def resolve_dti(annual_rate: Decimal, months: int) -> Decimal | None:
+        if dti_ratio is None:
+            # DTI 규제 대상이 아닌 지역(비수도권). 상한이 없다는 뜻이므로
+            # `required_amount`로 환산해 구속하지 않게 만든다 — 어댑터가
+            # UNCAPPED를 다루는 방식과 같다. None을 돌려주면 "모름"으로 읽혀
+            # 계산 자체가 막힌다.
+            return request.required_amount
         # 옵션마다 금리·만기가 다르므로 DTI 한도도 옵션마다 다시 역산한다.
         # 하나를 공유하면 금리가 낮은 옵션의 한도가 그대로 높은 옵션에 쓰인다.
         return resolve_dti_limit_amount(
@@ -239,8 +252,30 @@ def simulate_loan_options(
         ltv=ltv,
         policy_as_of=request.as_of,
         policy_sources=sources + tuple(stress_sources),
-        notes=_regulation_notes(ltv, dti_ratio, request),
+        notes=_regulation_notes(ltv, dti, request),
     )
+
+
+def resolve_dti_region(request: LoanSimulationRequest) -> DtiRegion:
+    """요청의 DTI 지역 구분. 명시하지 않았으면 지역 사실에서 파생한다.
+
+    수도권인 것만 알고 서울인지 모르면 **더 엄격한 서울(50%)** 로 물러선다.
+    금액을 과소평가하는 방향이라 안전하다 — 60%로 잡으면 반대가 된다.
+
+    명시했는데 `is_capital_region`과 어긋나면 `ValueError`다. 지역 사실이 둘로
+    갈리면 어느 쪽이 맞는지 답할 수 없고, 그걸 막는 것이 이 계층의 일이다.
+    """
+    if request.dti_region is None:
+        return DtiRegion.SEOUL if request.is_capital_region else DtiRegion.NON_CAPITAL
+
+    implied_capital = request.dti_region is not DtiRegion.NON_CAPITAL
+    if implied_capital != request.is_capital_region:
+        raise ValueError(
+            f"dti_region={request.dti_region}과(와) "
+            f"is_capital_region={request.is_capital_region}이(가) 어긋납니다. "
+            "지역 사실의 출처는 하나여야 합니다."
+        )
+    return request.dti_region
 
 
 # Rule Pack과 상품 한도표가 지역을 판단할 때 쓰는 facts 키. 이 값들이 요청의
@@ -299,7 +334,7 @@ def _resolve_stress_rate(
 
 def _regulation_notes(
     ltv: ResolvedPolicyLimit,
-    dti_ratio: object | None,
+    dti: ResolvedDtiRatio,
     request: LoanSimulationRequest,
 ) -> tuple[str, ...]:
     """결과에 함께 표시할 정책 근거. 어떤 기준으로 계산했는지 밝힌다."""
@@ -308,8 +343,8 @@ def _regulation_notes(
         notes.append(f"LTV 산출: {ltv.binding_reason}")
     if ltv.note is not None:
         notes.append(ltv.note)
-    if dti_ratio is None:
-        notes.append(f"DTI 비율을 찾을 수 없는 지역 구분입니다: {request.dti_region}")
+    if dti.note is not None:
+        notes.append(dti.note)
     if request.allow_unverified_regulation:
         notes.append("미검증 규제값 사용을 허용한 결과입니다 — 대외 표기 전 출처를 확인하세요.")
     notes.append(
@@ -330,6 +365,10 @@ def build_request_for_region(
 
     지역을 확정하지 못하면 요청 대신 그 사유(`ResolvedRegion`)를 돌려준다 —
     임의로 비규제로 채우면 LTV 70%가 적용돼 한도가 크게 과대평가된다.
+
+    `dti_region`도 여기서 채운다. 예전에는 `zone`·`is_capital_region`만 채우고
+    `dti_region`은 기본값 "SEOUL"로 남겨 둬서, 대전 차주에게 서울 DTI 50%가
+    붙었다 — 지역 사실의 출처가 셋으로 갈려 있었다.
     """
     region = resolve_region(as_of=as_of, region_code=region_code, region_name=region_name)
     if not region.is_resolved:
@@ -338,9 +377,23 @@ def build_request_for_region(
     return LoanSimulationRequest(
         zone=region.zone,
         is_capital_region=region.is_capital_region,
+        dti_region=_dti_region_for(region_code, is_capital_region=region.is_capital_region),
         as_of=as_of,
         **fields,  # type: ignore[arg-type]
     )
+
+
+def _dti_region_for(region_code: str | None, *, is_capital_region: bool) -> DtiRegion:
+    """행정구역코드로 DTI 지역 구분을 정한다.
+
+    코드가 없으면(이름으로만 찾은 지역) 서울 여부를 가릴 수 없으므로 수도권일 때
+    더 엄격한 서울(50%)로 물러선다.
+    """
+    if not is_capital_region:
+        return DtiRegion.NON_CAPITAL
+    if region_code is not None and is_seoul_code(region_code) is False:
+        return DtiRegion.CAPITAL_REGION
+    return DtiRegion.SEOUL
 
 
 def summarize(result: LoanSimulationResult) -> Sequence[str]:

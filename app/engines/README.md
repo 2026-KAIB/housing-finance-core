@@ -7,7 +7,8 @@
 - `savings/`: 예상 실효금리·상품 평가·포트폴리오
 - `recommendation/`: 대출과 예적금 결과의 종합추천. 세부 계약과 결측 규약은
   `recommendation/README.md`를 따른다.
-- `stress/`: 금리·소득·생활비 충격
+- `stress/`: 금리·소득·생활비 충격. 규제 심사용 스트레스 DSR과 구분한 생활
+  시나리오 계약은 `stress/README.md`를 따른다.
 - `strategy/`: 자산축적형과 조기구매형 비교
 
 AI는 계산값을 변경하지 않고 `reports/`에서 설명만 생성합니다.

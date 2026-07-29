@@ -111,6 +111,9 @@ def _loan_input(
                 maximum_amount=computation.amount,
                 annual_rate=annual_rate,
                 assessment_annual_rate=computation.dsr_annual_rate,
+                rate_type_name=(
+                    None if computation.option is None else computation.option.rate_type_name
+                ),
                 additional_financial_cost=(
                     None if supplement is None else supplement.additional_financial_cost
                 ),

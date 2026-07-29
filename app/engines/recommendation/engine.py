@@ -136,6 +136,7 @@ def _compute_loan_metrics(
         covers_required_amount=covers_required,
         annual_rate=candidate.annual_rate,
         assessment_annual_rate=assessment_rate,
+        rate_type_name=candidate.rate_type_name,
         monthly_payment=monthly_payment,
         stress_monthly_payment=stress_payment,
         total_interest=total_interest,

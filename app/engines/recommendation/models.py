@@ -137,6 +137,9 @@ class LoanCandidateInput:
     maximum_amount: Decimal
     annual_rate: Decimal
     assessment_annual_rate: Decimal | None
+    # 스트레스 생활 시나리오가 고정·변동금리를 문자열 추측 없이 구분하도록
+    # 정규화된 옵션의 금리유형을 별도 보존한다.
+    rate_type_name: str | None = None
     additional_financial_cost: Decimal | None = None
     repayment_flexibility_score: Decimal | None = None
     assumptions: tuple[str, ...] = field(default_factory=tuple)
@@ -322,6 +325,7 @@ class LoanOptionRecommendation:
     covers_required_amount: bool
     annual_rate: Decimal
     assessment_annual_rate: Decimal | None
+    rate_type_name: str | None
     monthly_payment: Decimal
     stress_monthly_payment: Decimal | None
     total_interest: Decimal

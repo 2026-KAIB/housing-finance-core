@@ -1,3 +1,4 @@
+from dataclasses import replace
 from datetime import date
 from decimal import Decimal
 
@@ -8,6 +9,7 @@ from app.data_pipeline.adapters.loan_engine_adapter import (
     PolicyLimits,
     adapt_handoff_for_loan_max,
     compute_loan_max,
+    compute_loan_option,
 )
 from app.engines.loan.formulas import loan_max
 from app.rule_engine.product_packs.handoff import ProductCandidate, route_product_candidates
@@ -387,3 +389,122 @@ def test_uncapped_product_is_bound_by_policy_limits_not_by_a_product_cap() -> No
     assert adaptation.inputs is not None
     assert adaptation.inputs.product_limit_amount == Decimal("300000000")
     assert adaptation.assumptions == ()
+
+
+# --- 상품 최소 실행금액 -----------------------------------------------------------
+# Rule Pack은 **요청금액**이 최소금액 이상인지만 본다. 소득·DSR·현금흐름 때문에
+# 계산 결과가 최소금액 아래로 내려가면 판정은 PASS인데 실행은 불가능하다.
+
+EMERGENCY_BASE = {
+    "source_type": "manual_pdf",
+    "fin_prdt_nm": "KB 비상금대출",
+    "loan_lmt": "최소 50만원 ~ 최대 300만원",
+}
+EMERGENCY_OPTIONS = (
+    {
+        "fin_prdt_nm": "KB 비상금대출",
+        "rpay_type_nm": "만기일시상환방식",
+        "lend_rate_type_nm": "변동금리",
+        "lend_rate_min": 5.0,
+        "lend_rate_max": 7.0,
+        "lend_rate_avg": 6.0,
+    },
+)
+EMERGENCY_PACK = ProductRulePack(
+    product_name="KB 비상금대출",
+    category=ProductCategory.CREDIT_LOAN,
+    version="test-1",
+    effective_start_date=date(2026, 1, 1),
+    effective_end_date=None,
+    rules=(
+        ComparisonRule(
+            code="TEST_MIN_AGE",
+            field_name="age",
+            operator=ComparisonOperator.GTE,
+            expected=19,
+            failure_reason="미성년자는 신청할 수 없습니다.",
+        ),
+    ),
+)
+
+
+def _adapt_emergency(policy_limits: PolicyLimits):
+    routing = route_product_candidates(
+        [
+            ProductCandidate(
+                product_name="KB 비상금대출",
+                base_data=EMERGENCY_BASE,
+                option_list=EMERGENCY_OPTIONS,
+            )
+        ],
+        user_facts={"age": 32},
+        as_of=AS_OF,
+        registry=ProductRulePackRegistry((EMERGENCY_PACK,)),
+    )
+    return adapt_handoff_for_loan_max(
+        routing.forwardable[0],
+        borrower=BORROWER,
+        policy_limits=policy_limits,
+        required_amount=Decimal("3000000"),
+        months=12,
+    )[0]
+
+
+def test_minimum_amount_reaches_the_adaptation() -> None:
+    adaptation = _adapt_emergency(POLICY_LIMITS)
+    assert adaptation.product_minimum_amount == Decimal("500000")
+
+
+def test_result_below_the_product_minimum_is_not_executable() -> None:
+    # LTV 한도를 30만원으로 조여 계산 결과를 최소금액(50만원) 아래로 만든다.
+    adaptation = _adapt_emergency(
+        PolicyLimits(
+            ltv_limit_amount=Decimal("300000"),
+            dti_limit_amount=Decimal("400000000"),
+        )
+    )
+    computation = compute_loan_option(adaptation)
+
+    assert computation.amount < Decimal("500000")
+    assert computation.status is EvaluationStatus.FAIL
+    assert not computation.is_executable
+    assert "최소 실행금액" in computation.reasons[0]
+
+
+def test_result_at_exactly_the_product_minimum_is_executable() -> None:
+    # 탐색 결과를 특정 금액에 정확히 맞출 수는 없으므로, 계산된 금액을 그대로
+    # 최소금액으로 놓아 경계(미만이 아니라 이하)를 직접 확인한다.
+    adaptation = _adapt_emergency(
+        PolicyLimits(
+            ltv_limit_amount=Decimal("500000"),
+            dti_limit_amount=Decimal("400000000"),
+        )
+    )
+    computed = compute_loan_max(adaptation)
+    at_boundary = replace(adaptation, product_minimum_amount=computed)
+
+    computation = compute_loan_option(at_boundary)
+
+    assert computation.amount == computed
+    assert computation.status is EvaluationStatus.PASS
+    assert computation.is_executable
+
+    # 1원만 높여도 실행 불가가 되어야 경계가 제대로 잡힌 것이다.
+    just_above = replace(adaptation, product_minimum_amount=computed + Decimal("1"))
+    assert compute_loan_option(just_above).status is EvaluationStatus.FAIL
+
+
+def test_product_without_a_minimum_is_always_executable() -> None:
+    adaptation = _adapt_curated({"age": 32, "employment_months": 60, "is_overdraft_type": False})
+    computation = compute_loan_option(adaptation)
+
+    assert computation.product_minimum_amount is None
+    assert computation.status is EvaluationStatus.PASS
+
+
+def test_compute_loan_option_carries_conservative_assumptions_through() -> None:
+    adaptation = _adapt_curated({"age": 32})
+    computation = compute_loan_option(adaptation)
+
+    assert computation.assumptions == adaptation.assumptions
+    assert computation.assumptions != ()

@@ -23,7 +23,14 @@ from app.engines.loan.formulas import principal_from_pmt
 #           주택가격 구간별 한도 6억/4억/2억, 스트레스 금리 하한 1.5%→3.0%)
 #   [26·6·30] 금융위원회 「규제지역 추가 지정 관련 긴급 가계부채 점검회의」
 #           2026-06-30, 시행 2026-07-01 (화성 동탄구·용인 기흥구·구리시 추가,
-#           "규제지역 내 주담대 취급시 LTV 강화(비규제지역 70% → 규제지역 40%)")
+#           "규제지역 내 주담대 취급시 LTV 강화(비규제지역 70% → 규제지역 40%)",
+#           생애최초·정책모기지는 완화비율 60~70% 적용)
+#           이 자료의 "규제지역"은 투기과열지구와 조정대상지역을 **묶어** 가리키며
+#           둘에 다른 LTV를 적용하지 않는다. 조정대상지역 단독 지정 구간만
+#           6·27에서 유추한 50%로 남겨 두었던 것은 오류였다.
+#           경과규정: 시행일 전일까지 대출신청 접수가 완료됐거나 매매계약 체결·
+#           계약금 납부를 증명한 차주는 종전 규정을 적용받는다. 이 서비스는
+#           `as_of`에 해당 기준일을 넘기는 방식으로 표현한다.
 #   DTI 산식·비율은 SSOT §13.2.2 / 부록 A-14 참조(은행업감독업무시행세칙).
 
 
@@ -48,13 +55,24 @@ class HousingStatus(StrEnum):
 
 @dataclass(frozen=True)
 class RegulatoryRatio:
-    """출처가 붙은 규제 비율 하나."""
+    """출처가 붙은 규제 비율 하나.
+
+    `effective_to`는 이 비율이 **마지막으로 적용되는 날**(포함)이며, None이면
+    아직 유효하다. 시행일만으로는 "이 비율이 언제 끝났는가"를 표현할 수 없어
+    낡은 값이 새 대책 이후에도 계속 조회되는 문제가 있었다.
+    """
 
     ratio: Decimal
     source: str
     effective_from: date
+    effective_to: date | None = None
     verified: bool = True
     note: str | None = None
+
+    def covers(self, as_of: date) -> bool:
+        if as_of < self.effective_from:
+            return False
+        return self.effective_to is None or as_of <= self.effective_to
 
 
 @dataclass(frozen=True)
@@ -74,117 +92,163 @@ _JUNE_2026 = (
     "금융위 「규제지역 추가 지정 관련 긴급 가계부채 점검회의」(2026-06-30, 시행 2026-07-01)"
 )
 
-# (구역, 차주구분) → LTV 비율.
-LTV_RATIOS: dict[tuple[RegulationZone, HousingStatus], RegulatoryRatio] = {
+# (구역, 차주구분) → 시행 순서대로 정렬한 LTV 비율 이력.
+#
+# 값 하나가 아니라 이력인 이유: 규제 비율은 대책마다 바뀌는데 시행일만 들고
+# 있으면 낡은 값이 언제 끝났는지 표현할 수 없다. 실제로 조정대상지역 50%가
+# 2026-07-01 이후에도 계속 조회되고 있었다.
+LTV_RATIO_HISTORY: dict[tuple[RegulationZone, HousingStatus], tuple[RegulatoryRatio, ...]] = {
     # 추가 주택구입 목적 대출 금지. 지역·차주 무관하게 0%다.
-    (RegulationZone.SPECULATION_OVERHEATED, HousingStatus.MULTI_HOUSE): RegulatoryRatio(
-        ratio=Decimal("0"),
-        source=_SIX_TWENTY_SEVEN,
-        effective_from=date(2025, 6, 28),
-        note="2주택 이상 보유자의 수도권·규제지역 추가 주택구입 목적 주담대 금지",
+    (RegulationZone.SPECULATION_OVERHEATED, HousingStatus.MULTI_HOUSE): (
+        RegulatoryRatio(
+            ratio=Decimal("0"),
+            source=_SIX_TWENTY_SEVEN,
+            effective_from=date(2025, 6, 28),
+            note="2주택 이상 보유자의 수도권·규제지역 추가 주택구입 목적 주담대 금지",
+        ),
     ),
-    (RegulationZone.ADJUSTMENT_TARGET, HousingStatus.MULTI_HOUSE): RegulatoryRatio(
-        ratio=Decimal("0"),
-        source=_SIX_TWENTY_SEVEN,
-        effective_from=date(2025, 6, 28),
-        note="2주택 이상 보유자의 수도권·규제지역 추가 주택구입 목적 주담대 금지",
+    (RegulationZone.ADJUSTMENT_TARGET, HousingStatus.MULTI_HOUSE): (
+        RegulatoryRatio(
+            ratio=Decimal("0"),
+            source=_SIX_TWENTY_SEVEN,
+            effective_from=date(2025, 6, 28),
+            note="2주택 이상 보유자의 수도권·규제지역 추가 주택구입 목적 주담대 금지",
+        ),
     ),
-    (RegulationZone.SPECULATION_OVERHEATED, HousingStatus.ONE_HOUSE_KEEPING): RegulatoryRatio(
-        ratio=Decimal("0"),
-        source=_SIX_TWENTY_SEVEN,
-        effective_from=date(2025, 6, 28),
-        note="1주택자가 기존 주택을 처분하지 않고 추가 구입하는 경우 금지",
+    (RegulationZone.SPECULATION_OVERHEATED, HousingStatus.ONE_HOUSE_KEEPING): (
+        RegulatoryRatio(
+            ratio=Decimal("0"),
+            source=_SIX_TWENTY_SEVEN,
+            effective_from=date(2025, 6, 28),
+            note="1주택자가 기존 주택을 처분하지 않고 추가 구입하는 경우 금지",
+        ),
     ),
-    (RegulationZone.ADJUSTMENT_TARGET, HousingStatus.ONE_HOUSE_KEEPING): RegulatoryRatio(
-        ratio=Decimal("0"),
-        source=_SIX_TWENTY_SEVEN,
-        effective_from=date(2025, 6, 28),
-        note="1주택자가 기존 주택을 처분하지 않고 추가 구입하는 경우 금지",
+    (RegulationZone.ADJUSTMENT_TARGET, HousingStatus.ONE_HOUSE_KEEPING): (
+        RegulatoryRatio(
+            ratio=Decimal("0"),
+            source=_SIX_TWENTY_SEVEN,
+            effective_from=date(2025, 6, 28),
+            note="1주택자가 기존 주택을 처분하지 않고 추가 구입하는 경우 금지",
+        ),
     ),
-    # 무주택·처분조건부 1주택.
-    (RegulationZone.SPECULATION_OVERHEATED, HousingStatus.NO_HOUSE): RegulatoryRatio(
-        ratio=Decimal("0.40"),
-        source=_JUNE_2026,
-        effective_from=date(2026, 7, 1),
-        note="원문 '비규제지역 70% → 규제지역 40%'",
+    # 규제지역 무주택·처분조건부 1주택. 26·6·30 보도자료는 투기과열지구와
+    # 조정대상지역을 구분하지 않고 "규제지역"으로 묶어 40%를 적용한다.
+    (RegulationZone.SPECULATION_OVERHEATED, HousingStatus.NO_HOUSE): (
+        RegulatoryRatio(
+            ratio=Decimal("0.40"),
+            source=_JUNE_2026,
+            effective_from=date(2026, 7, 1),
+            note="규제지역 내 주담대 LTV 40%(비규제지역 70% 대비 강화)",
+        ),
     ),
     (RegulationZone.SPECULATION_OVERHEATED, HousingStatus.ONE_HOUSE_DISPOSAL_PLEDGED): (
         RegulatoryRatio(
             ratio=Decimal("0.40"),
             source=_JUNE_2026,
             effective_from=date(2026, 7, 1),
-            note="처분조건부 1주택자는 무주택자와 동일 취급(6·27)",
-        )
-    ),
-    (RegulationZone.NON_REGULATED, HousingStatus.NO_HOUSE): RegulatoryRatio(
-        ratio=Decimal("0.70"),
-        source=_JUNE_2026,
-        effective_from=date(2025, 6, 28),
-        note="비규제지역 70%",
-    ),
-    (RegulationZone.NON_REGULATED, HousingStatus.ONE_HOUSE_DISPOSAL_PLEDGED): RegulatoryRatio(
-        ratio=Decimal("0.70"),
-        source=_SIX_TWENTY_SEVEN,
-        effective_from=date(2025, 6, 28),
-        note="처분조건부 1주택자 비규제지역 70%",
-    ),
-    # 생애최초.
-    (RegulationZone.SPECULATION_OVERHEATED, HousingStatus.FIRST_HOME_BUYER): RegulatoryRatio(
-        ratio=Decimal("0.70"),
-        source=_SIX_TWENTY_SEVEN,
-        effective_from=date(2025, 6, 28),
-        note="수도권·규제지역 생애최초 80% → 70%, 6개월 이내 전입의무",
-    ),
-    (RegulationZone.NON_REGULATED, HousingStatus.FIRST_HOME_BUYER): RegulatoryRatio(
-        ratio=Decimal("0.80"),
-        source=_SIX_TWENTY_SEVEN,
-        effective_from=date(2025, 6, 28),
-        verified=False,
-        note=(
-            "6·27은 '수도권·규제지역' 생애최초만 70%로 낮췄다. 비규제지역이 종전 "
-            "80%로 남는다는 것은 반대해석이며 원문에 명시되어 있지 않다. "
-            "1차 출처 확인 전까지 사용 금지."
+            note="처분조건부 1주택자는 무주택자와 동일 취급",
         ),
     ),
-    # 조정대상지역 단독 지정(투기과열 미지정) 구간.
-    (RegulationZone.ADJUSTMENT_TARGET, HousingStatus.NO_HOUSE): RegulatoryRatio(
-        ratio=Decimal("0.50"),
-        source="(미확인)",
-        effective_from=date(2025, 6, 28),
-        verified=False,
-        note=(
-            "6·27의 '처분조건부 1주택자 규제지역 50%' 문구에서 조정대상지역 50%를 "
-            "유추한 값이다. 2026-06-30 보도자료는 규제지역을 40%로만 언급하며 "
-            "투기과열/조정대상을 구분하지 않는다. 두 지정을 함께 받은 지역은 "
-            "SPECULATION_OVERHEATED로 조회할 것."
+    (RegulationZone.ADJUSTMENT_TARGET, HousingStatus.NO_HOUSE): (
+        RegulatoryRatio(
+            ratio=Decimal("0.50"),
+            source=_SIX_TWENTY_SEVEN,
+            effective_from=date(2025, 6, 28),
+            effective_to=date(2026, 6, 30),
+            verified=False,
+            note=(
+                "6·27의 '처분조건부 1주택자 규제지역 50%'에서 유추한 값이라 "
+                "미검증으로 남긴다. 2026-07-01부터는 아래 40%가 적용되므로 "
+                "이 구간을 조회하려면 allow_unverified=True가 필요하다."
+            ),
+        ),
+        RegulatoryRatio(
+            ratio=Decimal("0.40"),
+            source=_JUNE_2026,
+            effective_from=date(2026, 7, 1),
+            note="규제지역 내 주담대 LTV 40%. 조정대상지역 단독 지정도 포함된다.",
         ),
     ),
-    (RegulationZone.ADJUSTMENT_TARGET, HousingStatus.ONE_HOUSE_DISPOSAL_PLEDGED): RegulatoryRatio(
-        ratio=Decimal("0.50"),
-        source=_SIX_TWENTY_SEVEN,
-        effective_from=date(2025, 6, 28),
-        verified=False,
-        note="위와 동일한 사유로 미검증.",
+    (RegulationZone.ADJUSTMENT_TARGET, HousingStatus.ONE_HOUSE_DISPOSAL_PLEDGED): (
+        RegulatoryRatio(
+            ratio=Decimal("0.50"),
+            source=_SIX_TWENTY_SEVEN,
+            effective_from=date(2025, 6, 28),
+            effective_to=date(2026, 6, 30),
+            verified=False,
+            note="6·27 '처분조건부 1주택자 규제지역 50%'. 26·6·30으로 대체됐다.",
+        ),
+        RegulatoryRatio(
+            ratio=Decimal("0.40"),
+            source=_JUNE_2026,
+            effective_from=date(2026, 7, 1),
+            note="처분조건부 1주택자는 무주택자와 동일 취급",
+        ),
     ),
-    (RegulationZone.ADJUSTMENT_TARGET, HousingStatus.FIRST_HOME_BUYER): RegulatoryRatio(
-        ratio=Decimal("0.70"),
-        source=_SIX_TWENTY_SEVEN,
-        effective_from=date(2025, 6, 28),
-        note="수도권·규제지역 생애최초 70%",
+    (RegulationZone.NON_REGULATED, HousingStatus.NO_HOUSE): (
+        RegulatoryRatio(
+            ratio=Decimal("0.70"),
+            source=_JUNE_2026,
+            effective_from=date(2025, 6, 28),
+            note="비규제지역 70%",
+        ),
     ),
-    (RegulationZone.NON_REGULATED, HousingStatus.ONE_HOUSE_KEEPING): RegulatoryRatio(
-        ratio=Decimal("0.70"),
-        source=_SIX_TWENTY_SEVEN,
-        effective_from=date(2025, 6, 28),
-        verified=False,
-        note="6·27의 추가구입 금지는 수도권·규제지역 한정이다. 비규제지역 취급 미확인.",
+    (RegulationZone.NON_REGULATED, HousingStatus.ONE_HOUSE_DISPOSAL_PLEDGED): (
+        RegulatoryRatio(
+            ratio=Decimal("0.70"),
+            source=_SIX_TWENTY_SEVEN,
+            effective_from=date(2025, 6, 28),
+            note="처분조건부 1주택자 비규제지역 70%",
+        ),
     ),
-    (RegulationZone.NON_REGULATED, HousingStatus.MULTI_HOUSE): RegulatoryRatio(
-        ratio=Decimal("0.60"),
-        source="(미확인)",
-        effective_from=date(2025, 6, 28),
-        verified=False,
-        note="비규제지역 다주택자 LTV 미확인. 사용 금지.",
+    # 생애최초. 26·6·30은 규제지역 생애최초에 완화비율(60~70%)을 적용한다고만
+    # 하며, 주담대 생애최초는 70%로 확인된다.
+    (RegulationZone.SPECULATION_OVERHEATED, HousingStatus.FIRST_HOME_BUYER): (
+        RegulatoryRatio(
+            ratio=Decimal("0.70"),
+            source=f"{_SIX_TWENTY_SEVEN}; {_JUNE_2026}",
+            effective_from=date(2025, 6, 28),
+            note="수도권·규제지역 생애최초 80% → 70%, 6개월 이내 전입의무",
+        ),
+    ),
+    (RegulationZone.ADJUSTMENT_TARGET, HousingStatus.FIRST_HOME_BUYER): (
+        RegulatoryRatio(
+            ratio=Decimal("0.70"),
+            source=f"{_SIX_TWENTY_SEVEN}; {_JUNE_2026}",
+            effective_from=date(2025, 6, 28),
+            note="규제지역 생애최초 70%. 26·6·30 이후에도 완화비율이 유지된다.",
+        ),
+    ),
+    (RegulationZone.NON_REGULATED, HousingStatus.FIRST_HOME_BUYER): (
+        RegulatoryRatio(
+            ratio=Decimal("0.80"),
+            source=_SIX_TWENTY_SEVEN,
+            effective_from=date(2025, 6, 28),
+            verified=False,
+            note=(
+                "6·27은 '수도권·규제지역' 생애최초만 70%로 낮췄다. 비규제지역이 종전 "
+                "80%로 남는다는 것은 반대해석이며 원문에 명시되어 있지 않다. "
+                "1차 출처 확인 전까지 사용 금지."
+            ),
+        ),
+    ),
+    (RegulationZone.NON_REGULATED, HousingStatus.ONE_HOUSE_KEEPING): (
+        RegulatoryRatio(
+            ratio=Decimal("0.70"),
+            source=_SIX_TWENTY_SEVEN,
+            effective_from=date(2025, 6, 28),
+            verified=False,
+            note="6·27의 추가구입 금지는 수도권·규제지역 한정이다. 비규제지역 취급 미확인.",
+        ),
+    ),
+    (RegulationZone.NON_REGULATED, HousingStatus.MULTI_HOUSE): (
+        RegulatoryRatio(
+            ratio=Decimal("0.60"),
+            source="(미확인)",
+            effective_from=date(2025, 6, 28),
+            verified=False,
+            note="비규제지역 다주택자 LTV 미확인. 사용 금지.",
+        ),
     ),
 }
 
@@ -228,20 +292,26 @@ def get_ltv_ratio(
     as_of: date,
     allow_unverified: bool = False,
 ) -> RegulatoryRatio | None:
-    """(구역, 차주구분) 조합의 LTV 비율을 찾는다.
+    """(구역, 차주구분) 조합에서 `as_of` 시점에 적용되는 LTV 비율을 찾는다.
 
-    표에 없거나, 기준일이 시행일보다 이르거나, 미검증 값이면 None이다.
+    표에 없거나, 그 시점을 덮는 구간이 없거나, 미검증 값이면 None이다.
     미검증 값을 굳이 쓰려면 `allow_unverified=True`를 명시해야 한다 — 규제 상수를
     말없이 추측하는 것이 이 저장소가 금지하는 사고이므로 호출부에 흔적을 남긴다.
+
+    경과규정(시행일 전에 대출신청 접수 또는 매매계약·계약금 납부를 마친 차주는
+    종전 규정 적용)을 반영하려면 `as_of`에 **그 차주에게 적용되는 기준일**을
+    넘긴다. 오늘 날짜를 그대로 쓰면 경과규정이 무시된다.
     """
-    ratio = LTV_RATIOS.get((zone, status))
-    if ratio is None:
+    history = LTV_RATIO_HISTORY.get((zone, status))
+    if not history:
         return None
-    if as_of < ratio.effective_from:
-        return None
-    if not ratio.verified and not allow_unverified:
-        return None
-    return ratio
+    for ratio in history:
+        if not ratio.covers(as_of):
+            continue
+        if not ratio.verified and not allow_unverified:
+            return None
+        return ratio
+    return None
 
 
 def get_mortgage_hard_cap(house_price: Decimal, *, as_of: date) -> Decimal | None:
@@ -319,9 +389,21 @@ def resolve_dti_limit_amount(
 
     기타 부채 이자만으로 이미 상한을 채운 경우 한도는 0원이다 — 이때는 "모름"이
     아니라 실제로 0이므로 UNKNOWN으로 돌리지 않는다.
+
+    입력 검증은 `allowed_annual <= 0` 조기 반환보다 **먼저** 한다. 뒤로 미루면
+    잘못된 금리·기간이 들어와도 기존 이자 때문에 0원이 나왔다는 이유로 오류가
+    묻힌다.
     """
     if annual_income <= 0:
         raise ValueError("annual_income은 0보다 커야 합니다.")
+    if not (0 <= dti_ratio <= 1):
+        raise ValueError(f"dti_ratio는 0과 1 사이여야 합니다: {dti_ratio}")
+    if other_annual_interest < 0:
+        raise ValueError(f"other_annual_interest는 음수일 수 없습니다: {other_annual_interest}")
+    if annual_rate < 0:
+        raise ValueError(f"annual_rate는 음수일 수 없습니다: {annual_rate}")
+    if months <= 0:
+        raise ValueError(f"months는 0보다 커야 합니다: {months}")
 
     allowed_annual = annual_income * dti_ratio - other_annual_interest
     if allowed_annual <= 0:

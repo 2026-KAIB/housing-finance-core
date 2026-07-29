@@ -374,6 +374,11 @@ class LoanComputation:
     product_minimum_amount: Decimal | None = None
     assumptions: tuple[str, ...] = field(default_factory=tuple)
     reasons: tuple[str, ...] = field(default_factory=tuple)
+    # 종합추천이 이미 사용된 금리를 다시 추측하지 않도록 계산 당시 입력을 보존한다.
+    # 실제 금리와 스트레스 DSR 심사금리는 목적이 다르므로 하나로 합치지 않는다.
+    annual_rate: Decimal | None = None
+    dsr_annual_rate: Decimal | None = None
+    months: int | None = None
 
     @property
     def is_executable(self) -> bool:
@@ -405,6 +410,8 @@ def compute_loan_option(adaptation: LoanOptionAdaptation) -> LoanComputation:
     판정은 PASS인데 실제로는 실행할 수 없는 상품이 된다. 그 구멍을 여기서 막는다.
     """
     amount = compute_loan_max(adaptation)
+    assert adaptation.inputs is not None
+    inputs = adaptation.inputs
     minimum = adaptation.product_minimum_amount
 
     if minimum is not None and amount < minimum:
@@ -419,6 +426,9 @@ def compute_loan_option(adaptation: LoanOptionAdaptation) -> LoanComputation:
                 f"계산된 대출가능액 {amount:,.0f}원이 상품 최소 실행금액 "
                 f"{minimum:,.0f}원보다 작습니다.",
             ),
+            annual_rate=inputs.annual_rate,
+            dsr_annual_rate=inputs.dsr_annual_rate,
+            months=inputs.months,
         )
 
     return LoanComputation(
@@ -428,6 +438,9 @@ def compute_loan_option(adaptation: LoanOptionAdaptation) -> LoanComputation:
         amount=amount,
         product_minimum_amount=minimum,
         assumptions=adaptation.assumptions,
+        annual_rate=inputs.annual_rate,
+        dsr_annual_rate=inputs.dsr_annual_rate,
+        months=inputs.months,
     )
 
 

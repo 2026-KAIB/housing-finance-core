@@ -5,9 +5,9 @@
 - `cashflow/`: 안전소득·생활비·잉여현금·비상자금
 - `loan/`: 대출 가능액·원리금·DSR·상품 비교
 - `savings/`: 예상 실효금리·상품 평가·포트폴리오
-- `recommendation/`: 대출과 예적금 결과의 종합추천
+- `recommendation/`: 대출과 예적금 결과의 종합추천. 세부 계약과 결측 규약은
+  `recommendation/README.md`를 따른다.
 - `stress/`: 금리·소득·생활비 충격
 - `strategy/`: 자산축적형과 조기구매형 비교
 
 AI는 계산값을 변경하지 않고 `reports/`에서 설명만 생성합니다.
-

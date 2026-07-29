@@ -506,6 +506,16 @@ def test_compute_loan_option_carries_conservative_assumptions_through() -> None:
     assert computation.assumptions != ()
 
 
+def test_compute_loan_option_preserves_rates_and_term_for_recommendation_audit() -> None:
+    adaptation = _adapt_curated({"age": 32})
+    computation = compute_loan_option(adaptation)
+
+    assert adaptation.inputs is not None
+    assert computation.annual_rate == adaptation.inputs.annual_rate
+    assert computation.dsr_annual_rate == adaptation.inputs.dsr_annual_rate
+    assert computation.months == adaptation.inputs.months
+
+
 class TestDtiUsesInterestOnly:
     """DTI 분자는 기타 대출을 이자만 세고, DSR은 원금까지 센다(KB 자료 계산식).
 

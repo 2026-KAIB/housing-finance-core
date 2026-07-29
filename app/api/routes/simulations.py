@@ -12,6 +12,6 @@ def create_simulation(payload: SimulationInput) -> SimulationResult:
         status_code=status.HTTP_501_NOT_IMPLEMENTED,
         detail=(
             "Simulation engine is not connected yet: "
-            f"target={payload.housing_goal.target_price}"
+            f"target={payload.housing_goal.resolved_target_amount}"
         ),
     )

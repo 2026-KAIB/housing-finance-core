@@ -5,6 +5,7 @@ import pytest
 
 from app.engines.loan.formulas import pmt
 from app.regulations.mortgage_limits import (
+    MORTGAGE_HARD_CAP_TIERS,
     HousingStatus,
     RegulationZone,
     get_ltv_ratio,
@@ -80,6 +81,18 @@ class TestHardCapTiers:
 
     def test_not_applicable_before_effective_date(self) -> None:
         assert get_mortgage_hard_cap(Decimal("800000000"), as_of=date(2025, 10, 15)) is None
+
+    def test_the_last_tier_must_stay_open_ended(self) -> None:
+        """마지막 구간의 상한이 None이어야 아무리 비싼 주택도 캡에 걸린다.
+
+        누가 그 줄을 닫힌 구간으로 바꾸면 고가주택이 캡 없이 통과한다 —
+        과대평가 방향이라 조용히 넘어가면 안 되는 변경이다.
+        """
+        assert MORTGAGE_HARD_CAP_TIERS[-1][0] is None
+
+    @pytest.mark.parametrize("house_price", ["1", "1000000000000"])
+    def test_every_house_price_gets_a_cap(self, house_price: str) -> None:
+        assert get_mortgage_hard_cap(Decimal(house_price), as_of=_TODAY) is not None
 
 
 class TestLtvLimitAmount:

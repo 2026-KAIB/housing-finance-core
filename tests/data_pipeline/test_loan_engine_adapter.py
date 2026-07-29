@@ -428,7 +428,7 @@ EMERGENCY_PACK = ProductRulePack(
 )
 
 
-def _adapt_emergency(policy_limits: PolicyLimits):
+def _adapt_emergency(policy_limits: PolicyLimits, required_amount: str = "3000000"):
     routing = route_product_candidates(
         [
             ProductCandidate(
@@ -445,7 +445,7 @@ def _adapt_emergency(policy_limits: PolicyLimits):
         routing.forwardable[0],
         borrower=BORROWER,
         policy_limits=policy_limits,
-        required_amount=Decimal("3000000"),
+        required_amount=Decimal(required_amount),
         months=12,
     )[0]
 
@@ -456,13 +456,9 @@ def test_minimum_amount_reaches_the_adaptation() -> None:
 
 
 def test_result_below_the_product_minimum_is_not_executable() -> None:
-    # LTV 한도를 30만원으로 조여 계산 결과를 최소금액(50만원) 아래로 만든다.
-    adaptation = _adapt_emergency(
-        PolicyLimits(
-            ltv_limit_amount=Decimal("300000"),
-            dti_limit_amount=Decimal("400000000"),
-        )
-    )
+    # 요청금액을 30만원으로 조여 계산 결과를 최소금액(50만원) 아래로 만든다.
+    # LTV로 조이면 안 된다 — 신용대출은 LTV 규제 대상이 아니라 무시된다.
+    adaptation = _adapt_emergency(POLICY_LIMITS, required_amount="300000")
     computation = compute_loan_option(adaptation)
 
     assert computation.amount < Decimal("500000")
@@ -508,3 +504,24 @@ def test_compute_loan_option_carries_conservative_assumptions_through() -> None:
 
     assert computation.assumptions == adaptation.assumptions
     assert computation.assumptions != ()
+
+
+class TestDtiUsesInterestOnly:
+    """DTI 분자는 기타 대출을 이자만 세고, DSR은 원금까지 센다(KB 자료 계산식).
+
+    두 값을 뭉치면 DTI가 틀린다. 이자만 따로 받고, 없으면 DSR용 값으로
+    대체하되 그 방향이 과소평가(안전)임을 고정한다.
+    """
+
+    def test_interest_only_field_is_used_when_present(self) -> None:
+        borrower = replace(BORROWER, existing_annual_interest=Decimal("2000000"))
+        assert borrower.dti_other_annual_interest == Decimal("2000000")
+
+    def test_falls_back_to_the_dsr_figure_when_absent(self) -> None:
+        assert BORROWER.existing_annual_interest is None
+        assert BORROWER.dti_other_annual_interest == BORROWER.existing_annual_debt_service
+
+    def test_the_fallback_never_overstates_the_dti_allowance(self) -> None:
+        # 원리금은 이자보다 크므로 더 많이 빼게 되고, DTI 한도는 낮아진다.
+        with_interest = replace(BORROWER, existing_annual_interest=Decimal("2000000"))
+        assert with_interest.dti_other_annual_interest < BORROWER.dti_other_annual_interest

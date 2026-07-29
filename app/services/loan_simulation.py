@@ -13,15 +13,28 @@ from app.data_pipeline.adapters.loan_engine_adapter import (
 )
 from app.regulations.mortgage_limits import (
     BANK_DSR_LIMIT,
-    DTI_RATIOS,
+    DtiRegion,
     HousingStatus,
     RegulationZone,
+    ResolvedDtiRatio,
     ResolvedPolicyLimit,
     resolve_dti_limit_amount,
+    resolve_dti_ratio,
     resolve_ltv_limit_amount,
 )
-from app.rule_engine.product_packs.handoff import ProductCandidate, route_product_candidates
-from app.rule_engine.product_packs.models import EvaluationStatus
+from app.regulations.regulated_regions import ResolvedRegion, is_seoul_code, resolve_region
+from app.regulations.stress_dsr import (
+    StressLoanKind,
+    StressRate,
+    get_stress_rate,
+    resolve_stress_region,
+)
+from app.rule_engine.product_packs.handoff import (
+    ProductCandidate,
+    ProductEngineHandoff,
+    route_product_candidates,
+)
+from app.rule_engine.product_packs.models import EvaluationStatus, ProductCategory
 from app.rule_engine.product_packs.registry import ProductRulePackRegistry
 
 # 규제표 → 상품 판정 → 어댑터 → 계산까지를 하나의 요청으로 잇는 조립 계층이다.
@@ -59,10 +72,16 @@ class LoanSimulationRequest:
     required_amount: Decimal
     months: int
     as_of: date
-    dti_region: str = "SEOUL"
+    # None이면 `is_capital_region`에서 파생한다. 지역 사실의 출처를 하나로
+    # 유지하기 위한 것이다 — 예전에는 기본값이 "SEOUL" 문자열이라 대전 차주에게도
+    # 서울 DTI 50%가 붙었다. 명시할 때는 `is_capital_region`과 모순되면 안 된다.
+    dti_region: DtiRegion | None = None
     rate_selection: str = "avg"
     for_house_purchase: bool = True
     allow_unverified_regulation: bool = False
+    # 신용대출 스트레스 금리는 잔액 1억원 초과 시에만 붙는다. 모르면 신용대출을
+    # 계산하지 못한다 — 0으로 뭉개면 한도가 과대평가되기 때문이다.
+    credit_loan_balance: Decimal | None = None
 
 
 @dataclass(frozen=True)
@@ -111,7 +130,11 @@ def simulate_loan_options(
     규제 한도를 확정하지 못하면 상품 판정으로 넘어가지 않고 즉시 결측을 보고한다.
     LTV를 모르는 채 계산한 금액은 의미가 없고, 그걸 상품별로 늘어놓으면 근거 없는
     숫자만 늘어나기 때문이다.
+
+    지역 관련 facts는 `request`의 값으로 **덮어쓴다**(`_align_region_facts`).
     """
+    user_facts = _align_region_facts(request)
+
     ltv = resolve_ltv_limit_amount(
         house_price=request.house_price,
         zone=request.zone,
@@ -122,13 +145,13 @@ def simulate_loan_options(
         allow_unverified=request.allow_unverified_regulation,
     )
 
-    dti_ratio = DTI_RATIOS.get(request.dti_region)
-    sources = tuple(ltv.sources) + ((dti_ratio.source,) if dti_ratio is not None else ())
+    dti = resolve_dti_ratio(resolve_dti_region(request), as_of=request.as_of)
+    sources = tuple(ltv.sources) + ((dti.ratio.source,) if dti.ratio is not None else ())
 
     missing: list[str] = []
     if ltv.amount is None:
         missing.extend(ltv.missing_inputs or ("ltv_limit_amount",))
-    if dti_ratio is None:
+    if not dti.is_resolved:
         missing.append("dti_ratio")
 
     if missing:
@@ -137,18 +160,27 @@ def simulate_loan_options(
             policy_as_of=request.as_of,
             policy_sources=sources,
             missing_inputs=tuple(dict.fromkeys(missing)),
-            notes=_regulation_notes(ltv, dti_ratio, request),
+            notes=_regulation_notes(ltv, dti, request),
         )
 
-    assert ltv.amount is not None and dti_ratio is not None
+    assert ltv.amount is not None
+
+    dti_ratio = dti.ratio
 
     def resolve_dti(annual_rate: Decimal, months: int) -> Decimal | None:
+        if dti_ratio is None:
+            # DTI 규제 대상이 아닌 지역(비수도권). 상한이 없다는 뜻이므로
+            # `required_amount`로 환산해 구속하지 않게 만든다 — 어댑터가
+            # UNCAPPED를 다루는 방식과 같다. None을 돌려주면 "모름"으로 읽혀
+            # 계산 자체가 막힌다.
+            return request.required_amount
         # 옵션마다 금리·만기가 다르므로 DTI 한도도 옵션마다 다시 역산한다.
         # 하나를 공유하면 금리가 낮은 옵션의 한도가 그대로 높은 옵션에 쓰인다.
         return resolve_dti_limit_amount(
             annual_income=request.borrower.annual_income,
             dti_ratio=dti_ratio.ratio,
-            other_annual_interest=request.borrower.existing_annual_debt_service,
+            # DTI 분자는 기타 대출을 **이자만** 센다(DSR은 원금까지).
+            other_annual_interest=request.borrower.dti_other_annual_interest,
             annual_rate=annual_rate,
             months=months,
         ).amount
@@ -158,7 +190,7 @@ def simulate_loan_options(
     routing_kwargs = {"registry": registry} if registry is not None else {}
     routing = route_product_candidates(
         list(candidates),
-        user_facts=request.user_facts,
+        user_facts=user_facts,
         as_of=request.as_of,
         **routing_kwargs,  # type: ignore[arg-type]
     )
@@ -168,7 +200,31 @@ def simulate_loan_options(
     unresolved: list[LoanOptionAdaptation] = []
     rejected: list[LoanOptionAdaptation] = []
 
+    stress_sources: list[str] = []
+
     for handoff in (*routing.forwardable, *routing.rejected, *routing.needs_review):
+        stress = _resolve_stress_rate(handoff, request)
+
+        # 자격 판정에서 이미 탈락한 상품은 스트레스 금리가 없어도 그대로 넘긴다 —
+        # 탈락 사유를 "입력 부족"으로 바꿔 버리면 이유가 흐려진다.
+        if stress is None and handoff.status is EvaluationStatus.PASS:
+            unresolved.append(
+                LoanOptionAdaptation(
+                    product_name=handoff.product.product_name,
+                    option=None,
+                    status=EvaluationStatus.UNKNOWN,
+                    missing_inputs=("stress_dsr_rate",),
+                    reasons=(
+                        "스트레스 DSR 가산금리를 확정하지 못했습니다. "
+                        "적용하지 않고 계산하면 한도가 과대평가됩니다.",
+                    ),
+                )
+            )
+            continue
+
+        if stress is not None and stress.source not in stress_sources:
+            stress_sources.append(stress.source)
+
         for adaptation in adapt_handoff_for_loan_max(
             handoff,
             borrower=request.borrower,
@@ -177,6 +233,7 @@ def simulate_loan_options(
             months=request.months,
             rate_selection=request.rate_selection,
             dti_limit_resolver=resolve_dti,
+            dsr_rate_add_on=None if stress is None else stress.rate,
         ):
             if adaptation.status is EvaluationStatus.FAIL:
                 rejected.append(adaptation)
@@ -194,14 +251,90 @@ def simulate_loan_options(
         rejected=tuple(rejected),
         ltv=ltv,
         policy_as_of=request.as_of,
-        policy_sources=sources,
-        notes=_regulation_notes(ltv, dti_ratio, request),
+        policy_sources=sources + tuple(stress_sources),
+        notes=_regulation_notes(ltv, dti, request),
+    )
+
+
+def resolve_dti_region(request: LoanSimulationRequest) -> DtiRegion:
+    """요청의 DTI 지역 구분. 명시하지 않았으면 지역 사실에서 파생한다.
+
+    수도권인 것만 알고 서울인지 모르면 **더 엄격한 서울(50%)** 로 물러선다.
+    금액을 과소평가하는 방향이라 안전하다 — 60%로 잡으면 반대가 된다.
+
+    명시했는데 `is_capital_region`과 어긋나면 `ValueError`다. 지역 사실이 둘로
+    갈리면 어느 쪽이 맞는지 답할 수 없고, 그걸 막는 것이 이 계층의 일이다.
+    """
+    if request.dti_region is None:
+        return DtiRegion.SEOUL if request.is_capital_region else DtiRegion.NON_CAPITAL
+
+    implied_capital = request.dti_region is not DtiRegion.NON_CAPITAL
+    if implied_capital != request.is_capital_region:
+        raise ValueError(
+            f"dti_region={request.dti_region}과(와) "
+            f"is_capital_region={request.is_capital_region}이(가) 어긋납니다. "
+            "지역 사실의 출처는 하나여야 합니다."
+        )
+    return request.dti_region
+
+
+# Rule Pack과 상품 한도표가 지역을 판단할 때 쓰는 facts 키. 이 값들이 요청의
+# `zone`/`is_capital_region`과 어긋나면 같은 차주에게 앞뒤가 안 맞는 결과가 나온다
+# — LTV는 규제지역 40%로 계산하면서 상품 한도는 비규제 3억을 쓰는 식이다.
+_REGION_FACT_KEYS = ("is_regulated_region", "is_capital_region")
+
+
+def _align_region_facts(request: LoanSimulationRequest) -> Mapping[str, object]:
+    """지역 facts를 요청의 규제지역 판정에 맞춰 덮어쓴다.
+
+    호출자가 채워 넣은 값을 신뢰하지 않는 이유는, 지역 구분의 근거가 하나여야
+    하기 때문이다. `zone`은 지정 목록(`regulated_regions.py`)에서 나온 값이고
+    facts는 사람이 채우는 값이라 어긋날 수 있다. 근거가 둘이면 어느 쪽이 맞는지
+    답할 수 없으므로 표에서 나온 쪽으로 통일한다.
+    """
+    aligned = dict(request.user_facts)
+    aligned["is_regulated_region"] = request.zone is not RegulationZone.NON_REGULATED
+    aligned["is_capital_region"] = request.is_capital_region
+    return aligned
+
+
+# Rule Pack 카테고리 → 스트레스 금리 구분. 주담대만 지역별로 다르고 나머지는
+# "주담대 외" 한 묶음이지만, 신용대출은 잔액 조건이 붙어 따로 둔다.
+_STRESS_KIND_BY_CATEGORY: dict[ProductCategory, StressLoanKind] = {
+    ProductCategory.MORTGAGE_LOAN: StressLoanKind.MORTGAGE,
+    ProductCategory.CREDIT_LOAN: StressLoanKind.CREDIT,
+    ProductCategory.JEONSE_LOAN: StressLoanKind.OTHER,
+}
+
+
+def _resolve_stress_rate(
+    handoff: ProductEngineHandoff,
+    request: LoanSimulationRequest,
+) -> StressRate | None:
+    """이 상품에 적용할 스트레스 DSR 가산금리를 찾는다.
+
+    확정하지 못하면 None이며, 호출부는 0으로 대체하지 않고 계산을 포기한다 —
+    스트레스를 빠뜨리면 한도가 **과대**평가되기 때문이다. 다른 결측들이 과소평가
+    방향이라 보수적 하한으로 처리되는 것과 반대다.
+    """
+    kind = _STRESS_KIND_BY_CATEGORY.get(handoff.rule_result.category)
+    if kind is None:
+        return None
+    return get_stress_rate(
+        resolve_stress_region(
+            is_capital_region=request.is_capital_region,
+            is_regulated_region=request.zone is not RegulationZone.NON_REGULATED,
+        ),
+        kind,
+        as_of=request.as_of,
+        credit_loan_balance=request.credit_loan_balance,
+        allow_unverified=request.allow_unverified_regulation,
     )
 
 
 def _regulation_notes(
     ltv: ResolvedPolicyLimit,
-    dti_ratio: object | None,
+    dti: ResolvedDtiRatio,
     request: LoanSimulationRequest,
 ) -> tuple[str, ...]:
     """결과에 함께 표시할 정책 근거. 어떤 기준으로 계산했는지 밝힌다."""
@@ -210,8 +343,8 @@ def _regulation_notes(
         notes.append(f"LTV 산출: {ltv.binding_reason}")
     if ltv.note is not None:
         notes.append(ltv.note)
-    if dti_ratio is None:
-        notes.append(f"DTI 비율을 찾을 수 없는 지역 구분입니다: {request.dti_region}")
+    if dti.note is not None:
+        notes.append(dti.note)
     if request.allow_unverified_regulation:
         notes.append("미검증 규제값 사용을 허용한 결과입니다 — 대외 표기 전 출처를 확인하세요.")
     notes.append(
@@ -219,6 +352,48 @@ def _regulation_notes(
         f"(적용된 안전기준 {request.borrower.safe_dsr * 100:.0f}%는 서비스 내부 기준)"
     )
     return tuple(notes)
+
+
+def build_request_for_region(
+    *,
+    region_code: str | None = None,
+    region_name: str | None = None,
+    as_of: date,
+    **fields: object,
+) -> LoanSimulationRequest | ResolvedRegion:
+    """행정구역코드로 규제지역 구분을 채워 요청을 만든다.
+
+    지역을 확정하지 못하면 요청 대신 그 사유(`ResolvedRegion`)를 돌려준다 —
+    임의로 비규제로 채우면 LTV 70%가 적용돼 한도가 크게 과대평가된다.
+
+    `dti_region`도 여기서 채운다. 예전에는 `zone`·`is_capital_region`만 채우고
+    `dti_region`은 기본값 "SEOUL"로 남겨 둬서, 대전 차주에게 서울 DTI 50%가
+    붙었다 — 지역 사실의 출처가 셋으로 갈려 있었다.
+    """
+    region = resolve_region(as_of=as_of, region_code=region_code, region_name=region_name)
+    if not region.is_resolved:
+        return region
+    assert region.zone is not None and region.is_capital_region is not None
+    return LoanSimulationRequest(
+        zone=region.zone,
+        is_capital_region=region.is_capital_region,
+        dti_region=_dti_region_for(region_code, is_capital_region=region.is_capital_region),
+        as_of=as_of,
+        **fields,  # type: ignore[arg-type]
+    )
+
+
+def _dti_region_for(region_code: str | None, *, is_capital_region: bool) -> DtiRegion:
+    """행정구역코드로 DTI 지역 구분을 정한다.
+
+    코드가 없으면(이름으로만 찾은 지역) 서울 여부를 가릴 수 없으므로 수도권일 때
+    더 엄격한 서울(50%)로 물러선다.
+    """
+    if not is_capital_region:
+        return DtiRegion.NON_CAPITAL
+    if region_code is not None and is_seoul_code(region_code) is False:
+        return DtiRegion.CAPITAL_REGION
+    return DtiRegion.SEOUL
 
 
 def summarize(result: LoanSimulationResult) -> Sequence[str]:

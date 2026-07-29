@@ -210,3 +210,61 @@ def test_loan_max_rejects_zero_months() -> None:
 def test_loan_max_rejects_negative_amount_limit() -> None:
     with pytest.raises(ValueError, match="dti_limit_amount"):
         loan_max(**_loan_max_kwargs(dti_limit_amount=Decimal("-1")))
+
+
+class TestStressDsrRateSeparation:
+    """DSR 판정과 현금흐름 판정에 서로 다른 금리를 쓸 수 있어야 한다.
+
+    스트레스 DSR은 심사만 가산금리 기준으로 하고 실제 상환액은 실제 금리 기준이다.
+    하나로 뭉치면 어느 쪽으로 뭉치든 틀린다.
+    """
+
+    _BASE = {
+        "ltv_limit_amount": Decimal("560000000"),
+        "product_limit_amount": Decimal("1000000000"),
+        "dti_limit_amount": Decimal("395000000"),
+        "required_amount": Decimal("600000000"),
+        "months": 360,
+        "existing_annual_debt_service": Decimal("6000000"),
+        "annual_income": Decimal("60000000"),
+        "safe_dsr": Decimal("0.40"),
+        "post_purchase_monthly_income": Decimal("5000000"),
+        "post_purchase_monthly_expense": Decimal("2000000"),
+        "other_existing_monthly_debt_service": Decimal("500000"),
+        "buffer_target": Decimal("300000"),
+    }
+
+    def test_omitting_the_stress_rate_keeps_the_previous_behaviour(self) -> None:
+        rate = Decimal("0.04")
+        assert loan_max(annual_rate=rate, **self._BASE) == loan_max(
+            annual_rate=rate, dsr_annual_rate=rate, **self._BASE
+        )
+
+    def test_a_stressed_assessment_rate_lowers_the_limit(self) -> None:
+        rate = Decimal("0.04")
+        plain = loan_max(annual_rate=rate, **self._BASE)
+        stressed = loan_max(
+            annual_rate=rate, dsr_annual_rate=rate + Decimal("0.03"), **self._BASE
+        )
+        assert stressed < plain
+
+    def test_cashflow_still_uses_the_actual_rate(self) -> None:
+        # Buffer를 빡빡하게 잡아 현금흐름이 구속하게 만든 뒤, 심사 금리만 올린
+        # 경우와 두 판정 모두 올린 경우를 비교한다. 후자가 더 낮으면 현금흐름
+        # 판정이 실제 금리를 쓰고 있다는 뜻이다.
+        rate = Decimal("0.04")
+        tight = {**self._BASE, "buffer_target": Decimal("1500000")}
+        dsr_only = loan_max(
+            annual_rate=rate, dsr_annual_rate=rate + Decimal("0.03"), **tight
+        )
+        both = loan_max(annual_rate=rate + Decimal("0.03"), **tight)
+        assert both < dsr_only
+
+    def test_assessment_rate_below_the_actual_rate_is_rejected(self) -> None:
+        # 스트레스는 가산이지 할인이 아니다. 낮은 값이 들어오면 입력 오류다.
+        with pytest.raises(ValueError, match="dsr_annual_rate"):
+            loan_max(
+                annual_rate=Decimal("0.04"),
+                dsr_annual_rate=Decimal("0.03"),
+                **self._BASE,
+            )

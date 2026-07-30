@@ -60,6 +60,11 @@ class TestEgressGuard:
 
         assert report.allowed, report.findings
 
+    def test_policy_version_is_not_mistaken_for_an_email(self) -> None:
+        report = scan_payload({"policy_sources": ["cashflow-policy@1.0.0"]})
+
+        assert report.allowed, report.findings
+
     def test_a_clean_report_input_passes(self, report_input: ReportAIInput) -> None:
         report = scan_payload(report_input.to_json_dict())
 
@@ -89,11 +94,7 @@ class TestGeminiResponseHandling:
 
     def test_a_normal_response_reports_stop(self) -> None:
         text, reason = _first_candidate(
-            {
-                "candidates": [
-                    {"content": {"parts": [{"text": "## 요약"}]}, "finishReason": "STOP"}
-                ]
-            }
+            {"candidates": [{"content": {"parts": [{"text": "## 요약"}]}, "finishReason": "STOP"}]}
         )
 
         assert text == "## 요약"

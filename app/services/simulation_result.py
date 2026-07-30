@@ -20,6 +20,7 @@ from uuid import UUID
 
 from pydantic import BaseModel
 
+from app.engines.cashflow.models import CashflowResult
 from app.engines.recommendation.models import CombinedRecommendationResult
 from app.engines.savings.portfolio_models import SavingsPortfolioResult
 from app.engines.strategy.models import StrategyComparisonResult
@@ -63,10 +64,7 @@ def to_json_value(value: object) -> Any:
     if isinstance(value, BaseModel):
         return to_json_value(value.model_dump())
     if is_dataclass(value) and not isinstance(value, type):
-        return {
-            item.name: to_json_value(getattr(value, item.name))
-            for item in fields(value)
-        }
+        return {item.name: to_json_value(getattr(value, item.name)) for item in fields(value)}
     if isinstance(value, Mapping):
         return {str(key): to_json_value(item) for key, item in value.items()}
     if isinstance(value, (tuple, list)):
@@ -88,9 +86,7 @@ def _attribute_strings(result: object, *names: str) -> tuple[str, ...]:
     values: list[str] = []
     for name in names:
         candidate = (
-            result.get(name, ())
-            if isinstance(result, Mapping)
-            else getattr(result, name, ())
+            result.get(name, ()) if isinstance(result, Mapping) else getattr(result, name, ())
         )
         if candidate is None:
             continue
@@ -126,9 +122,7 @@ def build_calculation_section(
         )
 
     status_value = (
-        result.get("status")
-        if isinstance(result, Mapping)
-        else getattr(result, "status", None)
+        result.get("status") if isinstance(result, Mapping) else getattr(result, "status", None)
     )
     resolved_status = engine_status or _string_status(status_value)
     if resolved_status is None and isinstance(result, LoanSimulationResult):
@@ -145,20 +139,14 @@ def build_calculation_section(
         engine_status=resolved_status,
         result=payload,
         missing_inputs=_dedupe(
-            tuple(missing_inputs)
-            + _attribute_strings(result, "missing_inputs")
+            tuple(missing_inputs) + _attribute_strings(result, "missing_inputs")
         ),
-        reasons=_dedupe(
-            tuple(reasons)
-            + _attribute_strings(result, "reasons")
-        ),
+        reasons=_dedupe(tuple(reasons) + _attribute_strings(result, "reasons")),
         assumptions=_dedupe(
-            tuple(assumptions)
-            + _attribute_strings(result, "assumptions", "notes", "scope_notes")
+            tuple(assumptions) + _attribute_strings(result, "assumptions", "notes", "scope_notes")
         ),
         policy_sources=_dedupe(
-            tuple(policy_sources)
-            + _attribute_strings(result, "policy_sources")
+            tuple(policy_sources) + _attribute_strings(result, "policy_sources")
         ),
     )
 
@@ -203,7 +191,7 @@ def build_simulation_result(
     simulation_id: UUID,
     as_of: date,
     calculated_at: datetime,
-    cashflow_result: Mapping[str, object] | None = None,
+    cashflow_result: CashflowResult | Mapping[str, object] | None = None,
     savings_portfolio_result: SavingsPortfolioResult | None = None,
     loan_simulation_result: LoanSimulationResult | None = None,
     recommendation_result: CombinedRecommendationResult | None = None,
@@ -221,11 +209,7 @@ def build_simulation_result(
         raise ValueError("전략 비교 결과와 시뮬레이션 기준일이 다릅니다.")
 
     stress_missing = (
-        tuple(
-            item
-            for scenario in stress_test_result.scenarios
-            for item in scenario.missing_inputs
-        )
+        tuple(item for scenario in stress_test_result.scenarios for item in scenario.missing_inputs)
         if stress_test_result is not None
         else ()
     )
@@ -257,20 +241,8 @@ def build_simulation_result(
         ),
     }
     all_sections = tuple(sections.values())
-    missing = _dedupe(
-        tuple(
-            item
-            for section in all_sections
-            for item in section.missing_inputs
-        )
-    )
-    sources = _dedupe(
-        tuple(
-            item
-            for section in all_sections
-            for item in section.policy_sources
-        )
-    )
+    missing = _dedupe(tuple(item for section in all_sections for item in section.missing_inputs))
+    sources = _dedupe(tuple(item for section in all_sections for item in section.policy_sources))
     return SimulationResult(
         simulation_id=simulation_id,
         as_of=as_of,

@@ -1,0 +1,60 @@
+{
+  "schema_version": "1.0.0",
+  "dataset_file": "property_listings.v1.json",
+  "cases": [
+    {
+      "case_id": "GWANAK_VILLA_UNDER_50M_WALK_10",
+      "description": "관악구, 5천만원 이하, 빌라, 역 도보 10분 이하",
+      "criteria": {
+        "region_codes": [
+          "11620"
+        ],
+        "transaction_type": "SALE",
+        "property_types": [
+          "VILLA"
+        ],
+        "max_price_krw": "50000000",
+        "max_station_walk_minutes": 10,
+        "sort": "PRICE_ASC"
+      },
+      "expected_listing_ids": [
+        "MOCK-GWANAK-001"
+      ]
+    },
+    {
+      "case_id": "GWANAK_ALL_UNDER_50M",
+      "description": "관악구, 5천만원 이하, 주택 유형과 역세권 제한 없음",
+      "criteria": {
+        "region_codes": [
+          "11620"
+        ],
+        "transaction_type": "SALE",
+        "max_price_krw": "50000000",
+        "sort": "PRICE_ASC"
+      },
+      "expected_listing_ids": [
+        "MOCK-GWANAK-006",
+        "MOCK-GWANAK-001",
+        "MOCK-GWANAK-002"
+      ]
+    },
+    {
+      "case_id": "SEOUL_UNDER_50M_TRANSIT_SORT",
+      "description": "서울 전체, 5천만원 이하, 가까운 역 순이며 역 정보 없음은 마지막",
+      "criteria": {
+        "region_codes": [
+          "11"
+        ],
+        "transaction_type": "SALE",
+        "max_price_krw": "50000000",
+        "sort": "STATION_WALK_ASC"
+      },
+      "expected_listing_ids": [
+        "MOCK-GEUMCHEON-001",
+        "MOCK-GWANAK-001",
+        "MOCK-GWANAK-002",
+        "MOCK-GWANAK-006"
+      ]
+    }
+  ]
+}

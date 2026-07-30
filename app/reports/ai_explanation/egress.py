@@ -31,9 +31,7 @@ class ReportEgressBlocked(RuntimeError):
 
     def __init__(self, findings: tuple["EgressFinding", ...]) -> None:
         summary = ", ".join(f"{item.path}({item.kind})" for item in findings)
-        super().__init__(
-            "개인정보로 보이는 값이 있어 외부 AI 전송을 중단했습니다: " + summary
-        )
+        super().__init__("개인정보로 보이는 값이 있어 외부 AI 전송을 중단했습니다: " + summary)
         self.findings = findings
 
 
@@ -58,7 +56,10 @@ class EgressReport:
 # 주민등록번호: 6자리-7자리. 생년월일과 성별코드 조합이라 형태가 고유하다.
 _RRN = re.compile(r"(?<!\d)\d{6}\s*-\s*[1-4]\d{6}(?!\d)")
 _PHONE = re.compile(r"(?<!\d)01[016-9]-?\d{3,4}-?\d{4}(?!\d)")
-_EMAIL = re.compile(r"[\w.+-]+@[\w-]+\.[\w.-]+")
+# 마지막 도메인 라벨이 숫자로만 된 값은 이메일이 아니다. 정책 버전
+# ``cashflow-policy@1.0.0`` 같은 내부 식별자를 차단하지 않되 일반 이메일과
+# 국제화된 문자 도메인은 계속 탐지한다.
+_EMAIL = re.compile(r"[\w.+-]+@[\w-]+(?:\.[\w-]+)*\.(?!\d+(?:[^\w-]|$))[\w-]+")
 # API 키·토큰. 우리가 실수로 프롬프트에 키를 넣는 것도 막는다.
 _TOKEN = re.compile(r"(?:AIza[\w-]{20,}|sk-[\w-]{20,}|AQ\.[\w.\-]{20,}|Bearer\s+[\w.\-]{20,})")
 # 계좌번호: 하이픈으로 끊긴 숫자 묶음, 또는 하이픈 없는 11자리 이상.

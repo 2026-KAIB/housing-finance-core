@@ -1,7 +1,7 @@
 """``SimulationInput`` 하나를 ``SimulationResult`` JSON까지 통과시키는 계층.
 
 목적:
-    대출 → 종합추천 → 생활 스트레스 → 전략 비교를 정해진 순서로 호출하고
+    현금흐름 → 대출 → 종합추천 → 생활 스트레스 → 전략 비교를 정해진 순서로 호출하고
     ``build_simulation_result()``로 단일 JSON을 만든다. HTTP 경계(``/simulations``)는
     이 함수만 부르면 되고, 엔진 호출 순서를 다시 알 필요가 없다.
 
@@ -35,6 +35,7 @@ from app.regulations.regulated_regions import ResolvedRegion
 from app.rule_engine.product_packs.handoff import ProductCandidate
 from app.rule_engine.product_packs.registry import ProductRulePackRegistry
 from app.schemas.simulation import GoalType, LoanRequestInput, SimulationInput, SimulationResult
+from app.services.cashflow_diagnosis import diagnose_cashflow
 from app.services.loan_simulation import (
     LoanSimulationRequest,
     LoanSimulationResult,
@@ -216,8 +217,7 @@ def build_loan_request(
     )
     if isinstance(built, ResolvedRegion):
         reason = (
-            built.note
-            or "지역을 규제지역 구분으로 확정하지 못해 대출 구간을 실행하지 않았습니다."
+            built.note or "지역을 규제지역 구분으로 확정하지 못해 대출 구간을 실행하지 않았습니다."
         )
         return (
             None,
@@ -256,10 +256,12 @@ def run_simulation(
 ) -> SimulationResult:
     """실행할 수 있는 구간을 모두 계산해 단일 ``SimulationResult``로 조립한다.
 
-    현금흐름 진단 전용 엔진은 아직 없으므로 그 구간은 항상 ``NOT_RUN``이다.
+    현금흐름 진단은 공용 금융 스냅샷으로 먼저 실행한다. 세부 이력처럼 공용 계약에
+    아직 없는 값은 만들지 않고 현금흐름 결과의 ``missing_inputs``에 남긴다.
     전략 비교는 ``housing_scenarios``를 호출자가 근거와 함께 넘길 때만 실행한다 —
     미래 집값을 엔진이 만들어내지 않는다는 규약(§15) 때문이다.
     """
+    cashflow_result = diagnose_cashflow(payload, as_of=as_of)
     loan_request, loan_missing, loan_reasons, loan_assumptions = build_loan_request(
         payload,
         as_of=as_of,
@@ -318,6 +320,7 @@ def run_simulation(
         simulation_id=simulation_id,
         as_of=as_of,
         calculated_at=calculated_at,
+        cashflow_result=cashflow_result,
         loan_simulation_result=loan_result,
         recommendation_result=recommendation,
         stress_test_result=stress,
@@ -335,9 +338,7 @@ def run_simulation(
                     "missing_inputs": tuple(
                         dict.fromkeys(result.loan_simulation.missing_inputs + loan_missing)
                     ),
-                    "reasons": tuple(
-                        dict.fromkeys(result.loan_simulation.reasons + loan_reasons)
-                    ),
+                    "reasons": tuple(dict.fromkeys(result.loan_simulation.reasons + loan_reasons)),
                     "assumptions": tuple(
                         dict.fromkeys(result.loan_simulation.assumptions + loan_assumptions)
                     ),

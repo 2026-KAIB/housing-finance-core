@@ -25,15 +25,7 @@ from pydantic import BaseModel, ConfigDict, Field, model_validator
 from app.regulations.mortgage_limits import HousingStatus
 
 SIMULATION_RESULT_SCHEMA_VERSION = "1.0.0"
-type JsonValue = (
-    str
-    | int
-    | float
-    | bool
-    | None
-    | list[JsonValue]
-    | dict[str, JsonValue]
-)
+type JsonValue = str | int | float | bool | None | list[JsonValue] | dict[str, JsonValue]
 
 
 class GoalType(StrEnum):
@@ -93,10 +85,7 @@ class HousingGoal(BaseModel):
             and self.target_amount != self.target_price
         ):
             raise ValueError("target_amount와 target_price가 서로 다릅니다.")
-        if (
-            self.goal_type is GoalType.MONTHLY_RENT_DEPOSIT
-            and self.monthly_rent is None
-        ):
+        if self.goal_type is GoalType.MONTHLY_RENT_DEPOSIT and self.monthly_rent is None:
             raise ValueError("월세보증금 목표에는 monthly_rent가 필요합니다.")
         return self
 
@@ -110,6 +99,14 @@ class HousingGoal(BaseModel):
 
 
 class FinancialSnapshot(BaseModel):
+    """계산 기준일의 집계 금융정보.
+
+    ``monthly_expense``는 기존 대출 월 상환액을 제외한 생활비이며,
+    ``monthly_debt_payment``에서 부채상환을 별도로 받는다. ``emergency_reserve``는
+    ``liquid_assets``에 포함된 금액 중 비상용으로 지정한 현재 잔액이므로 별도
+    자산처럼 더하지 않는다. ``None``은 0원이 아니라 현재 비상자금 미확정을 뜻한다.
+    """
+
     model_config = ConfigDict(extra="forbid")
 
     monthly_income: Decimal = Field(ge=0)
@@ -119,6 +116,12 @@ class FinancialSnapshot(BaseModel):
     total_debt: Decimal = Field(default=Decimal(0), ge=0)
     monthly_debt_payment: Decimal = Field(default=Decimal(0), ge=0)
     emergency_reserve: Decimal | None = Field(default=None, ge=0)
+
+    @model_validator(mode="after")
+    def validate_emergency_reserve_is_liquid(self) -> "FinancialSnapshot":
+        if self.emergency_reserve is not None and self.emergency_reserve > self.liquid_assets:
+            raise ValueError("emergency_reserve는 liquid_assets를 초과할 수 없습니다.")
+        return self
 
 
 class LoanRequestInput(BaseModel):

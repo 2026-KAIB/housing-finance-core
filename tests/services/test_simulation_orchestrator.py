@@ -11,6 +11,7 @@ from decimal import Decimal
 from uuid import UUID
 
 from app.regulations.mortgage_limits import HousingStatus
+from app.regulations.regulated_regions import DESIGNATION_LIST_VERIFIED_THROUGH
 from app.schemas.simulation import (
     FinancialSnapshot,
     HousingGoal,
@@ -104,11 +105,18 @@ def test_expired_designation_list_blocks_a_non_regulated_conclusion() -> None:
 
     목록에 없는 지역(대전)을 유효기한 뒤 기준일로 조회하면, 그 사이 새 고시가
     있었을 수 있으므로 확정 실패로 답해야 한다.
+
+    **경계 날짜는 상수에서 파생한다.** 예전 이 테스트는 유효기한과 그 이틀 뒤를
+    날짜로 박아 뒀는데, 목록을 갱신해 유효기한이 뒤로 밀리자 "만료 뒤"로 쓴
+    날짜가 유효구간 안으로 들어와 테스트가 깨졌다. 검사하려던 성질은 특정
+    날짜가 아니라 **경계 앞뒤의 동작 차이**다.
     """
     payload = _payload(loan_request=_loan_request(), goal_region="30110")
+    last_valid = DESIGNATION_LIST_VERIFIED_THROUGH
+    first_expired = date.fromordinal(last_valid.toordinal() + 1)
 
-    inside, missing_inside, _, _ = build_loan_request(payload, as_of=date(2026, 7, 28))
-    outside, missing_outside, _, _ = build_loan_request(payload, as_of=date(2026, 7, 30))
+    inside, missing_inside, _, _ = build_loan_request(payload, as_of=last_valid)
+    outside, missing_outside, _, _ = build_loan_request(payload, as_of=first_expired)
 
     assert inside is not None and missing_inside == ()
     assert outside is None

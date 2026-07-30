@@ -10,7 +10,17 @@ from app.regulations.regulated_regions import (
     resolve_region,
 )
 
-_TODAY = date(2026, 7, 28)
+_TODAY = date(2026, 7, 30)
+
+# 목록을 다시 확인하지 않고 방치해도 되는 기간. 이 창을 넘기면 테스트가 깨져
+# 재확인을 강제한다.
+#
+# 왜 필요한가: 이 파일의 다른 테스트는 전부 `_TODAY`를 **하드코딩**한다. 그래서
+# `DESIGNATION_LIST_VERIFIED_THROUGH`가 실제 달력을 지나 만료돼도 전부 통과했고,
+# 실제로 2026-07-28에 만료된 목록이 07-30까지 아무 경고 없이 방치됐다. 그 사이
+# 서비스는 목록에 없는 모든 지역을 결측으로 돌려보내고 있었다 — 안전한 방향이지만
+# **조용히 쓸모없어지는** 상태다. 달력을 보는 테스트가 하나는 있어야 한다.
+_STALENESS_GRACE_DAYS = 7
 
 
 class TestDesignatedRegions:
@@ -82,6 +92,39 @@ class TestUnknownIsNotNonRegulated:
         # 반면 지정된 지역은 목록이 낡아도 규제지역인 것이 뒤집히지 않는다.
         still_regulated = resolve_region(as_of=future, region_code="11680")
         assert still_regulated.zone is RegulationZone.SPECULATION_OVERHEATED
+
+
+class TestTheListDoesNotSilentlyExpire:
+    """만료를 사람이 알아채도록 달력을 보는 유일한 테스트.
+
+    만료 자체는 안전장치가 맞다(비규제로 단정하지 않는다). 문제는 만료되면
+    **목록에 없는 모든 지역이 계산 불가**가 되는데 아무도 모른다는 것이다.
+    """
+
+    def test_the_designation_list_was_verified_recently(self) -> None:
+        stale_days = (date.today() - DESIGNATION_LIST_VERIFIED_THROUGH).days
+
+        assert stale_days <= _STALENESS_GRACE_DAYS, (
+            f"규제지역 지정 목록이 {stale_days}일째 재확인되지 않았습니다. "
+            f"확인 기준일 {DESIGNATION_LIST_VERIFIED_THROUGH.isoformat()}. "
+            "국토교통부 참고·설명자료 게시판(m_72, 보도자료 m_71이 아님)에서 "
+            "투기과열지구·조정대상지역 지정·해제 고시를 확인하고 목록과 날짜를 "
+            "함께 올리십시오. **확인 없이 날짜만 올리면** '목록에 없으니 비규제'가 "
+            "근거 없이 열려 LTV가 과대평가됩니다."
+        )
+
+    def test_expiry_blocks_non_regulated_conclusions_immediately(self) -> None:
+        """만료는 유예 없이 즉시 비규제 판정을 막는다.
+
+        위 유예기간(7일)은 **재확인 알람의 주기**일 뿐이고, 판정이 느슨해지는
+        유예가 아니다. 둘을 섞으면 안 되므로 여기서 고정한다.
+        """
+        one_day_late = date.fromordinal(DESIGNATION_LIST_VERIFIED_THROUGH.toordinal() + 1)
+
+        resolved = resolve_region(as_of=one_day_late, region_code="30200")
+
+        assert resolved.zone is None
+        assert resolved.is_resolved is False
 
 
 class TestNonRegulatedIsConfirmedWhenTheListIsCurrent:

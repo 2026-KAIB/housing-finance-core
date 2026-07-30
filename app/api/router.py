@@ -1,6 +1,6 @@
 from fastapi import APIRouter
 
-from app.api.routes import health, simulations
+from app.api.routes import health, properties, simulations
 from app.core.config import settings
 
 api_router = APIRouter()
@@ -10,4 +10,8 @@ api_router.include_router(
     prefix=f"{settings.api_prefix}/simulations",
     tags=["simulations"],
 )
-
+api_router.include_router(
+    properties.router,
+    prefix=f"{settings.api_prefix}/properties",
+    tags=["properties"],
+)

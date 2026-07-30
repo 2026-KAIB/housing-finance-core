@@ -1,4 +1,5 @@
 from functools import lru_cache
+from pathlib import Path
 
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
@@ -15,6 +16,9 @@ class Settings(BaseSettings):
     app_version: str = "0.1.0"
     api_prefix: str = "/api/v1"
     database_url: str = "postgresql+psycopg://housing:housing@localhost:5432/housing"
+    property_listing_json_path: Path = Path(
+        "sample_data/property_listings/property_listings.v1.json"
+    )
     cors_origins: str = "http://localhost:3000"
 
     @property
@@ -28,4 +32,3 @@ def get_settings() -> Settings:
 
 
 settings = get_settings()
-

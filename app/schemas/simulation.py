@@ -20,6 +20,10 @@ from uuid import UUID
 
 from pydantic import BaseModel, ConfigDict, Field, model_validator
 
+# LTV 표와 같은 어휘를 쓰려고 규제 모듈의 enum을 그대로 재사용한다. 여기서
+# 별도 목록을 만들면 API와 규제표가 갈라져 같은 차주에게 다른 한도가 나온다.
+from app.regulations.mortgage_limits import HousingStatus
+
 SIMULATION_RESULT_SCHEMA_VERSION = "1.0.0"
 type JsonValue = str | int | float | bool | None | list[JsonValue] | dict[str, JsonValue]
 
@@ -120,12 +124,56 @@ class FinancialSnapshot(BaseModel):
         return self
 
 
+class LoanRequestInput(BaseModel):
+    """대출 계산에 필요하지만 사용자 요약만으로는 확정할 수 없는 사실.
+
+    이 블록이 없으면 대출 이후 구간(대출·종합추천·스트레스·전략)을 실행하지 않고
+    ``NOT_RUN``으로 남긴다. 기본값으로 채우지 않는 이유는 여기 값들이 전부
+    **틀리면 한도가 커지는 축**이기 때문이다.
+
+    - ``housing_status``: ``UserProfile.is_first_home_buyer``만으로는 1주택 미처분과
+      다주택을 가릴 수 없는데, LTV는 그 사이에서 0%와 80%로 갈린다.
+      규제표와 같은 어휘를 쓰려고 ``HousingStatus``를 그대로 재사용한다.
+    - ``months``: 만기가 없으면 PMT도 DTI 원금 역산도 성립하지 않는다.
+    - ``monthly_essential_expense``: 총지출이 아니라 필수생활비다. Buffer(부록 A-8)
+      기준이 여기서 나오므로 ``FinancialSnapshot.monthly_expense``로 대체할 수 없다.
+    """
+
+    model_config = ConfigDict(extra="forbid")
+
+    months: int = Field(gt=0, le=600)
+    housing_status: HousingStatus
+    monthly_essential_expense: Decimal = Field(ge=0)
+    # 없으면 목표금액 − 유동자산으로 파생하고 가정을 남긴다. 취득세·부대비용이
+    # 빠지므로 필요금액을 과소평가하는데, 필요금액은 대출 상한 중 하나라서
+    # (`loan_max`의 `hi = min(ltv, product, dti, required)`) 과소평가가 안전한 쪽이다.
+    required_amount: Decimal | None = Field(default=None, ge=0)
+    # DSR 분자(원리금). 없으면 월 상환액 × 12로 파생한다.
+    existing_annual_debt_service: Decimal | None = Field(default=None, ge=0)
+    # DTI 분자(이자만). 없으면 어댑터가 DSR용 값으로 물러서 DTI를 낮게 잡는다.
+    existing_annual_interest: Decimal | None = Field(default=None, ge=0)
+    post_purchase_monthly_income: Decimal | None = Field(default=None, ge=0)
+    post_purchase_monthly_expense: Decimal | None = Field(default=None, ge=0)
+    # 법정 상한이 아니라 서비스 내부 안전기준이다(SSOT §14.1). 40%는 SSOT가
+    # "그대로 둔다"고 확정한 값이라 기본값으로 쓴다. 결과에는 내부 기준으로 표기한다.
+    safe_dsr: Decimal = Field(default=Decimal("0.40"), gt=0, le=1)
+    rate_selection: Literal["avg", "min", "max"] = "avg"
+    # 잔액 1억원 초과에만 스트레스 금리가 붙으므로, 모르면 신용대출을 계산하지
+    # 않고 결측으로 남긴다. 0으로 채우면 한도가 과대평가된다.
+    credit_loan_balance: Decimal | None = Field(default=None, ge=0)
+    # 적용할 규제의 기준일. 경과규정 대상 차주는 신청 접수 시점을 넘긴다.
+    # 없으면 계산 기준일(``as_of``)을 쓴다.
+    regulation_as_of: date | None = None
+    for_house_purchase: bool = True
+
+
 class SimulationInput(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
     profile: UserProfile
     housing_goal: HousingGoal
     financial_snapshot: FinancialSnapshot
+    loan_request: LoanRequestInput | None = None
 
 
 class PublicUserSummary(BaseModel):

@@ -1,5 +1,7 @@
 from decimal import Decimal
 
+from app.engines.safety import cashflow_buffer
+
 # 이 모듈은 입력 스키마(어댑터/handoff 연결 방식)와 무관하게 확정된 순수 계산
 # 공식만 담는다 (DESIGN SSOT §13.3 PMT, §13.2/A-12 DSR, 부록 A-8 Buffer).
 # 상품·정책 데이터를 어떻게 받아올지는 아직 팀 논의 중이므로, 이 함수들은
@@ -80,9 +82,7 @@ def dsr(
 
 def buffer(monthly_essential_expense: Decimal) -> Decimal:
     """최소 여유자금(Buffer) = max(300,000원, 필수생활비 × 0.10) (부록 A-8)."""
-    _require_non_negative(monthly_essential_expense, "monthly_essential_expense")
-
-    return max(Decimal("300000"), monthly_essential_expense * Decimal("0.10"))
+    return cashflow_buffer(monthly_essential_expense)
 
 
 def loan_max(

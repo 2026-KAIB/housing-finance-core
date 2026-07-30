@@ -45,6 +45,7 @@ class PropertyAffordabilityInput:
     loan_combination: LoanCombinationResult | None = None
     loan_missing_inputs: tuple[str, ...] = ()
     loan_reasons: tuple[str, ...] = ()
+    loan_assumptions: tuple[str, ...] = ()
     cashflow_assumptions: tuple[str, ...] = ()
     cashflow_policy_sources: tuple[str, ...] = ()
     loan_policy_sources: tuple[str, ...] = ()

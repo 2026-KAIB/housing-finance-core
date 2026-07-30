@@ -9,11 +9,11 @@ from app.engines.cashflow import (
     CashflowResult,
     calculate_cashflow,
 )
-from app.schemas.simulation import SimulationInput
+from app.schemas.simulation import FinancialSnapshot, SimulationInput
 
 
-def diagnose_cashflow(
-    payload: SimulationInput,
+def diagnose_financial_snapshot(
+    snapshot: FinancialSnapshot,
     *,
     as_of: date,
     policy: CashflowPolicy = DEFAULT_CASHFLOW_POLICY,
@@ -26,7 +26,6 @@ def diagnose_cashflow(
     보고 전액을 필수생활비로 해석해 저축 가능액을 과대평가하지 않는다.
     """
 
-    snapshot = payload.financial_snapshot
     return calculate_cashflow(
         CashflowInput(
             as_of=as_of,
@@ -47,4 +46,19 @@ def diagnose_cashflow(
     )
 
 
-__all__ = ["diagnose_cashflow"]
+def diagnose_cashflow(
+    payload: SimulationInput,
+    *,
+    as_of: date,
+    policy: CashflowPolicy = DEFAULT_CASHFLOW_POLICY,
+) -> CashflowResult:
+    """Diagnose the financial snapshot embedded in a simulation request."""
+
+    return diagnose_financial_snapshot(
+        payload.financial_snapshot,
+        as_of=as_of,
+        policy=policy,
+    )
+
+
+__all__ = ["diagnose_cashflow", "diagnose_financial_snapshot"]

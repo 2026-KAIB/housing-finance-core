@@ -105,6 +105,7 @@ def evaluate_property_affordability(
     missing: list[str] = list(costs.missing_inputs)
     assumptions: list[str] = [
         *payload.cashflow_assumptions,
+        *payload.loan_assumptions,
         *costs.assumptions,
         policy.policy_note,
     ]

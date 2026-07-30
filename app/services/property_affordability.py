@@ -71,6 +71,8 @@ class PropertyLoanProfile:
     for_house_purchase: bool = True
     allow_unverified_regulation: bool = False
     credit_loan_balance: Decimal | None = None
+    regulation_as_of: date | None = None
+    assumptions: tuple[str, ...] = ()
 
     def __post_init__(self) -> None:
         if self.months <= 0:
@@ -141,7 +143,7 @@ def _loan_request_for_property(
     # 명시한 값은 유지하되, 없으면 2로 추측해 채우지 않는다.
     return build_request_for_region(
         region_code=case.candidate.region.sigungu_code,
-        as_of=case.purchase_cost_input.as_of,
+        as_of=profile.regulation_as_of or case.purchase_cost_input.as_of,
         borrower=profile.borrower,
         user_facts=facts,
         house_price=case.candidate.price_krw,
@@ -239,6 +241,7 @@ def assess_property_affordability(
             loan_combination=combination,
             loan_missing_inputs=loan_missing,
             loan_reasons=loan_reasons,
+            loan_assumptions=(() if loan_profile is None else loan_profile.assumptions),
             cashflow_assumptions=cashflow_result.assumptions,
             cashflow_policy_sources=cashflow_result.policy_sources,
             loan_policy_sources=loan_sources,

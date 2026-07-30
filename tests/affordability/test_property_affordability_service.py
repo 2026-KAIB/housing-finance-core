@@ -1,3 +1,4 @@
+from dataclasses import replace
 from datetime import UTC, date, datetime
 from decimal import Decimal
 
@@ -14,6 +15,7 @@ from app.engines.loan.combination_models import (
 )
 from app.engines.purchase_costs import PurchaseCostInput
 from app.regulations.mortgage_limits import HousingStatus
+from app.regulations.regulated_regions import ResolvedRegion
 from app.rule_engine.product_packs.handoff import (
     ProductCandidate as LoanProductCandidate,
 )
@@ -229,6 +231,36 @@ def test_missing_loan_candidates_is_unknown_not_zero_capacity() -> None:
     assert result.verdict is AffordabilityVerdict.UNKNOWN
     assert result.loan_funding_amount is None
     assert "loan_product_candidates" in result.missing_inputs
+
+
+def test_property_loan_profile_date_and_assumptions_reach_the_result(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    captured: dict[str, object] = {}
+
+    def fake_build_request_for_region(**kwargs):
+        captured.update(kwargs)
+        return ResolvedRegion(zone=None, note="unresolved test region")
+
+    monkeypatch.setattr(
+        "app.services.property_affordability.build_request_for_region",
+        fake_build_request_for_region,
+    )
+    profile = replace(
+        _loan_profile(),
+        regulation_as_of=date(2026, 7, 1),
+        assumptions=("derived borrower fact",),
+    )
+
+    result = assess_property_affordability(
+        _case(),
+        cashflow_result=_cashflow(),
+        loan_profile=profile,
+        loan_candidates=(object(),),  # type: ignore[arg-type]
+    )
+
+    assert captured["as_of"] == date(2026, 7, 1)
+    assert "derived borrower fact" in result.assumptions
 
 
 def test_real_cost_loan_and_combination_engines_work_end_to_end() -> None:

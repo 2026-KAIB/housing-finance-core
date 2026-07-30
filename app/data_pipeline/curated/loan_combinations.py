@@ -318,6 +318,24 @@ def describe_missing_verification() -> tuple[str, ...]:
     )
 
 
+def collateral_group(product_name: str) -> str | None:
+    """상품이 어떤 담보 묶음에 속하는지. 모르면 ``None``.
+
+    조합 엔진이 "이 다리가 LTV 예산을 함께 쓰는가"를 판단할 때 쓴다. 검수표가
+    같은 근거로 쌍을 분류하므로 여기서 함께 답한다.
+
+    **모르는 상품에 기본값을 주지 않는다.** ``OTHER``로 떨어뜨리면 그 상품이 LTV
+    예산에서 빠져 한도가 커지는 방향으로 틀린다. 확인되지 않은 상품은 호출자가
+    조합에서 제외해야 한다.
+    """
+    name = product_name.strip()
+    if name in MORTGAGE_PRODUCTS:
+        return "MORTGAGE"
+    if name in CREDIT_PRODUCTS:
+        return "CREDIT"
+    return None
+
+
 def known_product_names() -> tuple[str, ...]:
     """검수표가 다루는 상품명. 한도표와의 이름 일치를 테스트가 확인한다."""
     names: set[str] = set()
@@ -355,6 +373,7 @@ __all__ = [
     "CREDIT_PRODUCTS",
     "MORTGAGE_PRODUCTS",
     "ResolvedCombination",
+    "collateral_group",
     "coverage_report",
     "describe_missing_verification",
     "get_combination_rule",

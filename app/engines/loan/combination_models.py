@@ -114,6 +114,11 @@ class LoanLegCandidate:
     additional_financial_cost: Decimal | None = None
     repayment_flexibility_score: Decimal | None = None
     rate_type_name: str | None = None
+    # ``maximum_amount``가 무엇을 뜻하는지 만든 쪽이 이름을 붙인다. 조합안의
+    # "묶은 제약"에 그대로 실리므로 정확해야 한다 — 상위 계층이 여러 상한의
+    # 최솟값을 이 칸에 넣는 경우가 있고, 그때 "상품 한도"라고 표시하면 사용자에게
+    # **틀린 사유**를 알려 준다.
+    maximum_amount_label: str = "상품 한도"
     assumptions: tuple[str, ...] = field(default_factory=tuple)
 
     def __post_init__(self) -> None:

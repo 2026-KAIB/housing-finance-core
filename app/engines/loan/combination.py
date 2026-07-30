@@ -234,6 +234,10 @@ def _allocate(
             headroom.append(("dti", candidate.dti_limit_amount - current))
 
         label, increment = min(headroom, key=lambda entry: entry[1])
+        if label == "product":
+            # 이 상한이 무엇인지는 후보를 만든 쪽이 안다. 여기서 "상품 한도"로
+            # 단정하면 틀린 사유가 사용자에게 간다.
+            label = candidate.maximum_amount_label
         # 원 단위로 **내림**한다. 두 가지를 동시에 해결한다.
         #
         # 1) 예산을 계수로 나눠 얻은 금액을 그대로 쓰면, 그 금액을 `pmt()`로 다시

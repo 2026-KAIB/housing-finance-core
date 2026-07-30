@@ -1,5 +1,6 @@
 """Structured property search and affordability endpoints used by the frontend."""
 
+import logging
 from collections.abc import Sequence
 from datetime import datetime
 from pathlib import Path
@@ -9,7 +10,11 @@ from zoneinfo import ZoneInfo
 from fastapi import APIRouter, Depends, HTTPException, status
 
 from app.core.config import settings
-from app.repositories import JsonPropertyListingRepository, PropertyDatasetLoadError
+from app.repositories import (
+    JsonPropertyListingRepository,
+    LoanProductSnapshotLoadError,
+    PropertyDatasetLoadError,
+)
 from app.rule_engine.product_packs.handoff import ProductCandidate as LoanProductCandidate
 from app.rule_engine.product_packs.registry import ProductRulePackRegistry
 from app.schemas.property import PropertySearchCriteria, PropertySearchResult
@@ -17,12 +22,14 @@ from app.schemas.property_affordability import (
     PropertyAffordabilitySearchRequest,
     PropertyAffordabilitySearchResponse,
 )
+from app.services.loan_product_catalog import load_configured_loan_candidates
 from app.services.property_affordability_api import (
     evaluate_property_search_affordability,
 )
 from app.services.property_search import search_properties
 
 router = APIRouter()
+logger = logging.getLogger(__name__)
 SEOUL = ZoneInfo("Asia/Seoul")
 PROJECT_ROOT = Path(__file__).resolve().parents[3]
 
@@ -38,20 +45,26 @@ def get_property_repository() -> JsonPropertyListingRepository:
     return JsonPropertyListingRepository(_property_dataset_path())
 
 
-def get_property_loan_candidates() -> Sequence[LoanProductCandidate]:
-    """Return no candidates until the product-data dependency is connected."""
-
-    return ()
-
-
-def get_property_loan_rule_registry() -> ProductRulePackRegistry | None:
-    return None
-
-
 def get_property_calculated_at() -> datetime:
     """Use the Korean policy date around the UTC/KST day boundary."""
 
     return datetime.now(tz=SEOUL)
+
+
+def get_property_loan_candidates(
+    calculated_at: Annotated[datetime, Depends(get_property_calculated_at)],
+) -> Sequence[LoanProductCandidate]:
+    """Load the DB export; an invalid snapshot remains an explicit UNKNOWN."""
+
+    try:
+        return load_configured_loan_candidates(as_of=calculated_at.date())
+    except LoanProductSnapshotLoadError:
+        logger.warning("failed to load configured loan-product snapshot", exc_info=True)
+        return ()
+
+
+def get_property_loan_rule_registry() -> ProductRulePackRegistry | None:
+    return None
 
 
 @router.post("/search", response_model=PropertySearchResult)

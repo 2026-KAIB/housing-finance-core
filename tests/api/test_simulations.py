@@ -142,7 +142,7 @@ def _payload(**loan_overrides: object) -> dict[str, object]:
 
 @pytest.fixture
 def client() -> Iterator[TestClient]:
-    """계산 시각과 식별자를 고정한 클라이언트. 상품 후보는 기본 없음이다."""
+    """계산 시각과 식별자를 고정한 클라이언트."""
     app.dependency_overrides[get_calculated_at] = lambda: _CALCULATED_AT
     app.dependency_overrides[get_simulation_id] = lambda: UUID(_SIMULATION_ID)
     yield TestClient(app)

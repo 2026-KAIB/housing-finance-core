@@ -19,6 +19,12 @@ class Settings(BaseSettings):
     property_listing_json_path: Path = Path(
         "sample_data/property_listings/property_listings.v1.json"
     )
+    loan_product_base_json_path: Path = Path(
+        "sample_data/loan_products/loan_base_rows_2026-07-31.json"
+    )
+    loan_product_option_json_path: Path = Path(
+        "sample_data/loan_products/loan_option_rows_2026-07-31.json"
+    )
     cors_origins: str = "http://localhost:3000"
 
     # 보고서 설명 생성용. 키는 환경변수(`GEMINI_API_KEY`) 또는 `.env`에서만 읽고

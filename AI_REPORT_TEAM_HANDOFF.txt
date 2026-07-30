@@ -1,0 +1,598 @@
+AI 결과 보고서 담당자 전달 문서
+기준일: 2026-07-30
+현재 기준 커밋: b4fcd4c
+
+================================================================================
+0. 먼저 읽어야 할 핵심 요약
+================================================================================
+
+우리 서비스의 최종 목적은 사용자가 원하는 매물 조건을 입력하면,
+
+1) 조건에 맞는 매물을 찾고
+2) 사용자의 현금흐름과 비상자금을 진단하고
+3) 매물별 취득 부대비용과 필요 대출액을 계산하고
+4) 실제 대출 가능 조합을 반영하여 구매 가능성을 판정한 뒤
+5) AI가 그 계산 결과를 사람이 이해하기 쉬운 보고서로 설명하는 것입니다.
+
+현재 자연어 파싱은 아직 붙이지 않았습니다.
+웹의 토글·선택값으로 지역, 매매가, 주택 유형, 역 도보시간 등을 구조화해서 받고 있습니다.
+나중에 자연어 검색을 붙일 때도 자연어 파서가 같은 검색 조건 객체를 만들도록 할 예정이므로,
+금융 계산 엔진과 보고서 계약은 그대로 재사용할 수 있습니다.
+
+중요:
+
+- AI는 계산기가 아닙니다.
+- 숫자, 판정, 상품명, 누락 입력, 정책 출처는 백엔드 계산 결과가 원본입니다.
+- AI는 검증된 원본을 설명만 해야 합니다.
+- UNKNOWN/null을 0이나 구매 가능으로 바꾸면 안 됩니다.
+- 현재 기존 AI 보고서와 새 매물 구매 가능성 handoff는 아직 최종 연결 전입니다.
+  이 문서의 "8. AI 보고서 담당자의 다음 작업"을 따라 연결해야 합니다.
+
+================================================================================
+1. 아키텍처가 변경된 이유
+================================================================================
+
+초기에는 특정 집을 고르는 것이 아니라 사용자가 목표금액을 입력하면
+그 금액을 모으기 위한 금융 라이프스타일을 추천하는 흐름이 중심이었습니다.
+
+하지만 최종 서비스 목표가 실제 매물을 기준으로
+"이 집을 살 수 있는가, 어떤 비용과 대출이 필요한가"를 설명하는 방향으로 구체화됐습니다.
+
+그래서 다음 요소가 다시 핵심 구조에 포함됐습니다.
+
+- 구조화된 매물 검색
+- 매물별 취득세·지방교육세·중개보수·법무비 등 구매 부대비용
+- 비상자금을 제외한 실제 사용 가능 자기자금
+- 매물 소재지에 따른 규제지역 판정
+- 매물별 필요 대출액
+- 상품별 대출 가능액과 대출 조합
+- 매물별 최종 구매 가능성 판정
+- 해당 결과를 AI에 안전하게 넘기는 별도 handoff
+
+이 변경으로 "사용자의 목표금액 하나"가 아니라
+"검색된 매물 각각"에 대해 독립된 계산 결과가 생깁니다.
+AI 보고서도 반드시 매물별 결과를 구분해서 설명해야 합니다.
+
+================================================================================
+2. 현재 전체 처리 흐름
+================================================================================
+
+[현재]
+
+웹 구조화 입력
+  -> PropertySearchCriteria
+  -> JSON 매물 Repository
+  -> PropertySearchResult
+  -> 현금흐름·비상자금 엔진
+  -> 구매 부대비용 엔진
+  -> 매물별 필요 대출액 계산
+  -> 규제지역·대출상품·대출조합 엔진
+  -> 매물별 구매 가능성 엔진
+  -> PropertyAffordabilitySearchResponse (웹/API 원본)
+  -> PropertyAffordabilityAIHandoff (AI용 최소·검증 입력)
+  -> AI 설명 생성
+  -> 기계 검증 + 검증 에이전트
+  -> 최종 보고서
+
+[향후 자연어 검색 추가 후]
+
+사용자 자연어
+  -> 지역·가격·주택 유형·역 접근성 파싱
+  -> PropertySearchCriteria
+  -> 이후 흐름은 현재와 동일
+
+[향후 DB 구축 후]
+
+현재 JSON Repository
+  -> DB Repository로 교체
+  -> 이후 검색·계산·AI 계약은 동일
+
+Repository를 경계로 분리했기 때문에 DB가 바뀌어도 엔진을 다시 만들 필요가 없습니다.
+
+================================================================================
+3. 기존 AI 보고서 흐름과 새 매물 흐름의 차이
+================================================================================
+
+3-1. 기존 보고서 흐름
+
+현재 app/api/routes/reports.py는 다음 흐름입니다.
+
+SimulationInput
+  -> run_simulation()
+  -> SimulationResult
+  -> build_report_ai_input()
+  -> ReportAIInput
+  -> build_final_report()
+
+기존 ReportAIInput에는 다음 섹션이 있습니다.
+
+- financial_diagnosis
+- savings
+- loan
+- recommendation
+- stress_test
+- strategy_comparison
+
+3-2. 새로 추가된 매물 구매 가능성 흐름
+
+PropertyAffordabilitySearchRequest
+  -> evaluate_property_search_affordability()
+  -> PropertyAffordabilitySearchResponse
+  -> build_property_affordability_ai_handoff()
+  -> PropertyAffordabilityAIHandoff
+
+주의:
+
+- PropertyAffordabilitySearchResponse는 웹/API용 전체 결과입니다.
+- PropertyAffordabilityAIHandoff는 AI 설명에 필요한 최소 결과입니다.
+- 현재 POST /api/v1/reports는 PropertyAffordabilityAIHandoff를 아직 사용하지 않습니다.
+- 즉, 기존 보고서가 자동으로 매물별 구매 가능성을 설명하는 상태는 아닙니다.
+- AI 보고서 담당자가 두 흐름을 보고서 경계에서 연결해야 합니다.
+
+권장 방식:
+
+기존 SimulationResult 안에 매물 데이터를 억지로 넣지 말고,
+보고서 입력 경계에서 다음과 같이 조합하는 방식을 권장합니다.
+
+예시 개념:
+
+PropertyReportAIInput
+  - base_report: ReportAIInput 또는 필요한 기존 금융진단 섹션
+  - property_affordability: PropertyAffordabilityAIHandoff
+
+기존 ReportAIInput을 바로 파괴적으로 변경하기보다
+새 버전 또는 별도 PropertyReportAIInput을 만드는 편이 안전합니다.
+
+================================================================================
+4. 새 API와 입력 계약
+================================================================================
+
+엔드포인트:
+
+POST /api/v1/properties/affordability
+
+요청 모델:
+
+PropertyAffordabilitySearchRequest
+
+주요 필드:
+
+1) criteria
+
+- region_codes
+- transaction_type
+- property_types
+- min_price_krw
+- max_price_krw
+- min_exclusive_area_m2
+- max_exclusive_area_m2
+- max_station_walk_minutes
+- sort
+
+2) profile
+
+- age
+- annual_income
+- household_size
+- employment_type
+- is_first_home_buyer
+- 기타 기존 UserProfile 필드
+
+3) financial_snapshot
+
+- monthly_income
+- monthly_expense
+- liquid_assets
+- housing_assets
+- total_debt
+- monthly_debt_payment
+- emergency_reserve
+
+4) loan_request
+
+- months
+- housing_status
+- monthly_essential_expense
+- existing_annual_debt_service
+- existing_annual_interest
+- post_purchase_monthly_income
+- post_purchase_monthly_expense
+- safe_dsr
+- rate_selection
+- credit_loan_balance
+- regulation_as_of
+
+중요:
+
+loan_request.required_amount는 이 API에서 보내면 안 됩니다.
+필요 대출액은 매물가 + 구매 부대비용 - 사용 가능 자기자금으로 매물마다 다시 계산됩니다.
+
+5) acquisition_profile
+
+구매자 공통 사실:
+
+- buyer_is_corporation
+- household_home_count_after_purchase
+
+매물별 또는 기본 취득 사실:
+
+- is_registered_housing
+- is_luxury_home
+- is_national_housing_scale_override
+- registration_and_legal_costs
+- brokerage_vat_rate_override
+
+매물마다 값이 다르면 listing_overrides[listing_id]로 덮어쓸 수 있습니다.
+입력하지 않은 법적 사실을 유리한 값으로 추정하지 않습니다.
+
+================================================================================
+5. 구매 가능성 계산의 의미
+================================================================================
+
+개념식:
+
+사용 가능 자기자금
+  = 유동자산에서 비상자금 목표를 보호하고 남은 금액
+
+최소 총구매비용
+  = 매물가 + 현재 확정할 수 있는 구매 부대비용
+
+총구매비용
+  = 매물가 + 취득세 + 지방교육세 + 농어촌특별세
+    + 중개보수 + 중개보수 부가세 + 등기·법무비 등
+
+필요 대출액
+  = 총구매비용 - 사용 가능 자기자금
+  (0보다 작으면 0)
+
+자금 부족액
+  = 필요 대출액 - 실제 조달 가능한 대출 조합 금액
+  (0보다 작으면 0)
+
+중요한 보수 원칙:
+
+- 확인되지 않은 비용을 0원으로 바꾸지 않습니다.
+- 총구매비용을 확정할 수 없으면 total_purchase_cost는 null입니다.
+- 이 경우 최소비용으로도 자금이 부족한 것은 SHORTFALL로 확정할 수 있습니다.
+- 최소비용을 감당할 수 있다는 사실만으로 AFFORDABLE을 주지는 않습니다.
+- 대출상품 데이터가 없으면 대출 가능액 0원이 아니라 "모름"입니다.
+
+================================================================================
+6. 매물별 verdict 해석
+================================================================================
+
+AFFORDABLE
+
+- 총구매비용이 확정됐습니다.
+- 보호할 비상자금을 제외한 자기자금과 계산된 대출 조합으로 조달할 수 있습니다.
+- 내부 안전 기준에도 중대한 부족이 없습니다.
+- 이것은 금융기관의 최종 대출 승인이나 가격 상승 보장이 아닙니다.
+
+TIGHT
+
+- 현재 계산상 조달은 가능하지만 여유가 부족합니다.
+- 허용 오차 내 자금 차이, 비상자금 목표 부족,
+  스트레스 금리 적용 후 현금흐름 부족 등이 있을 수 있습니다.
+- AI는 "구매 가능" 한 문장으로 끝내지 말고 위험 원인을 함께 설명해야 합니다.
+
+SHORTFALL
+
+- 자기자금과 실행 가능한 대출 조합을 더해도 자금이 부족합니다.
+- funding_gap 또는 minimum_funding_gap을 근거로 설명해야 합니다.
+
+UNKNOWN
+
+- 판단에 필요한 비용·지역·대출상품·법적 분류 등이 부족합니다.
+- 실패나 0원이 아니라 "현재 정보로 확정할 수 없음"입니다.
+- 누락값을 사용자에게 추가 질문 또는 확인 항목으로 제시해야 합니다.
+
+UNSUPPORTED
+
+- 현재 v1 엔진의 정책 지원 범위를 벗어났습니다.
+- 예: 법인·다주택·고급주택 등 현재 구매 부대비용 정책에서 지원하지 않는 경우
+- 임의 공식으로 보완하지 말고 전문 확인 필요로 표시해야 합니다.
+
+================================================================================
+7. AI에 전달할 계약
+================================================================================
+
+AI용 모델:
+
+PropertyAffordabilityAIHandoff
+
+생성 함수:
+
+build_property_affordability_ai_handoff(
+    response: PropertyAffordabilitySearchResponse
+) -> PropertyAffordabilityAIHandoff
+
+파일:
+
+app/services/property_affordability_api.py
+app/schemas/property_affordability.py
+
+handoff 최상위 필드:
+
+- schema_version
+- search_snapshot_id
+- calculated_at
+- data_as_of
+- source
+- items
+- missing_inputs
+- policy_sources
+- generation_rules
+
+items의 매물별 필드:
+
+- listing_id
+- property_name
+- address_summary
+- price_krw
+- nearest_station_walk_minutes
+- verdict
+- minimum_total_purchase_cost
+- total_purchase_cost
+- usable_liquid_assets_before_purchase
+- required_loan_amount
+- selected_loan_products
+- loan_funding_amount
+- funding_gap
+- monthly_loan_payment
+- post_purchase_monthly_surplus
+- stress_monthly_surplus
+- missing_inputs
+- reasons
+- assumptions
+- policy_sources
+
+handoff에는 원본 profile과 financial_snapshot 전체가 들어가지 않습니다.
+보고서 AI에 웹 요청 원문이나 원본 금융 JSON을 직접 전달하지 마십시오.
+
+================================================================================
+8. AI 보고서 담당자의 다음 작업
+================================================================================
+
+권장 구현 순서:
+
+1) 새 보고서 입력 계약을 만든다.
+
+- 기존 ReportAIInput을 그대로 유지하면서 PropertyAffordabilityAIHandoff를 조합하거나
+- PropertyReportAIInput v1을 별도로 만든다.
+- 기존 필드를 삭제·변경한다면 버전을 올려야 한다.
+
+2) 매물 전용 보고서 섹션을 만든다.
+
+권장 섹션:
+
+- 검색 조건과 데이터 기준시점
+- 사용자 금융진단 요약
+- 매물별 총구매비용
+- 매물별 필요 대출과 조달 가능액
+- 매물별 구매 가능성 verdict
+- 월 상환 부담과 구매 후 잉여현금
+- 스트레스 상황 결과
+- 누락 입력·추가 확인사항
+- 최종 비교 요약
+
+3) AI writer 입력에는 PropertyAffordabilityAIHandoff만 사용한다.
+
+- 숫자를 재계산하지 않는다.
+- 매물별 결과를 섞지 않는다.
+- listing_id를 내부 연결 키로 유지한다.
+- 사용자 표시에는 property_name과 address_summary를 사용할 수 있다.
+
+4) 기계 검증기를 확장한다.
+
+최소 검증 항목:
+
+- AI가 쓴 모든 금액이 handoff에 존재하는 값인지
+- listing_id와 매물명이 바뀌거나 섞이지 않았는지
+- verdict가 원본과 같은지
+- UNKNOWN/UNSUPPORTED를 긍정 판정으로 표현하지 않았는지
+- selected_loan_products에 없는 상품을 추천하지 않았는지
+- missing_inputs를 임의로 해결한 것처럼 표현하지 않았는지
+- data_as_of와 policy_sources를 필요한 설명에 유지했는지
+
+5) 고정 템플릿 fallback을 유지한다.
+
+- AI 호출 실패
+- AI 응답 파싱 실패
+- 기계 숫자 검증 실패
+- 검증 에이전트 ISSUE
+
+위 상황에서는 AI 문장을 버리고 계산값만 들어간 고정 템플릿을 보여줘야 합니다.
+
+6) 기존 POST /api/v1/reports와의 연결 방식을 명시한다.
+
+현재 reports 라우트는 SimulationInput만 받습니다.
+매물 보고서를 만들려면 다음 중 하나를 명시적으로 선택해야 합니다.
+
+권장안 A:
+
+POST /api/v1/reports/property 같은 별도 경계를 만들고
+PropertyAffordabilitySearchRequest를 받아 검색·계산·handoff·보고서를 한 번에 실행
+
+대안 B:
+
+프론트가 먼저 /properties/affordability를 호출하고
+검증된 결과 식별자 또는 결과 스냅샷을 보고서 API에 전달
+
+주의:
+
+브라우저가 보낸 계산 결과를 아무 검증 없이 AI 원본으로 신뢰하면 안 됩니다.
+가능하면 서버가 저장한 계산 스냅샷 또는 서버 내부에서 생성한 handoff를 사용하십시오.
+
+================================================================================
+9. AI 작성 규칙
+================================================================================
+
+반드시 지켜야 하는 규칙:
+
+1) 제공된 금액, 비율, 점수, 상품명, verdict를 변경하거나 다시 계산하지 않는다.
+2) Decimal 금액은 JSON에서 문자열로 전달될 수 있으며 float로 바꾸지 않는다.
+3) null은 0이 아니다.
+4) UNKNOWN은 실패가 아니며 AFFORDABLE도 아니다.
+5) UNSUPPORTED는 별도 확인이 필요한 지원 범위 밖 상태다.
+6) 대출 계산 결과는 금융기관의 최종 승인으로 표현하지 않는다.
+7) 미래 집값, 금리, 소득을 보장하지 않는다.
+8) 매물별 reasons와 assumptions를 다른 매물에 옮기지 않는다.
+9) 상품명은 selected_loan_products에 있는 것만 사용한다.
+10) missing_inputs가 결론에 영향을 주면 반드시 사용자에게 알린다.
+11) 정책·상품 관련 설명에는 policy_sources를 연결한다.
+12) 계산 결과와 AI 설명은 별도 데이터로 보존한다.
+13) AI가 생성한 숫자를 계산 결과 저장소에 역으로 덮어쓰지 않는다.
+
+금지 예시:
+
+- total_purchase_cost가 null인데 최소비용을 최종 총비용이라고 표현
+- loan_product_candidates 누락을 "대출 가능액 0원"이라고 표현
+- UNKNOWN을 "구매 가능합니다"라고 표현
+- SHORTFALL인데 저축상품만 바꾸면 즉시 구매 가능하다고 단정
+- selected_loan_products에 없는 상품명을 새로 만들어 추천
+- monthly_loan_payment와 stress_monthly_surplus를 AI가 다시 계산
+
+================================================================================
+10. 현재 데이터 상태와 제한사항
+================================================================================
+
+매물 데이터:
+
+- 현재 sample_data/property_listings/property_listings.v1.json 사용
+- 구조 검증과 개발용 MOCK 데이터
+- 나중에 DB 담당자가 같은 계약을 구현하는 Repository로 교체 예정
+
+대출상품 데이터:
+
+- get_property_loan_candidates()의 현재 기본값은 빈 목록
+- 따라서 대출이 필요한 매물은 기본 실행에서 loan_product_candidates 누락으로 UNKNOWN
+- 이것은 대출 가능액 0원이 아님
+- 실제 상품 후보가 주입되면 기존 규제·대출·조합 엔진이 그대로 실행됨
+
+자연어:
+
+- 아직 없음
+- 나중에 자연어 파서가 PropertySearchCriteria를 생성하도록 연결
+
+AI 보고서:
+
+- PropertyAffordabilityAIHandoff 생성까지 완료
+- 현재 기존 /reports 파이프라인에는 아직 연결되지 않음
+
+DB 저장:
+
+- 계산 스냅샷 영속화는 별도 연결 필요
+- 보고서 재현성을 위해 search_snapshot_id, calculated_at, data_as_of,
+  schema_version, policy_sources를 함께 저장해야 함
+
+================================================================================
+11. 담당 영역과 충돌 방지
+================================================================================
+
+매물·구매 가능성 계산 영역:
+
+- app/api/routes/properties.py
+- app/schemas/property.py
+- app/schemas/property_affordability.py
+- app/services/property_search.py
+- app/services/property_affordability.py
+- app/services/property_affordability_api.py
+- app/engines/affordability/
+- app/engines/purchase_costs/
+
+AI 보고서 담당자가 주로 수정할 영역:
+
+- app/reports/
+- app/schemas/report.py
+- app/api/routes/reports.py
+- tests/reports/
+
+연동 시 지켜야 할 경계:
+
+- affordability 엔진 공식과 verdict를 보고서 쪽에서 복제하지 않는다.
+- 보고서 계약에 필요한 필드가 부족하면 엔진 결과를 추측하지 말고 계약 변경을 요청한다.
+- 기존 필드 의미를 바꾸지 말고 새 선택 필드 추가 또는 스키마 버전 상승을 사용한다.
+- app/schemas/property_affordability.py를 변경해야 한다면 매물 계산 담당자와 먼저 합의한다.
+
+================================================================================
+12. 주요 코드 위치
+================================================================================
+
+구조화 검색 API:
+app/api/routes/properties.py
+
+매물 검색 계약:
+app/schemas/property.py
+
+매물 구매 가능성 API·AI 계약:
+app/schemas/property_affordability.py
+
+검색 후 전체 계산 조립:
+app/services/property_affordability_api.py
+
+매물별 취득비용·대출·판정 연결:
+app/services/property_affordability.py
+
+순수 구매 가능성 판정:
+app/engines/affordability/
+
+구매 부대비용 계산:
+app/engines/purchase_costs/
+
+현금흐름·비상자금:
+app/engines/cashflow/
+app/services/cashflow_diagnosis.py
+
+기존 보고서 AI 입력:
+app/reports/context.py
+app/schemas/report.py
+
+기존 보고서 생성·검증:
+app/reports/ai_explanation/
+app/reports/validation/
+app/reports/templates/
+
+테스트:
+tests/api/test_property_affordability.py
+tests/services/test_property_affordability_api.py
+tests/schemas/test_property_affordability_contract.py
+tests/affordability/
+tests/reports/
+
+================================================================================
+13. 연동 완료 조건
+================================================================================
+
+아래 조건을 모두 만족해야 매물 기반 AI 보고서 연결이 완료된 것입니다.
+
+[ ] 보고서 입력에 PropertyAffordabilityAIHandoff가 포함된다.
+[ ] 매물별 listing_id와 verdict가 보존된다.
+[ ] total_purchase_cost가 null일 때 최종비용으로 단정하지 않는다.
+[ ] UNKNOWN/UNSUPPORTED가 긍정 문장으로 바뀌지 않는다.
+[ ] AI가 새로운 금액이나 상품명을 만들지 못하게 기계 검증한다.
+[ ] 누락 입력과 assumptions를 보고서에 표시한다.
+[ ] policy_sources와 데이터 기준시점을 표시한다.
+[ ] AI 실패 시 고정 템플릿 fallback이 동작한다.
+[ ] 원본 계산 결과와 AI 설명을 분리해 저장한다.
+[ ] 대출상품 후보가 없을 때 UNKNOWN이 유지된다.
+[ ] 전체 기존 테스트와 새 보고서 테스트가 통과한다.
+
+================================================================================
+14. 마지막 전달사항
+================================================================================
+
+현재 백엔드는 "검색된 매물별 구매 가능성 계산"과
+"AI가 안전하게 소비할 수 있는 handoff 생성"까지 완료돼 있습니다.
+
+AI 보고서 담당자가 해야 할 핵심은 계산식을 다시 만드는 것이 아니라,
+PropertyAffordabilityAIHandoff를 기존 보고서 작성·검증 파이프라인에 안전하게 조합하는 것입니다.
+
+혼동될 때의 우선순위:
+
+1) 엔진 결과
+2) 버전이 있는 Pydantic 계약
+3) missing_inputs / reasons / assumptions / policy_sources
+4) 고정 템플릿
+5) AI 설명
+
+AI 설명은 항상 마지막이며, 앞 단계의 값을 수정할 권한이 없습니다.

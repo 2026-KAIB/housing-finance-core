@@ -41,7 +41,13 @@ class ExplanationClient(Protocol):
     넣을 수 있고, 제공자를 바꿔도 에이전트를 고치지 않는다.
     """
 
-    def generate(self, *, system_prompt: str, user_prompt: str) -> GenerationResult: ...
+    def generate(
+        self,
+        *,
+        system_prompt: str,
+        user_prompt: str,
+        response_schema: dict[str, Any] | None = None,
+    ) -> GenerationResult: ...
 
 
 class GeminiClient:
@@ -54,7 +60,13 @@ class GeminiClient:
     def configured(self) -> bool:
         return bool(self._settings.gemini_api_key)
 
-    def generate(self, *, system_prompt: str, user_prompt: str) -> GenerationResult:
+    def generate(
+        self,
+        *,
+        system_prompt: str,
+        user_prompt: str,
+        response_schema: dict[str, Any] | None = None,
+    ) -> GenerationResult:
         model = self._settings.gemini_model
         if not self.configured:
             return GenerationResult(
@@ -67,10 +79,16 @@ class GeminiClient:
             )
 
         url = f"{self._settings.gemini_base_url}/models/{model}:generateContent"
+        generation_config: dict[str, Any] = {}
+        if response_schema is not None:
+            # 고정 양식은 절마다 칸이 따로 있으므로 마크다운을 파싱하는 대신
+            # 구조화 출력을 받는다. 제목을 바꿔 쓰거나 절을 빼먹는 일이 없어진다.
+            generation_config["responseMimeType"] = "application/json"
+            generation_config["responseSchema"] = response_schema
         body: dict[str, Any] = {
             "systemInstruction": {"parts": [{"text": system_prompt}]},
             "contents": [{"role": "user", "parts": [{"text": user_prompt}]}],
-            "generationConfig": {
+            "generationConfig": generation_config | {
                 # 설명문이므로 창작 여지를 낮춘다. 숫자를 지어내는 경향을 줄이는
                 # 첫 번째 방어선이고, 두 번째가 `validation/numbers.py`다.
                 "temperature": 0.0,

@@ -229,6 +229,61 @@ def verify_explanation(text: str, payload: ReportAIInput) -> VerificationResult:
     )
 
 
+def verify_narration(text: str, payload: ReportAIInput) -> VerificationResult:
+    """고정 양식의 **서술 칸**을 검사한다. 수치를 아예 허용하지 않는다.
+
+    ``verify_explanation``보다 강한 규칙이다. 자유 서술에서는 "그 수가 계산 결과에
+    있는가"만 볼 수 있어서, 값은 맞고 **귀속만 틀린** 문장을 잡지 못한다 — 실제로
+    "목표 금액 대비 66,479,492원 부족"(실은 필요 대출금액 대비)이 통과했다.
+
+    고정 양식에서는 수치를 엔진이 렌더링하므로 서술 칸에 수치가 있을 이유가 없다.
+    그래서 "있으면 위반"으로 바꾼다. 이러면 귀속 오류가 **구조적으로** 불가능해진다.
+    """
+    violations: list[Violation] = []
+    numbers = _extract_numbers(text)
+    for raw in numbers:
+        violations.append(
+            Violation(
+                kind="number_in_narration",
+                value=raw,
+                detail=(
+                    "서술 칸에는 수치를 쓸 수 없습니다. 수치는 계산 엔진이 "
+                    "표시하며, 서술은 그 의미만 설명합니다."
+                ),
+            )
+        )
+    for iso in _ISO_DATE.findall(text):
+        violations.append(
+            Violation(
+                kind="date_in_narration",
+                value=iso,
+                detail="서술 칸에는 날짜를 쓸 수 없습니다.",
+            )
+        )
+
+    source_names = collect_source_names(payload)
+    unknown_names = _mentions_unknown_product(text, source_names)
+    for name in unknown_names:
+        violations.append(
+            Violation(
+                kind="product_name",
+                value=name,
+                detail="종합추천 결과에 없는 상품을 언급했습니다.",
+            )
+        )
+
+    return VerificationResult(
+        ok=not violations,
+        violations=tuple(violations),
+        checked_numbers=len(numbers),
+        checked_names=len(unknown_names) + len(source_names),
+        limitations=(
+            "서술 칸의 수치·날짜를 전면 금지하므로 귀속 오류가 발생할 수 없습니다.",
+            "문장의 인과 설명이 옳은지는 여전히 보증하지 않습니다.",
+        ),
+    )
+
+
 __all__ = [
     "VerificationResult",
     "Violation",

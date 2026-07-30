@@ -1,0 +1,1 @@
+"""Property affordability tests."""

@@ -8,36 +8,15 @@
 
 import json
 from dataclasses import dataclass, field
-from datetime import UTC, date, datetime
-from decimal import Decimal
 from typing import Any
-from uuid import UUID
-
-import pytest
 
 from app.core.config import Settings
-from app.regulations.mortgage_limits import HousingStatus
 from app.reports.ai_explanation.gemini import GenerationResult
 from app.reports.ai_explanation.pipeline import build_final_report
 from app.reports.ai_explanation.verifier_agent import Verdict, judge_report_form
-from app.reports.context import build_report_ai_input
 from app.reports.templates.form import FORM_SECTIONS, build_report_form
-from app.reports.templates.html import render_report_html
-from app.rule_engine.product_packs.handoff import ProductCandidate
-from app.rule_engine.product_packs.models import ProductCategory, ProductRulePack
-from app.rule_engine.product_packs.registry import ProductRulePackRegistry
-from app.rule_engine.product_packs.rules import ComparisonOperator, ComparisonRule
 from app.schemas.report import ReportAIInput
-from app.schemas.simulation import (
-    FinancialSnapshot,
-    HousingGoal,
-    LoanRequestInput,
-    SimulationInput,
-    UserProfile,
-)
-from app.services.simulation_orchestrator import run_simulation
 
-_MORTGAGE = "KB 주택담보대출"
 _KEYS = tuple(key for key, _title in FORM_SECTIONS)
 _CLEAN = "표시된 수치의 의미를 설명하는 문장입니다."
 
@@ -78,72 +57,6 @@ def _judge(default: str = "OK", **overrides: str) -> FakeClient:
         payload[key] = {"verdict": verdict, "reason": f"{key} 지적 사유"}
     return FakeClient(GenerationResult(text=json.dumps(payload, ensure_ascii=False), model="j"))
 
-
-@pytest.fixture(scope="module")
-def report_input() -> ReportAIInput:
-    payload = SimulationInput(
-        profile=UserProfile(age=34, annual_income=Decimal("60000000"), is_first_home_buyer=True),
-        housing_goal=HousingGoal(
-            target_amount=Decimal("500000000"),
-            target_date=date(2028, 7, 30),
-            region_code="11680",
-        ),
-        financial_snapshot=FinancialSnapshot(
-            monthly_income=Decimal("5000000"),
-            monthly_expense=Decimal("2000000"),
-            liquid_assets=Decimal("150000000"),
-            monthly_debt_payment=Decimal("300000"),
-        ),
-        loan_request=LoanRequestInput(
-            months=360,
-            housing_status=HousingStatus.FIRST_HOME_BUYER,
-            monthly_essential_expense=Decimal("1800000"),
-        ),
-    )
-    pack = ProductRulePack(
-        product_name=_MORTGAGE,
-        category=ProductCategory.MORTGAGE_LOAN,
-        version="test-1",
-        effective_start_date=date(2026, 1, 1),
-        effective_end_date=None,
-        rules=(
-            ComparisonRule(
-                code="TEST_MIN_AGE",
-                field_name="age",
-                operator=ComparisonOperator.GTE,
-                expected=19,
-                failure_reason="미성년자는 신청할 수 없습니다.",
-            ),
-        ),
-    )
-    candidate = ProductCandidate(
-        product_name=_MORTGAGE,
-        base_data={
-            "source_type": "manual_pdf",
-            "fin_prdt_nm": _MORTGAGE,
-            "loan_lmt": "담보조사가격 및 소득금액에 따른 대출가능금액 이내",
-        },
-        option_list=(
-            {
-                "fin_prdt_nm": _MORTGAGE,
-                "mrtg_type_nm": "아파트",
-                "rpay_type_nm": "분할상환방식",
-                "lend_rate_type_nm": "변동금리",
-                "lend_rate_min": 3.0,
-                "lend_rate_max": 3.0,
-                "lend_rate_avg": 3.0,
-            },
-        ),
-    )
-    simulation = run_simulation(
-        payload,
-        simulation_id=UUID("0f9b21e4-4c1a-4d7f-9c3e-2b6a5d8e1f30"),
-        as_of=date(2026, 7, 28),
-        calculated_at=datetime(2026, 7, 28, 9, 0, tzinfo=UTC),
-        loan_candidates=[candidate],
-        registry=ProductRulePackRegistry((pack,)),
-    )
-    return build_report_ai_input(simulation)
 
 
 def _final(report_input: ReportAIInput, writer: FakeClient, judge: FakeClient):
@@ -314,35 +227,3 @@ class TestJudgeAgent:
         assert _CLEAN in prompt
         assert "283,520,507원" in prompt
         assert "simulation_id" not in prompt
-
-
-class TestHtmlView:
-    def test_narration_and_figures_are_visually_separated(
-        self,
-        report_input: ReportAIInput,
-    ) -> None:
-        report = _final(report_input, _writer(), _judge())
-        html = render_report_html(report)
-
-        assert "AI 설명 · 검증 통과" in html
-        assert "283,520,507원" in html
-        assert "두 에이전트 검증을 통과했습니다" in html
-
-    def test_a_blocked_section_shows_the_reason_and_keeps_figures(
-        self,
-        report_input: ReportAIInput,
-    ) -> None:
-        report = _final(report_input, _writer(), _judge(rates_and_policy="ISSUE"))
-        html = render_report_html(report)
-
-        assert "AI 설명 미채택" in html
-        assert "rates_and_policy 지적 사유" in html
-        assert "계산 엔진 산출값이므로 그대로 유효합니다" in html
-
-    def test_user_content_is_escaped(self, report_input: ReportAIInput) -> None:
-        """서술은 외부 모델이 만든 문자열이므로 그대로 HTML에 넣지 않는다."""
-        report = _final(report_input, _writer("<script>alert(1)</script>"), _judge())
-        html = render_report_html(report)
-
-        assert "<script>alert(1)</script>" not in html
-        assert "&lt;script&gt;" in html

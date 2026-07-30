@@ -1,22 +1,20 @@
-"""AI가 만들어낸 숫자·상품명을 걸러내는 사후 검증기.
+"""AI 서술이 계산 결과 밖으로 나가지 않았는지 검사한다.
 
 목적:
     ``reports/README``의 4단계다. AI는 계산 결과를 **설명**만 할 수 있고 숫자·
-    상품명·상태를 바꿀 수 없다. 그 규칙을 문장 생성 이후에 기계적으로 확인한다.
-기능:
-    생성된 문장에서 금액·비율·상품명을 뽑아 계산 결과에 실제로 있는지 대조한다.
-    하나라도 근거가 없으면 위반으로 보고하고, 호출자는 그 문장을 채택하지 않는다.
-근거:
-    SSOT §20 "AI는 금액·점수·상품 순위를 결정하지 않는다". 프롬프트로 부탁하는
-    것만으로는 보장이 되지 않으므로 출력 쪽에 검사를 둔다.
+    상품명·상태를 바꿀 수 없다. 프롬프트로 부탁하는 것만으로는 보장이 되지
+    않으므로 출력 쪽에 기계 검사를 둔다(SSOT §20).
 
-무엇을 잡고 무엇을 못 잡는가:
-    - 잡는다: 천단위 쉼표가 있는 수, ``원``/``%``가 붙은 수, ISO 날짜, 상품명.
-    - 안 잡는다: 쉼표·단위 없는 1,000 미만 정수. "세 가지", "9개 시나리오"처럼
-      산문에 쓰이는 수까지 위반으로 만들면 거짓 양성이 너무 많아진다. 대신
-      **금액과 비율은 반드시 단위와 함께 쓰라고** 프롬프트에서 요구한다.
-    그래서 이 검증기는 "숫자를 지어내지 못하게" 하는 장치이고, 문장의 사실관계
-    전체를 보증하지는 않는다. 그 한계를 결과에 함께 담는다.
+기능:
+    고정 양식의 서술 칸을 검사한다. 수치는 엔진이 렌더링하므로 서술 칸에 수치가
+    있을 이유가 없다 — **있으면 위반**이다. 이 규칙이 "값은 맞고 기준만 틀린"
+    귀속 오류를 구조적으로 없앤다.
+
+한계와 그 보완:
+    수치 없이도 귀속을 틀릴 수 있다("표시된 부족액은 목표 금액 대비 부족한
+    금액입니다"에는 숫자가 없지만 기준이 틀렸다). 실제 검증 에이전트에게 물었을 때
+    이 문장을 OK로 판정하는 것을 확인했으므로, **관찰된 오류는 여기서 기계가
+    막는다**(``_FORBIDDEN_PHRASES``). 아직 모르는 오류는 검증 에이전트가 찾는다.
 """
 
 import re
@@ -89,62 +87,6 @@ def _extract_numbers(text: str) -> list[str]:
     return [item for item in found if item]
 
 
-def collect_source_numbers(payload: ReportAIInput) -> set[Decimal]:
-    """계산 결과에 실제로 존재하는 수의 집합.
-
-    비율은 0~1로 저장되지만 문장에서는 퍼센트로 쓰이므로 ``×100`` 형태도 함께
-    허용한다. 반대로 금액은 반올림해 쓰이므로 정수로 내린 값도 함께 넣는다.
-
-    **문장 속에 서식화돼 들어 있는 수도 함께 모은다.** 엔진의 ``reasons``에는
-    "월 최소 Buffer 대비 521,999원이 부족합니다"처럼 금액이 문장으로 박혀 있고,
-    AI가 그 근거를 인용하는 것은 정당하다. 숫자 필드만 모았을 때 실제로 그런
-    정당한 인용이 위반으로 잡혔다.
-    """
-    numbers: set[Decimal] = set()
-
-    def _add(value: Decimal) -> None:
-        numbers.add(value)
-        numbers.add(value.to_integral_value())
-        if 0 < abs(value) <= 1:
-            numbers.add(value * 100)
-            numbers.add((value * 100).to_integral_value())
-
-    for _key, item in _walk(payload.to_json_dict()):
-        if isinstance(item, bool) or item is None:
-            continue
-        if not isinstance(item, (int, float, str)):
-            continue
-        text = str(item)
-        whole = _to_decimal(text)
-        if whole is not None:
-            _add(whole)
-            continue
-        # 값 전체가 수가 아니면 문장으로 보고 서식화된 수를 뽑는다.
-        for embedded in _extract_numbers(text):
-            parsed = _to_decimal(embedded)
-            if parsed is not None:
-                _add(parsed)
-    return numbers
-
-
-def collect_source_dates(payload: ReportAIInput) -> set[str]:
-    """계산 결과에 등장하는 모든 ISO 날짜.
-
-    기준일·목표일만 허용하면 안 된다. ``policy_sources``에는 규제 시행일이
-    문장으로 들어 있고(예: "「가계부채 관리 강화 방안」(2025-06-27)"), AI가 근거
-    날짜를 인용하는 것은 §19가 요구하는 바람직한 서술이다. 실제로 기준일만
-    허용했을 때 정상 인용이 위반으로 잡혔다.
-    """
-    dates = {
-        payload.as_of.isoformat(),
-        payload.goal.target_date.isoformat(),
-    }
-    for _key, item in _walk(payload.to_json_dict()):
-        if isinstance(item, str):
-            dates.update(_ISO_DATE.findall(item))
-    return dates
-
-
 def collect_source_names(payload: ReportAIInput) -> set[str]:
     """계산 결과에 등장하는 상품명·옵션명."""
     names: set[str] = set()
@@ -175,58 +117,6 @@ def _mentions_unknown_product(text: str, known: set[str]) -> list[str]:
             continue
         unknown.append(cleaned)
     return unknown
-
-
-def verify_explanation(text: str, payload: ReportAIInput) -> VerificationResult:
-    """생성된 문장이 계산 결과 안에 머물렀는지 확인한다."""
-    source_numbers = collect_source_numbers(payload)
-    source_names = collect_source_names(payload)
-    source_dates = collect_source_dates(payload)
-
-    violations: list[Violation] = []
-
-    numbers = _extract_numbers(text)
-    for raw in numbers:
-        value = _to_decimal(raw)
-        if value is None:
-            continue
-        if any(abs(value - known) <= _AMOUNT_TOLERANCE for known in source_numbers):
-            continue
-        violations.append(
-            Violation(
-                kind="number",
-                value=raw,
-                detail="계산 결과에 없는 수입니다. AI가 만들어낸 값일 수 있습니다.",
-            )
-        )
-
-    for iso in _ISO_DATE.findall(text):
-        if iso in source_dates:
-            continue
-        violations.append(
-            Violation(
-                kind="date",
-                value=iso,
-                detail="계산 결과에 없는 날짜입니다.",
-            )
-        )
-
-    unknown_names = _mentions_unknown_product(text, source_names)
-    for name in unknown_names:
-        violations.append(
-            Violation(
-                kind="product_name",
-                value=name,
-                detail="종합추천 결과에 없는 상품을 언급했습니다.",
-            )
-        )
-
-    return VerificationResult(
-        ok=not violations,
-        violations=tuple(violations),
-        checked_numbers=len(numbers),
-        checked_names=len(unknown_names) + len(source_names),
-    )
 
 
 # 절별 금지 표현. **실제로 관찰된 오류에서 자란 목록이며 완전하지 않다.**
@@ -334,8 +224,6 @@ def verify_narration(
 __all__ = [
     "VerificationResult",
     "Violation",
-    "collect_source_dates",
     "collect_source_names",
-    "collect_source_numbers",
-    "verify_explanation",
+    "verify_narration",
 ]

@@ -24,7 +24,7 @@ from app.api.routes.simulations import (
 )
 from app.reports.ai_explanation.pipeline import build_final_report
 from app.reports.context import build_report_ai_input
-from app.reports.templates.html import render_report_html
+from app.reports.templates.html import collect_product_terms, render_report_html
 from app.rule_engine.product_packs.handoff import ProductCandidate
 from app.rule_engine.product_packs.registry import ProductRulePackRegistry
 from app.schemas.simulation import SimulationInput, SimulationResult
@@ -82,10 +82,19 @@ def create_report(
         loan_candidates=loan_candidates,
         registry=registry,
     )
-    report = build_final_report(build_report_ai_input(simulation))
+    report_input = build_report_ai_input(simulation)
+    report = build_final_report(report_input)
 
     if response_format == "html":
-        return HTMLResponse(render_report_html(report))
+        # 우대조건 원문은 화면 표시 전용이다. 계산에도 AI 전송에도 쓰지 않으므로
+        # 보고서 입력이 아니라 상품 후보에서 직접 뽑아 렌더러에만 넘긴다.
+        return HTMLResponse(
+            render_report_html(
+                report,
+                simulation,
+                product_terms=collect_product_terms(loan_candidates),
+            )
+        )
 
     return ReportResponse(
         simulation_id=simulation_id,

@@ -7,15 +7,9 @@
 
 import json
 from dataclasses import dataclass, field
-from datetime import UTC, date, datetime
-from decimal import Decimal
 from typing import Any
-from uuid import UUID
-
-import pytest
 
 from app.core.config import Settings
-from app.regulations.mortgage_limits import HousingStatus
 from app.reports.ai_explanation.form_agent import (
     FORM_SECTIONS,
     build_form_prompt,
@@ -23,25 +17,10 @@ from app.reports.ai_explanation.form_agent import (
     narration_response_schema,
 )
 from app.reports.ai_explanation.gemini import GenerationResult
-from app.reports.context import build_report_ai_input
 from app.reports.templates.form import build_report_form
 from app.reports.validation.numbers import verify_narration
-from app.rule_engine.product_packs.handoff import ProductCandidate
-from app.rule_engine.product_packs.models import ProductCategory, ProductRulePack
-from app.rule_engine.product_packs.registry import ProductRulePackRegistry
-from app.rule_engine.product_packs.rules import ComparisonOperator, ComparisonRule
 from app.schemas.report import ReportAIInput
-from app.schemas.simulation import (
-    FinancialSnapshot,
-    HousingGoal,
-    LoanRequestInput,
-    SimulationInput,
-    UserProfile,
-)
-from app.services.simulation_orchestrator import run_simulation
 
-_AS_OF = date(2026, 7, 28)
-_MORTGAGE = "KB 주택담보대출"
 _SECTION_KEYS = tuple(key for key, _title in FORM_SECTIONS)
 
 
@@ -76,72 +55,6 @@ def _settings(**overrides: object) -> Settings:
 def _narration_payload(text: str) -> str:
     return json.dumps({key: text for key in _SECTION_KEYS}, ensure_ascii=False)
 
-
-@pytest.fixture(scope="module")
-def report_input() -> ReportAIInput:
-    payload = SimulationInput(
-        profile=UserProfile(age=34, annual_income=Decimal("60000000"), is_first_home_buyer=True),
-        housing_goal=HousingGoal(
-            target_amount=Decimal("500000000"),
-            target_date=date(2028, 7, 30),
-            region_code="11680",
-        ),
-        financial_snapshot=FinancialSnapshot(
-            monthly_income=Decimal("5000000"),
-            monthly_expense=Decimal("2000000"),
-            liquid_assets=Decimal("150000000"),
-            monthly_debt_payment=Decimal("300000"),
-        ),
-        loan_request=LoanRequestInput(
-            months=360,
-            housing_status=HousingStatus.FIRST_HOME_BUYER,
-            monthly_essential_expense=Decimal("1800000"),
-        ),
-    )
-    pack = ProductRulePack(
-        product_name=_MORTGAGE,
-        category=ProductCategory.MORTGAGE_LOAN,
-        version="test-1",
-        effective_start_date=date(2026, 1, 1),
-        effective_end_date=None,
-        rules=(
-            ComparisonRule(
-                code="TEST_MIN_AGE",
-                field_name="age",
-                operator=ComparisonOperator.GTE,
-                expected=19,
-                failure_reason="미성년자는 신청할 수 없습니다.",
-            ),
-        ),
-    )
-    candidate = ProductCandidate(
-        product_name=_MORTGAGE,
-        base_data={
-            "source_type": "manual_pdf",
-            "fin_prdt_nm": _MORTGAGE,
-            "loan_lmt": "담보조사가격 및 소득금액에 따른 대출가능금액 이내",
-        },
-        option_list=(
-            {
-                "fin_prdt_nm": _MORTGAGE,
-                "mrtg_type_nm": "아파트",
-                "rpay_type_nm": "분할상환방식",
-                "lend_rate_type_nm": "변동금리",
-                "lend_rate_min": 3.0,
-                "lend_rate_max": 3.0,
-                "lend_rate_avg": 3.0,
-            },
-        ),
-    )
-    result = run_simulation(
-        payload,
-        simulation_id=UUID("0f9b21e4-4c1a-4d7f-9c3e-2b6a5d8e1f30"),
-        as_of=_AS_OF,
-        calculated_at=datetime(2026, 7, 28, 9, 0, tzinfo=UTC),
-        loan_candidates=[candidate],
-        registry=ProductRulePackRegistry((pack,)),
-    )
-    return build_report_ai_input(result)
 
 
 class TestForm:

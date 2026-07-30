@@ -229,7 +229,48 @@ def verify_explanation(text: str, payload: ReportAIInput) -> VerificationResult:
     )
 
 
-def verify_narration(text: str, payload: ReportAIInput) -> VerificationResult:
+# 절별 금지 표현. **실제로 관찰된 오류에서 자란 목록이며 완전하지 않다.**
+# 여기 있는 것은 "LLM 판정자가 놓치는 것을 확인한" 항목이다 — 아는 오류는 기계로
+# 막고, 판정 에이전트는 아직 모르는 오류를 찾는 데 쓴다.
+#
+# 각 항목: (금지 표현, 왜 틀렸는지)
+_FORBIDDEN_PHRASES: dict[str, tuple[tuple[str, str], ...]] = {
+    "shortfall_and_extension": (
+        (
+            "목표 금액 대비",
+            "부족액의 기준은 목표 금액이 아니라 필요 대출금액입니다. "
+            "이렇게 쓰면 자기자본을 뺀 금액을 목표 금액과 비교한 것처럼 읽힙니다.",
+        ),
+        (
+            "목표금액 대비",
+            "부족액의 기준은 목표 금액이 아니라 필요 대출금액입니다.",
+        ),
+    ),
+    "rates_and_policy": (
+        (
+            "심사용 금리로 상환",
+            "심사용 금리는 한도 산정에만 쓰이며 실제 상환액 계산에 쓰이지 않습니다.",
+        ),
+    ),
+}
+
+
+def _forbidden_phrase_violations(text: str, section_key: str | None) -> list[Violation]:
+    if section_key is None:
+        return []
+    return [
+        Violation(kind="misattribution", value=phrase, detail=detail)
+        for phrase, detail in _FORBIDDEN_PHRASES.get(section_key, ())
+        if phrase in text
+    ]
+
+
+def verify_narration(
+    text: str,
+    payload: ReportAIInput,
+    *,
+    section_key: str | None = None,
+) -> VerificationResult:
     """고정 양식의 **서술 칸**을 검사한다. 수치를 아예 허용하지 않는다.
 
     ``verify_explanation``보다 강한 규칙이다. 자유 서술에서는 "그 수가 계산 결과에
@@ -237,9 +278,14 @@ def verify_narration(text: str, payload: ReportAIInput) -> VerificationResult:
     "목표 금액 대비 66,479,492원 부족"(실은 필요 대출금액 대비)이 통과했다.
 
     고정 양식에서는 수치를 엔진이 렌더링하므로 서술 칸에 수치가 있을 이유가 없다.
-    그래서 "있으면 위반"으로 바꾼다. 이러면 귀속 오류가 **구조적으로** 불가능해진다.
+    그래서 "있으면 위반"으로 바꾼다.
+
+    다만 **수치 없이도 귀속을 틀릴 수 있다.** "표시된 부족액은 목표 금액 대비
+    부족한 금액입니다"에는 숫자가 없지만 기준이 틀렸다. 검증 에이전트(LLM)에게
+    물어봤을 때 이 문장을 OK로 판정하는 것을 확인했으므로, 아는 오류는
+    ``_FORBIDDEN_PHRASES``로 기계가 막는다.
     """
-    violations: list[Violation] = []
+    violations: list[Violation] = _forbidden_phrase_violations(text, section_key)
     numbers = _extract_numbers(text)
     for raw in numbers:
         violations.append(
@@ -278,8 +324,9 @@ def verify_narration(text: str, payload: ReportAIInput) -> VerificationResult:
         checked_numbers=len(numbers),
         checked_names=len(unknown_names) + len(source_names),
         limitations=(
-            "서술 칸의 수치·날짜를 전면 금지하므로 귀속 오류가 발생할 수 없습니다.",
-            "문장의 인과 설명이 옳은지는 여전히 보증하지 않습니다.",
+            "서술 칸의 수치·날짜를 전면 금지합니다.",
+            "수치 없는 귀속 오류는 관찰된 표현만 막습니다(_FORBIDDEN_PHRASES).",
+            "문장의 인과 설명이 옳은지는 보증하지 않습니다 — 검증 에이전트가 보완합니다.",
         ),
     )
 

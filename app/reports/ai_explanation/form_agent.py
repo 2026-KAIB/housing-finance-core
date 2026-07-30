@@ -175,7 +175,7 @@ def explain_report_form(
             rejected.append(key)
             notes.append(f"{key}: 서술이 비어 있어 채우지 않았습니다.")
             continue
-        result = verify_narration(value, payload)
+        result = verify_narration(value, payload, section_key=key)
         verifications[key] = result
         if result.ok:
             accepted[key] = value.strip()

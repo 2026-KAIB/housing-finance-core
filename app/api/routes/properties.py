@@ -12,7 +12,6 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from app.core.config import settings
 from app.repositories import (
     JsonPropertyListingRepository,
-    LoanProductSnapshotLoadError,
     PropertyDatasetLoadError,
 )
 from app.rule_engine.product_packs.handoff import ProductCandidate as LoanProductCandidate
@@ -22,7 +21,10 @@ from app.schemas.property_affordability import (
     PropertyAffordabilitySearchRequest,
     PropertyAffordabilitySearchResponse,
 )
-from app.services.loan_product_catalog import load_configured_loan_candidates
+from app.services.loan_product_catalog import (
+    LoanProductCatalogUnavailable,
+    load_configured_loan_candidates,
+)
 from app.services.property_affordability_api import (
     evaluate_property_search_affordability,
 )
@@ -54,13 +56,16 @@ def get_property_calculated_at() -> datetime:
 def get_property_loan_candidates(
     calculated_at: Annotated[datetime, Depends(get_property_calculated_at)],
 ) -> Sequence[LoanProductCandidate]:
-    """Load the DB export; an invalid snapshot remains an explicit UNKNOWN."""
+    """Load candidates without treating provider failure as an empty catalog."""
 
     try:
         return load_configured_loan_candidates(as_of=calculated_at.date())
-    except LoanProductSnapshotLoadError:
-        logger.warning("failed to load configured loan-product snapshot", exc_info=True)
-        return ()
+    except LoanProductCatalogUnavailable as exc:
+        logger.error("failed to load the configured loan-product catalog", exc_info=True)
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail="대출 상품 데이터를 불러올 수 없습니다.",
+        ) from exc
 
 
 def get_property_loan_rule_registry() -> ProductRulePackRegistry | None:

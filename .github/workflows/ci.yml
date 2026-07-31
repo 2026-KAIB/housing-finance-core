@@ -1,10 +1,22 @@
 name: Core CI
 
 on:
+  workflow_dispatch:
   pull_request:
   push:
     branches:
       - main
+
+permissions:
+  contents: read
+
+concurrency:
+  group: core-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+env:
+  REGISTRY: ghcr.io
+  IMAGE_NAME: 2026-kaib/housing-finance-core
 
 jobs:
   test:
@@ -29,3 +41,130 @@ jobs:
       - name: Run tests
         run: python -m pytest -q
 
+  publish:
+    if: >-
+      (github.event_name == 'push' ||
+      github.event_name == 'workflow_dispatch') &&
+      github.ref == 'refs/heads/main'
+    needs:
+      - test
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v3
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Log in to GitHub Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Build and publish the backend image
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: ./Dockerfile
+          platforms: linux/amd64,linux/arm64
+          push: true
+          tags: |
+            ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ github.sha }}
+            ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:main
+          labels: |
+            org.opencontainers.image.source=https://github.com/${{ github.repository }}
+            org.opencontainers.image.revision=${{ github.sha }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+  deploy:
+    if: >-
+      (github.event_name == 'push' ||
+      github.event_name == 'workflow_dispatch') &&
+      github.ref == 'refs/heads/main' &&
+      vars.ENABLE_HOME_DEPLOY == 'true'
+    needs:
+      - publish
+    runs-on:
+      - self-hosted
+      - linux
+      - housing-production
+    environment:
+      name: production
+    permissions:
+      contents: read
+      packages: read
+
+    steps:
+      - name: Check out deployment definition
+        uses: actions/checkout@v4
+
+      - name: Log in to GitHub Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Verify the home-server environment
+        run: |
+          set -Eeuo pipefail
+          test -f /opt/housing-finance/.env
+          test -f /opt/housing-finance/backend.env
+          docker version
+          docker compose version
+          docker network inspect housing-platform >/dev/null
+
+      - name: Deploy and verify the backend
+        env:
+          BACKEND_IMAGE: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ github.sha }}
+        run: |
+          set -Eeuo pipefail
+
+          previous_image="$(
+            docker inspect \
+              --format '{{.Config.Image}}' \
+              housing-finance-api 2>/dev/null || true
+          )"
+          compose=(
+            docker compose
+            --project-name housing-finance
+            --env-file /opt/housing-finance/.env
+            -f deploy/compose.backend.yaml
+          )
+
+          export BACKEND_IMAGE
+          "${compose[@]}" config --quiet
+          "${compose[@]}" pull api
+
+          if "${compose[@]}" up \
+            -d \
+            --no-deps \
+            --wait \
+            --wait-timeout 90 \
+            api; then
+            "${compose[@]}" ps api
+            exit 0
+          fi
+
+          if [ -n "$previous_image" ] && [ "$previous_image" != "$BACKEND_IMAGE" ]; then
+            echo "Deployment failed; restoring $previous_image"
+            export BACKEND_IMAGE="$previous_image"
+            "${compose[@]}" up \
+              -d \
+              --no-deps \
+              --wait \
+              --wait-timeout 90 \
+              api
+          fi
+
+          exit 1

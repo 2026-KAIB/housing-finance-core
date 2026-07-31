@@ -27,6 +27,10 @@ class Settings(BaseSettings):
     database_pool_size: int = Field(default=5, ge=1, le=50)
     database_max_overflow: int = Field(default=5, ge=0, le=100)
     loan_product_provider: Literal["json", "database"] = "json"
+    # 시세 통계에는 JSON 폴백을 두지 않는다 — 가짜 시세를 보여주면 안 되는
+    # 데이터이므로, 공급자가 없으면 해당 엔드포인트만 503을 낸다. 기본값이
+    # disabled인 덕분에 DB 터널을 열지 않은 로컬에서도 앱 전체는 뜬다.
+    region_price_provider: Literal["disabled", "database"] = "disabled"
     property_listing_json_path: Path = Path(
         "sample_data/property_listings/property_listings.v1.json"
     )

@@ -1,4 +1,5 @@
-from pydantic import SecretStr
+import pytest
+from pydantic import SecretStr, ValidationError
 
 from app.core.config import Settings
 from app.db.session import build_database_url
@@ -38,3 +39,22 @@ def test_explicit_database_url_takes_precedence() -> None:
 
     assert url.host == "db"
     assert url.database == "preferred"
+
+
+def test_region_price_provider_defaults_to_disabled() -> None:
+    config = Settings(_env_file=None)
+
+    assert config.region_price_provider == "disabled"
+
+
+def test_region_price_provider_accepts_database() -> None:
+    config = Settings(_env_file=None, region_price_provider="database")
+
+    assert config.region_price_provider == "database"
+
+
+def test_region_price_provider_rejects_unknown_value() -> None:
+    # model_copy는 검증을 건너뛰므로, 오타가 조용히 통과하지 않는지는
+    # 생성자로 확인해야 한다.
+    with pytest.raises(ValidationError):
+        Settings(_env_file=None, region_price_provider="postgres")

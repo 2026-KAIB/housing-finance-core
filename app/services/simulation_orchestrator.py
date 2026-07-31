@@ -36,6 +36,10 @@ from app.rule_engine.product_packs.handoff import ProductCandidate
 from app.rule_engine.product_packs.registry import ProductRulePackRegistry
 from app.schemas.simulation import GoalType, LoanRequestInput, SimulationInput, SimulationResult
 from app.services.cashflow_diagnosis import diagnose_cashflow
+from app.services.housing_scenarios import (
+    HousingScenarioBuild,
+    build_housing_cost_scenarios,
+)
 from app.services.loan_combination import combine_loan_options
 from app.services.loan_simulation import (
     LoanSimulationRequest,
@@ -346,11 +350,18 @@ def run_simulation(
             scenarios=stress_scenarios,
         )
 
-    if recommendation is not None and housing_scenarios:
+    # 호출자가 근거와 함께 넘긴 시나리오가 언제나 우선한다. 없을 때만 §8.1
+    # [B-6 확정] 표로 만든다 — 변동률을 지어내는 것이 아니라 설계안이 확정한
+    # 값을 출처와 함께 적용하는 것이다. 취득 사실이 없으면 만들지 않는다.
+    scenario_build = HousingScenarioBuild(scenarios=housing_scenarios)
+    if not housing_scenarios:
+        scenario_build = build_housing_cost_scenarios(payload, as_of=as_of)
+
+    if recommendation is not None and scenario_build.scenarios:
         strategy = compare_recommended_purchase_strategies(
             recommendation,
             target_purchase_date=target_purchase_date or payload.housing_goal.target_date,
-            housing_scenarios=housing_scenarios,
+            housing_scenarios=scenario_build.scenarios,
             early_purchase_equity=payload.financial_snapshot.liquid_assets,
             additional_accumulation_equity=additional_accumulation_equity,
             stress_result=stress,
@@ -380,12 +391,19 @@ def run_simulation(
         assumptions=loan_assumptions,
     )
     savings_missing, savings_reasons, savings_assumptions = _savings_notes(savings_outcome)
-    return _annotate_section(
+    result = _annotate_section(
         result,
         "savings_portfolio",
         missing=savings_missing,
         reasons=savings_reasons,
         assumptions=savings_assumptions,
+    )
+    return _annotate_section(
+        result,
+        "strategy_comparison",
+        missing=scenario_build.missing_inputs,
+        reasons=scenario_build.reasons,
+        assumptions=scenario_build.assumptions,
     )
 
 

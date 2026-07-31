@@ -1,13 +1,13 @@
 """Structured property search and affordability endpoints used by the frontend."""
 
 import logging
-from collections.abc import Sequence
+from collections.abc import Callable, Sequence
 from datetime import datetime
 from pathlib import Path
 from typing import Annotated
 from zoneinfo import ZoneInfo
 
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, Query, status
 
 from app.core.config import settings
 from app.repositories import (
@@ -21,6 +21,7 @@ from app.schemas.property_affordability import (
     PropertyAffordabilitySearchRequest,
     PropertyAffordabilitySearchResponse,
 )
+from app.schemas.property_price import RegionPriceReference
 from app.services.loan_product_catalog import (
     LoanProductCatalogUnavailable,
     load_configured_loan_candidates,
@@ -29,6 +30,11 @@ from app.services.property_affordability_api import (
     evaluate_property_search_affordability,
 )
 from app.services.property_search import search_properties
+from app.services.region_price import (
+    RegionNotFound,
+    RegionPriceUnavailable,
+    load_region_price_reference,
+)
 
 router = APIRouter()
 logger = logging.getLogger(__name__)
@@ -87,6 +93,47 @@ def search_property_listings(criteria: PropertySearchCriteria) -> PropertySearch
         raise HTTPException(
             status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
             detail="매물 데이터 스냅샷을 불러올 수 없습니다.",
+        ) from exc
+
+
+def get_region_price_reference_loader() -> Callable[[str], RegionPriceReference]:
+    """테스트가 DB 없이 갈아끼울 수 있도록 조회 함수를 의존성으로 노출한다."""
+
+    return load_region_price_reference
+
+
+@router.get("/price-reference", response_model=RegionPriceReference)
+def read_region_price_reference(
+    sgg_code: Annotated[
+        str,
+        # 형식만 코드로 막는다. 25개 구 목록의 정본은 DB의 sgg_codes이며,
+        # 상수로 복제하면 DB와 어긋날 때 어느 쪽이 맞는지 판단할 근거가 없다.
+        Query(pattern=r"^11\d{3}$", description="서울 자치구 시군구 코드"),
+    ],
+    loader: Annotated[
+        Callable[[str], RegionPriceReference],
+        Depends(get_region_price_reference_loader),
+    ],
+) -> RegionPriceReference:
+    """자치구 단위 평형대별 시세를 돌려준다(`stat_level='sgg_all'`).
+
+    이 DB에는 판매 중인 매물이 없으므로(`apt_trades`는 체결 이력) 개별 물건이
+    아니라 실거래 집계를 돌려준다.
+    """
+
+    try:
+        return loader(sgg_code)
+    except RegionNotFound as exc:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="해당 시군구 코드를 찾을 수 없습니다.",
+        ) from exc
+    except RegionPriceUnavailable as exc:
+        # 원인은 로그에만 남긴다 — 접속 정보가 예외 메시지를 타고 나가지 않게.
+        logger.error("failed to load the configured region-price provider", exc_info=True)
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail="시세 데이터를 불러올 수 없습니다.",
         ) from exc
 
 

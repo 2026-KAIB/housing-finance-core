@@ -1,6 +1,8 @@
 from functools import lru_cache
 from pathlib import Path
+from typing import Literal
 
+from pydantic import Field, SecretStr
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
@@ -15,7 +17,16 @@ class Settings(BaseSettings):
     app_name: str = "Housing Finance Core"
     app_version: str = "0.1.0"
     api_prefix: str = "/api/v1"
-    database_url: str = "postgresql+psycopg://housing:housing@localhost:5432/housing"
+    database_url: str | None = None
+    database_host: str = "localhost"
+    database_port: int = Field(default=5432, ge=1, le=65535)
+    database_name: str = "housing"
+    database_user: str = "housing"
+    database_password: SecretStr | None = None
+    database_connect_timeout_seconds: int = Field(default=5, ge=1, le=60)
+    database_pool_size: int = Field(default=5, ge=1, le=50)
+    database_max_overflow: int = Field(default=5, ge=0, le=100)
+    loan_product_provider: Literal["json", "database"] = "json"
     property_listing_json_path: Path = Path(
         "sample_data/property_listings/property_listings.v1.json"
     )

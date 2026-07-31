@@ -1,0 +1,36 @@
+services:
+  api:
+    image: ${BACKEND_IMAGE:?BACKEND_IMAGE must be set}
+    container_name: housing-finance-api
+    restart: unless-stopped
+    init: true
+    env_file:
+      - ${BACKEND_ENV_FILE:-/opt/housing-finance/backend.env}
+    expose:
+      - "8000"
+    networks:
+      - platform
+    healthcheck:
+      test:
+        - CMD
+        - python
+        - -c
+        - >-
+          import urllib.request;
+          urllib.request.urlopen('http://127.0.0.1:8000/ready', timeout=2)
+      interval: 10s
+      timeout: 3s
+      retries: 6
+      start_period: 20s
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL
+    read_only: true
+    tmpfs:
+      - /tmp:size=64m,mode=1777
+
+networks:
+  platform:
+    name: ${PLATFORM_NETWORK:-housing-platform}
+    external: true

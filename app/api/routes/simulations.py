@@ -13,13 +13,15 @@ from datetime import UTC, datetime
 from typing import Annotated
 from uuid import UUID, uuid4
 
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, HTTPException, status
 
-from app.repositories import LoanProductSnapshotLoadError
 from app.rule_engine.product_packs.handoff import ProductCandidate
 from app.rule_engine.product_packs.registry import ProductRulePackRegistry
 from app.schemas.simulation import SimulationInput, SimulationResult
-from app.services.loan_product_catalog import load_configured_loan_candidates
+from app.services.loan_product_catalog import (
+    LoanProductCatalogUnavailable,
+    load_configured_loan_candidates,
+)
 from app.services.simulation_orchestrator import run_simulation
 
 router = APIRouter()
@@ -37,14 +39,17 @@ def get_loan_candidates(
 ) -> Sequence[ProductCandidate]:
     """계산에 넣을 대출 상품 후보.
 
-    직접 DB 포트가 닫힌 동안 검증된 DBeaver JSON 스냅샷을 사용한다. 파일을
-    읽지 못하거나 계약이 깨졌으면 빈 목록을 반환해 기존 UNKNOWN 계약을 유지한다.
+    저장소 종류는 설정으로 선택한다. 선택한 저장소가 고장 난 경우에는 상품이
+    실제로 0개인 것처럼 계산하지 않고 503으로 구분한다.
     """
     try:
         return load_configured_loan_candidates(as_of=calculated_at.date())
-    except LoanProductSnapshotLoadError:
-        logger.warning("failed to load configured loan-product snapshot", exc_info=True)
-        return ()
+    except LoanProductCatalogUnavailable as exc:
+        logger.error("failed to load the configured loan-product catalog", exc_info=True)
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail="대출 상품 데이터를 불러올 수 없습니다.",
+        ) from exc
 
 
 def get_loan_rule_registry() -> ProductRulePackRegistry | None:

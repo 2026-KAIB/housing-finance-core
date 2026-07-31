@@ -7,5 +7,3 @@ __pycache__
 .ruff_cache
 .env
 tests
-sample_data
-

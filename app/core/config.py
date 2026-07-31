@@ -27,6 +27,10 @@ class Settings(BaseSettings):
     database_pool_size: int = Field(default=5, ge=1, le=50)
     database_max_overflow: int = Field(default=5, ge=0, le=100)
     loan_product_provider: Literal["json", "database"] = "json"
+    # 예·적금은 아직 JSON 스냅샷을 뜬 적이 없어 갈래가 하나다. "none"이 기본인
+    # 이유는 DB가 없는 환경에서 예·적금 구간이 조용히 빈 목록으로 도는 것보다
+    # "공급원이 없다"고 막히는 편이 맞기 때문이다.
+    savings_product_provider: Literal["none", "database"] = "none"
     property_listing_json_path: Path = Path(
         "sample_data/property_listings/property_listings.v1.json"
     )

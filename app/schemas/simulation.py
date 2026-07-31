@@ -18,7 +18,7 @@ from enum import StrEnum
 from typing import Any, Literal
 from uuid import UUID
 
-from pydantic import BaseModel, ConfigDict, Field, model_validator
+from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
 
 # LTV 표와 같은 어휘를 쓰려고 규제 모듈의 enum을 그대로 재사용한다. 여기서
 # 별도 목록을 만들면 API와 규제표가 갈라져 같은 차주에게 다른 한도가 나온다.
@@ -167,6 +167,66 @@ class LoanRequestInput(BaseModel):
     for_house_purchase: bool = True
 
 
+class SavingsRequestInput(BaseModel):
+    """예·적금 계산에 필요하지만 사용자 요약만으로는 확정할 수 없는 사실.
+
+    이 블록이 없으면 예·적금 구간을 실행하지 않고 ``NOT_RUN``으로 남긴다.
+    ``LoanRequestInput``과 같은 규약이지만 **보수적인 방향이 반대**다. 대출은
+    모르면 한도가 커지는 쪽이 위험하고, 예·적금은 모르면 수익이 커지는 쪽이
+    위험하다. 그래서 기본값은 전부 수익을 낮추는 쪽으로 둔다.
+
+    예산 두 값은 현금흐름 진단에서 파생할 수 있어 선택이다. 나머지 취향값은
+    파생할 수 없으므로, 없으면 결측으로 남기고 문서에 가정으로 적는다.
+    """
+
+    model_config = ConfigDict(extra="forbid")
+
+    # 없으면 ``HousingGoal.target_date``를 쓴다. 만기가 이 날짜를 넘는 상품은
+    # 돈이 필요한 시점에 묶여 있으므로 평가 단계가 만기위험으로 반영한다.
+    fund_needed_date: date | None = None
+    # 없으면 현금흐름 진단의 월 주택저축 가능액을 쓴다.
+    monthly_savings_budget: Decimal | None = Field(default=None, ge=0)
+    # 없으면 비상자금 목표를 뺀 사용 가능 유동자산을 쓴다.
+    lump_sum_budget: Decimal | None = Field(default=None, ge=0)
+    # 우대금리 달성 확률. **기본값 0이다** — 우대조건 달성 여부는 자유텍스트
+    # 자격조건이라 우리가 판정하지 않는다(부록 B-3). 달성한다고 보면 만기액이
+    # 커지므로, 모를 때는 미달성으로 둔다.
+    bonus_achievement_probability: Decimal = Field(default=Decimal(0), ge=0, le=1)
+    # 말일 납입이 이자를 적게 준다. 모를 때 초일 납입으로 두면 수익 과대평가다.
+    contribution_timing: Literal["beginning", "end"] = "end"
+    # **허용 일수가 아니라 점수 감쇠 척도다.** 만기가 필요 시점에서 이만큼
+    # 어긋나면 만기적합 점수를 1/e로 본다(`evaluation._maturity_fit_score`).
+    # 만기가 필요 시점을 넘으면 부적격이라는 판정은 이 값과 무관하게 항상 걸린다.
+    # 0은 척도로 성립하지 않으므로 허용하지 않는다. 기본 30일은 공식 설계안이
+    # 정하지 않은 서비스 내부 값이며 순위에만 영향을 준다.
+    maturity_tolerance_days: int = Field(default=30, gt=0)
+    # 유동성 선호. 순위에만 쓰이고 제약은 아니다. 없으면 현금흐름 엔진이
+    # 미확인 위험에 쓰는 것과 같은 정책 중립값을 쓰고 결측으로 기록한다.
+    liquidity_preference: Literal["low", "medium", "high"] | None = None
+    accepts_principal_risk: bool = False
+    # 금융회사 코드 → 이미 예치한 금액. 예금자보호 한도를 회사 단위로 계산한다.
+    # 비어 있으면 "기존 예치금이 없다"가 아니라 "확인되지 않았다"로 기록한다.
+    existing_institution_deposits: dict[str, Decimal] = Field(default_factory=dict)
+    # 상한 3은 엔진의 MVP 제약이다(조합 폭증 방지, `SavingsPortfolioPolicy`).
+    maximum_recommended_products: int = Field(default=3, gt=0, le=3)
+    # Rule Pack이 보는 자격 사실. 없으면 해당 규칙이 UNKNOWN으로 남는다.
+    applicant_type: str | None = None
+    is_first_payment: bool | None = None
+
+    @field_validator("existing_institution_deposits")
+    @classmethod
+    def validate_existing_deposits(
+        cls,
+        value: dict[str, Decimal],
+    ) -> dict[str, Decimal]:
+        for code, amount in value.items():
+            if not code.strip():
+                raise ValueError("금융회사 코드는 비어 있을 수 없습니다.")
+            if amount < 0:
+                raise ValueError("기존 예치액은 음수일 수 없습니다.")
+        return value
+
+
 class SimulationInput(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
@@ -174,6 +234,7 @@ class SimulationInput(BaseModel):
     housing_goal: HousingGoal
     financial_snapshot: FinancialSnapshot
     loan_request: LoanRequestInput | None = None
+    savings_request: SavingsRequestInput | None = None
 
 
 class PublicUserSummary(BaseModel):

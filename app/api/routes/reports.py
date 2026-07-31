@@ -26,6 +26,7 @@ from app.api.routes.simulations import (
     get_calculated_at,
     get_loan_candidates,
     get_loan_rule_registry,
+    get_savings_candidates,
     get_simulation_id,
 )
 from app.reports.ai_explanation.pipeline import (
@@ -187,6 +188,9 @@ def create_property_report(
 def create_report(
     payload: SimulationInput,
     loan_candidates: Annotated[Sequence[ProductCandidate], Depends(get_loan_candidates)],
+    savings_candidates: Annotated[
+        Sequence[ProductCandidate], Depends(get_savings_candidates)
+    ],
     registry: Annotated[ProductRulePackRegistry | None, Depends(get_loan_rule_registry)],
     calculated_at: Annotated[datetime, Depends(get_calculated_at)],
     simulation_id: Annotated[UUID, Depends(get_simulation_id)],
@@ -201,6 +205,7 @@ def create_report(
         as_of=calculated_at.date(),
         calculated_at=calculated_at,
         loan_candidates=loan_candidates,
+        savings_candidates=savings_candidates,
         registry=registry,
     )
     report_input = build_report_ai_input(simulation)

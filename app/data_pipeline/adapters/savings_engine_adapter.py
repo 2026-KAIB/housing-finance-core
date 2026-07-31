@@ -1,3 +1,4 @@
+from collections.abc import Sequence
 from dataclasses import dataclass, field
 from decimal import Decimal, InvalidOperation
 
@@ -17,6 +18,11 @@ from app.rule_engine.product_packs.models import (
     EvaluationStatus,
     ProductCategory,
 )
+from app.rule_engine.product_packs.registry import (
+    DEFAULT_PRODUCT_RULE_PACK_REGISTRY,
+    ProductRulePackRegistry,
+)
+from app.rule_engine.product_packs.rules import ComparisonOperator, ComparisonRule
 
 
 @dataclass(frozen=True)
@@ -246,6 +252,59 @@ def adapt_handoff_for_savings_calculation(
             ),
         )
     return tuple(adaptations)
+
+
+def _allocation_field(category: ProductCategory) -> str:
+    if category is ProductCategory.TERM_DEPOSIT:
+        return "deposit_amount"
+    if category is ProductCategory.INSTALLMENT_SAVINGS:
+        return "monthly_payment_amount"
+    raise ValueError(f"예적금이 아닌 상품 분류입니다: {category}")
+
+
+def resolve_allocation_bounds(
+    handoff: ProductEngineHandoff,
+    *,
+    registry: ProductRulePackRegistry = DEFAULT_PRODUCT_RULE_PACK_REGISTRY,
+) -> tuple[Decimal, Decimal | None]:
+    """Rule Pack의 단순 금액비교 규칙을 포트폴리오 납입범위로 변환한다.
+
+    상품별 최소·최대 납입액 컬럼이 DB에 비어 있어서 규칙에서 **구조적으로**
+    끌어온다. ``PredicateRule``처럼 구조로 바꿀 수 없는 조건은 여기서 다루지
+    않고 포트폴리오 최종 Rule Pack 재검증이 보장한다.
+
+    상한이 없으면 ``None``이다 — 0이 아니다. 0으로 두면 배분이 통째로 막힌다.
+    """
+    field_name = _allocation_field(handoff.rule_result.category)
+    pack = registry.resolve(handoff.product.product_name, handoff.rule_result.as_of)
+    minimum = Decimal(1)
+    maximum: Decimal | None = None
+
+    def _tighten_maximum(value: Decimal) -> Decimal:
+        return value if maximum is None else min(maximum, value)
+
+    for rule in pack.rules:
+        if not isinstance(rule, ComparisonRule) or rule.field_name != field_name:
+            continue
+        if rule.operator is ComparisonOperator.GTE:
+            minimum = max(minimum, Decimal(str(rule.expected)))
+        elif rule.operator is ComparisonOperator.GT:
+            minimum = max(minimum, Decimal(str(rule.expected)) + Decimal(1))
+        elif rule.operator is ComparisonOperator.LTE:
+            maximum = _tighten_maximum(Decimal(str(rule.expected)))
+        elif rule.operator is ComparisonOperator.LT:
+            maximum = _tighten_maximum(Decimal(str(rule.expected)) - Decimal(1))
+        elif rule.operator is ComparisonOperator.BETWEEN:
+            if (
+                isinstance(rule.expected, (str, bytes))
+                or not isinstance(rule.expected, Sequence)
+                or len(rule.expected) != 2
+            ):
+                raise ValueError(f"{rule.code}: BETWEEN 범위가 올바르지 않습니다.")
+            lower, upper = rule.expected
+            minimum = max(minimum, Decimal(str(lower)))
+            maximum = _tighten_maximum(Decimal(str(upper)))
+    return minimum, maximum
 
 
 def compute_savings(

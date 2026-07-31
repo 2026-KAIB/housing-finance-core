@@ -32,7 +32,7 @@ from app.schemas.simulation import SectionRunStatus, SimulationResult
 
 # 화면 대시보드와 달리 색으로 정보를 전달하지 않는다. 흑백 인쇄에서 모든 정보가
 # 남아야 하므로 상태는 **글자**로 적는다.
-_STYLE = """
+PRINT_STYLE = """
 @page { size: A4; margin: 20mm 18mm 22mm; }
 @page { @bottom-center { content: counter(page) " / " counter(pages); font-size: 9pt; } }
 :root { color-scheme: light; }
@@ -641,7 +641,7 @@ def render_official_report(
         "<!doctype html><html lang='ko'><head><meta charset='utf-8'>"
         "<meta name='viewport' content='width=device-width, initial-scale=1'>"
         "<title>주택자금 대출 조달방안 산출 결과 보고서</title>"
-        f"<style>{_STYLE}</style></head><body>"
+        f"<style>{PRINT_STYLE}</style></head><body>"
         "<h1>주택자금 대출 조달방안 산출 결과 보고서</h1>"
         f"<p class='subtitle'>산출 기준일 {escape(simulation.as_of.isoformat())} · "
         "본 문서는 계산 결과이며 대출 승인을 의미하지 않습니다</p>"
@@ -657,4 +657,4 @@ def render_official_report(
     )
 
 
-__all__ = ["render_official_report"]
+__all__ = ["PRINT_STYLE", "render_official_report"]

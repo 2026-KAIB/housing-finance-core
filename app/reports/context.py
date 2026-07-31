@@ -43,6 +43,14 @@ _BLOCKED_KEYS = {
 }
 
 
+def sanitize_report_facts(value: object) -> Any:
+    """금융 식별자·인증정보·원천 거래 묶음을 제거한다.
+
+    매물 보고서 계약도 같은 허용목록을 쓴다. 두 벌로 두면 한쪽만 갱신된다.
+    """
+    return _sanitize(value)
+
+
 def _sanitize(value: object) -> Any:
     if isinstance(value, Mapping):
         return {
@@ -222,4 +230,4 @@ def build_report_ai_input(result: SimulationResult) -> ReportAIInput:
     )
 
 
-__all__ = ["build_report_ai_input"]
+__all__ = ["build_report_ai_input", "sanitize_report_facts"]

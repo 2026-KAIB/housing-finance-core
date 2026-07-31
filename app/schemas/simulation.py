@@ -227,6 +227,38 @@ class SavingsRequestInput(BaseModel):
         return value
 
 
+class AcquisitionCostInput(BaseModel):
+    """총 구매비용(§8.2)을 확정하는 데 필요한 법적 사실.
+
+    이 블록이 없으면 시나리오별 목표 주택가격을 만들지 않는다. 매매가만으로
+    시나리오를 세우면 취득세·중개보수가 빠져 **필요 자금을 실제보다 작게** 잡고,
+    그러면 계획이 실제보다 쉬워 보인다.
+
+    매물 흐름의 ``PropertyAcquisitionProfileInput``과 필드가 겹치지만 축이 다르다 —
+    저쪽은 매물마다 덮어쓰는 표이고 이쪽은 목표 하나에 붙는 값이다. 둘 다 같은
+    엔진(``purchase_costs``)에 들어가며 필드의 뜻은 그 엔진이 정한다.
+    """
+
+    model_config = ConfigDict(extra="forbid")
+
+    buyer_is_corporation: bool | None = None
+    household_home_count_after_purchase: int | None = Field(default=None, gt=0)
+    is_registered_housing: bool | None = None
+    is_luxury_home: bool | None = None
+    exclusive_area_m2: Decimal | None = Field(default=None, gt=0)
+    is_national_housing_scale_override: bool | None = None
+    registration_and_legal_costs: Decimal | None = Field(default=None, ge=0)
+    brokerage_vat_rate_override: Decimal | None = Field(default=None, ge=0, le=1)
+
+    @model_validator(mode="after")
+    def validate_housing_classification(self) -> "AcquisitionCostInput":
+        if self.is_registered_housing is False and (
+            self.is_national_housing_scale_override is True
+        ):
+            raise ValueError("주택이 아닌 물건을 국민주택규모로 표시할 수 없습니다.")
+        return self
+
+
 class SimulationInput(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
@@ -235,6 +267,7 @@ class SimulationInput(BaseModel):
     financial_snapshot: FinancialSnapshot
     loan_request: LoanRequestInput | None = None
     savings_request: SavingsRequestInput | None = None
+    acquisition_costs: AcquisitionCostInput | None = None
 
 
 class PublicUserSummary(BaseModel):

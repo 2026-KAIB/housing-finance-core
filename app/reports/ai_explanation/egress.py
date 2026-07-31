@@ -68,6 +68,14 @@ _ACCOUNT = re.compile(r"(?<!\d)\d{2,6}-\d{2,6}-\d{2,8}(?!\d)|(?<!\d)\d{11,16}(?!
 # 정확히 들어맞는다. 이걸 걸러내지 않으면 `as_of`·`policy_sources`·규제 기준일이
 # 전부 계좌번호로 오인돼 **정상 트래픽이 모두 차단된다.** 실제로 그렇게 됐다.
 _DATE_LIKE = re.compile(r"(?<!\d)\d{4}-\d{1,2}-\d{1,2}(?!\d)")
+# UUID도 같은 이유로 겹친다 — 숫자만 담긴 UUID의 가운데 토막이
+# `\d{2,6}-\d{2,6}-\d{2,8}`에 들어맞는다. 매물 검색 스냅샷 식별자가 여기 걸려
+# **매물 보고서 전체가 AI에 나가지 못했다.** 8-4-4-4-12 16진수는 계좌번호가
+# 갖는 형태가 아니므로 날짜와 같이 지우고 본다.
+_UUID_LIKE = re.compile(
+    r"(?<![\w-])[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-"
+    r"[0-9a-fA-F]{4}-[0-9a-fA-F]{12}(?![\w-])"
+)
 
 # 판정 순서가 중요하다. 휴대전화번호(010-1234-5678)는 계좌번호 형태에도 들어맞으므로
 # 더 구체적인 패턴을 먼저 본다 — 첫 일치에서 멈추기 때문이다.
@@ -140,8 +148,9 @@ def scan_payload(payload: dict[str, Any]) -> EgressReport:
                 if key in _NUMERIC_VALUE_KEYS:
                     # 금액 필드의 큰 정수는 계좌번호가 아니다.
                     continue
-                # 날짜를 지운 뒤에 본다. 지우지 않으면 기준일·시행일이 모두 걸린다.
-                target = _DATE_LIKE.sub(" ", text)
+                # 날짜와 UUID를 지운 뒤에 본다. 지우지 않으면 기준일·시행일과
+                # 산출 식별자가 모두 계좌번호로 잡힌다.
+                target = _UUID_LIKE.sub(" ", _DATE_LIKE.sub(" ", text))
             if pattern.search(target):
                 findings.append(EgressFinding(path=path, kind=kind, detail=detail))
                 break

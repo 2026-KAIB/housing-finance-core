@@ -13,6 +13,7 @@
 """
 
 import json
+from collections.abc import Mapping
 from dataclasses import dataclass, field
 from typing import Any
 
@@ -23,6 +24,7 @@ from app.reports.ai_explanation.egress import (
     guard_payload,
 )
 from app.reports.ai_explanation.gemini import ExplanationClient, GeminiClient
+from app.reports.spec import NarrationSpec
 from app.reports.templates.form import FORM_SECTIONS, ReportForm, build_report_form
 from app.reports.validation.numbers import VerificationResult, verify_narration
 from app.schemas.report import ReportAIInput
@@ -75,26 +77,31 @@ class FormReport:
     notes: tuple[str, ...] = field(default_factory=tuple)
     verifications: dict[str, VerificationResult] = field(default_factory=dict)
     egress: EgressReport | None = None
+    # 이 보고서 종류의 절 개수. 양식마다 다르므로 결과에 함께 들고 다닌다.
+    section_count: int = len(FORM_SECTIONS)
 
     @property
     def fully_narrated(self) -> bool:
-        return len(self.adopted_sections) == len(FORM_SECTIONS)
+        return len(self.adopted_sections) == self.section_count
 
     def to_text(self) -> str:
         return self.form.to_text()
 
 
-def narration_response_schema() -> dict[str, Any]:
+def narration_response_schema(
+    sections: tuple[tuple[str, str], ...] = FORM_SECTIONS,
+) -> dict[str, Any]:
     """절 키를 그대로 필드로 갖는 구조화 출력 스키마."""
+    keys = [key for key, _title in sections]
     return {
         "type": "object",
-        "properties": {key: {"type": "string"} for key, _title in FORM_SECTIONS},
-        "required": [key for key, _title in FORM_SECTIONS],
-        "propertyOrdering": [key for key, _title in FORM_SECTIONS],
+        "properties": {key: {"type": "string"} for key in keys},
+        "required": keys,
+        "propertyOrdering": keys,
     }
 
 
-def build_form_prompt(payload: ReportAIInput, form: ReportForm) -> str:
+def build_spec_prompt(spec: NarrationSpec, form: ReportForm) -> str:
     """각 절의 제목·수치·서술 지침을 함께 넘긴다.
 
     계산 결과 전체가 아니라 **양식에 이미 렌더링된 수치 줄**을 보여준다. AI가
@@ -106,10 +113,10 @@ def build_form_prompt(payload: ReportAIInput, form: ReportForm) -> str:
         blocks.append(
             f"[{section.key}] {section.title}\n"
             f"  보고서에 표시된 수치:\n{figures}\n"
-            f"  이 절에서 설명할 것: {_SECTION_GUIDE[section.key]}"
+            f"  이 절에서 설명할 것: {spec.guides[section.key]}"
         )
-    rules = "\n".join(f"- {rule}" for rule in payload.generation_rules)
-    missing = ", ".join(payload.missing_inputs) or "없음"
+    rules = "\n".join(f"- {rule}" for rule in spec.generation_rules)
+    missing = ", ".join(spec.missing_inputs) or "없음"
     return (
         "아래 각 절의 서술 칸을 채우십시오. 숫자는 쓰지 마십시오.\n\n"
         f"[이 결과에 붙은 생성 규칙]\n{rules}\n\n"
@@ -118,19 +125,30 @@ def build_form_prompt(payload: ReportAIInput, form: ReportForm) -> str:
     )
 
 
-def explain_report_form(
-    payload: ReportAIInput,
+def build_form_prompt(payload: ReportAIInput, form: ReportForm) -> str:
+    """목표금액 보고서의 프롬프트. 기존 호출자를 위해 남긴 얇은 감싸개다."""
+    return build_spec_prompt(report_narration_spec(payload), form)
+
+
+def explain_form(
+    spec: NarrationSpec,
     *,
     client: ExplanationClient | None = None,
     settings: Settings | None = None,
 ) -> FormReport:
-    """고정 양식을 만들고 서술 칸을 AI로 채운다. 실패한 칸은 비워 둔다."""
+    """고정 양식을 만들고 서술 칸을 AI로 채운다. 실패한 칸은 비워 둔다.
+
+    보고서 종류를 모른다 — 절 목록도 검증기도 ``spec``이 준다. 그래서 매물
+    보고서와 목표금액 보고서가 **같은 실패 처리**를 공유한다(빈 칸 유지, 칸별
+    채택, 개인정보 차단 시 AI 미전송).
+    """
     resolved = settings or get_settings()
-    bare_form = build_report_form(payload)
+    bare_form = spec.build_form(None)
+    section_count = len(spec.sections)
 
     try:
         egress = guard_payload(
-            payload.to_json_dict(),
+            dict(spec.egress_payload),
             enabled=resolved.report_ai_egress_guard,
         )
     except ReportEgressBlocked as blocked:
@@ -141,41 +159,49 @@ def explain_report_form(
                 str(blocked),
             ),
             egress=EgressReport(allowed=False, findings=blocked.findings),
+            section_count=section_count,
         )
 
     notes: list[str] = []
     resolved_client = client or GeminiClient(resolved)
     generated = resolved_client.generate(
-        system_prompt=_SYSTEM_PROMPT,
-        user_prompt=build_form_prompt(payload, bare_form),
-        response_schema=narration_response_schema(),
+        system_prompt=spec.system_prompt,
+        user_prompt=build_spec_prompt(spec, bare_form),
+        response_schema=narration_response_schema(spec.sections),
     )
     notes.extend(generated.request_notes)
 
+    def _bare(reason: str) -> FormReport:
+        notes.append(reason)
+        return FormReport(
+            form=bare_form,
+            model=generated.model,
+            notes=tuple(notes),
+            egress=egress,
+            section_count=section_count,
+        )
+
     if not generated.ok or generated.text is None:
-        notes.append(generated.error or "AI 설명을 생성하지 못했습니다.")
-        return FormReport(form=bare_form, model=generated.model, notes=tuple(notes), egress=egress)
+        return _bare(generated.error or "AI 설명을 생성하지 못했습니다.")
 
     try:
         parsed = json.loads(generated.text)
     except json.JSONDecodeError:
-        notes.append("AI 응답이 JSON 형식이 아니어서 서술을 채우지 않았습니다.")
-        return FormReport(form=bare_form, model=generated.model, notes=tuple(notes), egress=egress)
+        return _bare("AI 응답이 JSON 형식이 아니어서 서술을 채우지 않았습니다.")
     if not isinstance(parsed, dict):
-        notes.append("AI 응답이 절별 객체가 아니어서 서술을 채우지 않았습니다.")
-        return FormReport(form=bare_form, model=generated.model, notes=tuple(notes), egress=egress)
+        return _bare("AI 응답이 절별 객체가 아니어서 서술을 채우지 않았습니다.")
 
     accepted: dict[str, str] = {}
     adopted: list[str] = []
     rejected: list[str] = []
     verifications: dict[str, VerificationResult] = {}
-    for key, _title in FORM_SECTIONS:
+    for key, _title in spec.sections:
         value = parsed.get(key)
         if not isinstance(value, str) or not value.strip():
             rejected.append(key)
             notes.append(f"{key}: 서술이 비어 있어 채우지 않았습니다.")
             continue
-        result = verify_narration(value, payload, section_key=key)
+        result = spec.verify(value, key)
         verifications[key] = result
         if result.ok:
             accepted[key] = value.strip()
@@ -188,13 +214,46 @@ def explain_report_form(
         )
 
     return FormReport(
-        form=build_report_form(payload, narrations=accepted),
+        form=spec.build_form(accepted),
         model=generated.model,
         adopted_sections=tuple(adopted),
         rejected_sections=tuple(rejected),
         notes=tuple(notes),
         verifications=verifications,
         egress=egress,
+        section_count=section_count,
+    )
+
+
+def report_narration_spec(payload: ReportAIInput) -> NarrationSpec:
+    """SSOT §19 목표금액 보고서의 작성 계약."""
+
+    def _build(narrations: Mapping[str, str] | None) -> ReportForm:
+        return build_report_form(payload, narrations=dict(narrations or {}))
+
+    return NarrationSpec(
+        sections=FORM_SECTIONS,
+        guides=_SECTION_GUIDE,
+        system_prompt=_SYSTEM_PROMPT,
+        generation_rules=payload.generation_rules,
+        missing_inputs=payload.missing_inputs,
+        egress_payload=payload.to_json_dict(),
+        build_form=_build,
+        verify=lambda text, key: verify_narration(text, payload, section_key=key),
+    )
+
+
+def explain_report_form(
+    payload: ReportAIInput,
+    *,
+    client: ExplanationClient | None = None,
+    settings: Settings | None = None,
+) -> FormReport:
+    """목표금액 보고서의 서술 칸을 채운다."""
+    return explain_form(
+        report_narration_spec(payload),
+        client=client,
+        settings=settings,
     )
 
 
@@ -202,6 +261,9 @@ __all__ = [
     "FORM_SECTIONS",
     "FormReport",
     "build_form_prompt",
+    "build_spec_prompt",
+    "explain_form",
     "explain_report_form",
     "narration_response_schema",
+    "report_narration_spec",
 ]

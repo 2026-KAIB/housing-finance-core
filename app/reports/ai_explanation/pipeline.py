@@ -21,7 +21,11 @@ from dataclasses import dataclass, field
 
 from app.core.config import Settings, get_settings
 from app.reports.ai_explanation.egress import EgressReport
-from app.reports.ai_explanation.form_agent import FormReport, explain_report_form
+from app.reports.ai_explanation.form_agent import (
+    FormReport,
+    explain_form,
+    report_narration_spec,
+)
 from app.reports.ai_explanation.gemini import ExplanationClient
 from app.reports.ai_explanation.verifier_agent import (
     JudgementReport,
@@ -29,7 +33,8 @@ from app.reports.ai_explanation.verifier_agent import (
     Verdict,
     judge_report_form,
 )
-from app.reports.templates.form import ReportForm, build_report_form
+from app.reports.spec import NarrationSpec
+from app.reports.templates.form import ReportForm
 from app.schemas.report import ReportAIInput
 
 
@@ -113,16 +118,20 @@ def _outcome(
     )
 
 
-def build_final_report(
-    payload: ReportAIInput,
+def build_report_from_spec(
+    spec: NarrationSpec,
     *,
     writer_client: ExplanationClient | None = None,
     judge_client: ExplanationClient | None = None,
     settings: Settings | None = None,
 ) -> FinalReport:
-    """두 에이전트를 돌리고 둘 다 통과한 절만 서술을 실어 최종 보고서를 만든다."""
+    """두 에이전트를 돌리고 둘 다 통과한 절만 서술을 실어 최종 보고서를 만든다.
+
+    보고서 종류를 모른다. 목표금액 보고서와 매물 보고서가 같은 게이트 순서
+    (기계 검증 → 판정 에이전트)를 쓰도록 한 자리에 둔다.
+    """
     resolved = settings or get_settings()
-    writer = explain_report_form(payload, client=writer_client, settings=resolved)
+    writer = explain_form(spec, client=writer_client, settings=resolved)
     notes = list(writer.notes)
 
     # 작성 에이전트가 기계 검증을 통과시킨 서술만 판정 대상이다.
@@ -152,10 +161,7 @@ def build_final_report(
             notes.append(f"{item.key}: 검증 에이전트 지적 — {item.judge_reason}")
 
     return FinalReport(
-        form=build_report_form(
-            payload,
-            narrations={key: value for key, value in adopted.items() if value},
-        ),
+        form=spec.build_form({key: value for key, value in adopted.items() if value}),
         outcomes=outcomes,
         writer_model=writer.model,
         judge_model=judgement.model,
@@ -164,4 +170,25 @@ def build_final_report(
     )
 
 
-__all__ = ["FinalReport", "SectionOutcome", "build_final_report"]
+def build_final_report(
+    payload: ReportAIInput,
+    *,
+    writer_client: ExplanationClient | None = None,
+    judge_client: ExplanationClient | None = None,
+    settings: Settings | None = None,
+) -> FinalReport:
+    """목표금액 보고서를 만든다."""
+    return build_report_from_spec(
+        report_narration_spec(payload),
+        writer_client=writer_client,
+        judge_client=judge_client,
+        settings=settings,
+    )
+
+
+__all__ = [
+    "FinalReport",
+    "SectionOutcome",
+    "build_final_report",
+    "build_report_from_spec",
+]

@@ -18,6 +18,7 @@
 """
 
 import re
+from collections.abc import Mapping
 from dataclasses import dataclass, field
 from decimal import Decimal, InvalidOperation
 
@@ -145,14 +146,78 @@ _FORBIDDEN_PHRASES: dict[str, tuple[tuple[str, str], ...]] = {
 }
 
 
-def _forbidden_phrase_violations(text: str, section_key: str | None) -> list[Violation]:
+def _forbidden_phrase_violations(
+    text: str,
+    section_key: str | None,
+    forbidden: Mapping[str, tuple[tuple[str, str], ...]],
+) -> list[Violation]:
     if section_key is None:
         return []
     return [
         Violation(kind="misattribution", value=phrase, detail=detail)
-        for phrase, detail in _FORBIDDEN_PHRASES.get(section_key, ())
+        for phrase, detail in forbidden.get(section_key, ())
         if phrase in text
     ]
+
+
+def verify_narration_text(
+    text: str,
+    *,
+    known_names: set[str],
+    section_key: str | None = None,
+    forbidden_phrases: Mapping[str, tuple[tuple[str, str], ...]] = _FORBIDDEN_PHRASES,
+) -> VerificationResult:
+    """보고서 종류와 무관한 서술 칸 공통 검사.
+
+    ``verify_narration``이 목표금액 보고서 입력에서 상품명을 모아 이 함수를
+    부른다. 매물 보고서처럼 입력 계약이 다른 쪽은 자기 상품명 집합과 자기
+    금지 표현표를 넘겨 같은 규칙을 쓴다 — 규칙을 복사하면 두 벌이 갈린다.
+    """
+    violations: list[Violation] = _forbidden_phrase_violations(
+        text, section_key, forbidden_phrases
+    )
+    numbers = _extract_numbers(text)
+    for raw in numbers:
+        violations.append(
+            Violation(
+                kind="number_in_narration",
+                value=raw,
+                detail=(
+                    "서술 칸에는 수치를 쓸 수 없습니다. 수치는 계산 엔진이 "
+                    "표시하며, 서술은 그 의미만 설명합니다."
+                ),
+            )
+        )
+    for iso in _ISO_DATE.findall(text):
+        violations.append(
+            Violation(
+                kind="date_in_narration",
+                value=iso,
+                detail="서술 칸에는 날짜를 쓸 수 없습니다.",
+            )
+        )
+
+    unknown_names = _mentions_unknown_product(text, known_names)
+    for name in unknown_names:
+        violations.append(
+            Violation(
+                kind="product_name",
+                value=name,
+                detail="종합추천 결과에 없는 상품을 언급했습니다.",
+            )
+        )
+
+    return VerificationResult(
+        ok=not violations,
+        violations=tuple(violations),
+        checked_numbers=len(numbers),
+        checked_names=len(unknown_names) + len(known_names),
+        limitations=(
+            "서술 칸의 수치·날짜를 전면 금지합니다.",
+            "수치 없는 귀속 오류는 관찰된 표현만 막습니다(_FORBIDDEN_PHRASES).",
+            "문장의 인과 설명이 옳은지는 보증하지 않습니다 — 검증 에이전트가 보완합니다.",
+        ),
+    )
 
 
 def verify_narration(
@@ -175,49 +240,10 @@ def verify_narration(
     물어봤을 때 이 문장을 OK로 판정하는 것을 확인했으므로, 아는 오류는
     ``_FORBIDDEN_PHRASES``로 기계가 막는다.
     """
-    violations: list[Violation] = _forbidden_phrase_violations(text, section_key)
-    numbers = _extract_numbers(text)
-    for raw in numbers:
-        violations.append(
-            Violation(
-                kind="number_in_narration",
-                value=raw,
-                detail=(
-                    "서술 칸에는 수치를 쓸 수 없습니다. 수치는 계산 엔진이 "
-                    "표시하며, 서술은 그 의미만 설명합니다."
-                ),
-            )
-        )
-    for iso in _ISO_DATE.findall(text):
-        violations.append(
-            Violation(
-                kind="date_in_narration",
-                value=iso,
-                detail="서술 칸에는 날짜를 쓸 수 없습니다.",
-            )
-        )
-
-    source_names = collect_source_names(payload)
-    unknown_names = _mentions_unknown_product(text, source_names)
-    for name in unknown_names:
-        violations.append(
-            Violation(
-                kind="product_name",
-                value=name,
-                detail="종합추천 결과에 없는 상품을 언급했습니다.",
-            )
-        )
-
-    return VerificationResult(
-        ok=not violations,
-        violations=tuple(violations),
-        checked_numbers=len(numbers),
-        checked_names=len(unknown_names) + len(source_names),
-        limitations=(
-            "서술 칸의 수치·날짜를 전면 금지합니다.",
-            "수치 없는 귀속 오류는 관찰된 표현만 막습니다(_FORBIDDEN_PHRASES).",
-            "문장의 인과 설명이 옳은지는 보증하지 않습니다 — 검증 에이전트가 보완합니다.",
-        ),
+    return verify_narration_text(
+        text,
+        known_names=collect_source_names(payload),
+        section_key=section_key,
     )
 
 
@@ -226,4 +252,5 @@ __all__ = [
     "Violation",
     "collect_source_names",
     "verify_narration",
+    "verify_narration_text",
 ]

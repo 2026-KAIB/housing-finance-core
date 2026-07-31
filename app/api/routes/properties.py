@@ -21,7 +21,7 @@ from app.schemas.property_affordability import (
     PropertyAffordabilitySearchRequest,
     PropertyAffordabilitySearchResponse,
 )
-from app.schemas.property_price import RegionPriceReference
+from app.schemas.property_trade import RegionTradePage, TradeSort
 from app.services.loan_product_catalog import (
     LoanProductCatalogUnavailable,
     load_configured_loan_candidates,
@@ -30,10 +30,10 @@ from app.services.property_affordability_api import (
     evaluate_property_search_affordability,
 )
 from app.services.property_search import search_properties
-from app.services.region_price import (
+from app.services.region_trade import (
     RegionNotFound,
-    RegionPriceUnavailable,
-    load_region_price_reference,
+    RegionTradesUnavailable,
+    load_region_trades,
 )
 
 router = APIRouter()
@@ -96,44 +96,48 @@ def search_property_listings(criteria: PropertySearchCriteria) -> PropertySearch
         ) from exc
 
 
-def get_region_price_reference_loader() -> Callable[[str], RegionPriceReference]:
+RegionTradeLoader = Callable[..., RegionTradePage]
+
+
+def get_region_trades_loader() -> RegionTradeLoader:
     """테스트가 DB 없이 갈아끼울 수 있도록 조회 함수를 의존성으로 노출한다."""
 
-    return load_region_price_reference
+    return load_region_trades
 
 
-@router.get("/price-reference", response_model=RegionPriceReference)
-def read_region_price_reference(
+@router.get("/trades", response_model=RegionTradePage)
+def read_region_trades(
     sgg_code: Annotated[
         str,
         # 형식만 코드로 막는다. 25개 구 목록의 정본은 DB의 sgg_codes이며,
         # 상수로 복제하면 DB와 어긋날 때 어느 쪽이 맞는지 판단할 근거가 없다.
         Query(pattern=r"^11\d{3}$", description="서울 자치구 시군구 코드"),
     ],
-    loader: Annotated[
-        Callable[[str], RegionPriceReference],
-        Depends(get_region_price_reference_loader),
-    ],
-) -> RegionPriceReference:
-    """자치구 단위 평형대별 시세를 돌려준다(`stat_level='sgg_all'`).
+    loader: Annotated[RegionTradeLoader, Depends(get_region_trades_loader)],
+    sort: Annotated[TradeSort, Query(description="정렬 기준")] = TradeSort.AREA_ASC,
+    page: Annotated[int, Query(ge=1, description="1부터 시작")] = 1,
+    page_size: Annotated[int, Query(ge=1, le=50, description="한 페이지 행 수")] = 5,
+) -> RegionTradePage:
+    """자치구의 실거래를 정렬·페이징해 돌려준다.
 
-    이 DB에는 판매 중인 매물이 없으므로(`apt_trades`는 체결 이력) 개별 물건이
-    아니라 실거래 집계를 돌려준다.
+    이 DB에는 판매 중인 매물이 없으므로(`apt_trades`는 체결 이력) 돌려주는 것은
+    이미 끝난 거래다. 집계가 아니라 개별 거래인 이유는 같은 아파트·같은 면적도
+    층마다 가격이 다르기 때문이다.
     """
 
     try:
-        return loader(sgg_code)
+        return loader(sgg_code, sort=sort, page=page, page_size=page_size)
     except RegionNotFound as exc:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="해당 시군구 코드를 찾을 수 없습니다.",
         ) from exc
-    except RegionPriceUnavailable as exc:
+    except RegionTradesUnavailable as exc:
         # 원인은 로그에만 남긴다 — 접속 정보가 예외 메시지를 타고 나가지 않게.
-        logger.error("failed to load the configured region-price provider", exc_info=True)
+        logger.error("failed to load the configured region-trade provider", exc_info=True)
         raise HTTPException(
             status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
-            detail="시세 데이터를 불러올 수 없습니다.",
+            detail="실거래 데이터를 불러올 수 없습니다.",
         ) from exc
 
 

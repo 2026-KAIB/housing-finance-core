@@ -4,7 +4,7 @@
 
 **Goal:** Step 1 입력 폼을 확장해 보고서의 대출·전략비교 절을 열고, 사용자가 입력한 값으로 실제 계산을 돌려 대시보드 하단에 보고서 PDF를 인라인으로 띄운다.
 
-**Architecture:** 위저드가 폼 값을 `sessionStorage`에 넘기고, 대시보드(클라이언트 컴포넌트)가 그 값으로 `SimulationInput`을 만들어 두 개의 독립된 백엔드 호출을 발사한다 — 빠른 `POST /api/simulations`가 카드를, 느린 `POST /api/reports?format=pdf`가 하단 뷰어를 채운다. 보고서는 응답 헤더 `X-Report-Id`를 받아 `GET /api/reports/{id}.pdf`를 iframe에 물린다.
+**Architecture:** 위저드가 폼 값을 `sessionStorage`에 넘기고, 대시보드(클라이언트 컴포넌트)가 그 값으로 `SimulationInput`을 만들어 두 개의 독립된 백엔드 호출을 발사한다 — 빠른 `POST /api/v1/simulations`가 카드를, 느린 `POST /api/v1/reports?format=pdf`가 하단 뷰어를 채운다. 보고서는 응답 헤더 `X-Report-Id`를 받아 `GET /api/v1/reports/{id}.pdf`를 iframe에 물린다.
 
 **Tech Stack:** core는 Python 3.12 / FastAPI / pydantic / weasyprint. web은 Next.js 16 / TypeScript / zod / react-hook-form / vitest + @testing-library/react.
 
@@ -363,7 +363,7 @@ REPORT_ARCHIVE_PROVIDER=filesystem
 
 ```bash
 curl -s -D /tmp/hdr.txt -o /tmp/report.pdf \
-  -X POST 'http://127.0.0.1:8000/api/reports?format=pdf' \
+  -X POST 'http://127.0.0.1:8000/api/v1/reports?format=pdf' \
   -H 'content-type: application/json' \
   -d '{"profile":{"age":24,"annual_income":24000000},
        "housing_goal":{"target_price":325000000,"target_date":"2028-07-01","region_code":"11650"},
@@ -1018,7 +1018,7 @@ import type { InputFormValues } from "@/features/input/form-schema";
 import type { PersonaProfile } from "@/lib/contracts/persona";
 
 /**
- * `POST /api/simulations`와 `POST /api/reports`가 받는 본문.
+ * `POST /api/v1/simulations`와 `POST /api/v1/reports`가 받는 본문.
  *
  * core의 `app/schemas/simulation.py`가 정하는 모양이다. 이 파일 밖에서는
  * 이 모양을 알지 못한다 — 경계를 한 곳에 가둔다.
@@ -1579,7 +1579,7 @@ async function detailOf(response: Response): Promise<string> {
 export async function postSimulation(
   input: SimulationInputPayload,
 ): Promise<unknown> {
-  const response = await fetch("/api/simulations", {
+  const response = await fetch("/api/v1/simulations", {
     method: "POST",
     headers: { "content-type": "application/json" },
     body: JSON.stringify(input),
@@ -1594,14 +1594,14 @@ export async function postSimulation(
  * 보고서를 만들어 보관하고 그 id를 돌려준다.
  *
  * 응답 본문의 PDF 바이트를 쓰지 않고 id만 받는 이유는, 뷰어가
- * `GET /api/reports/{id}.pdf`를 걸어야 새로고침과 새 탭 열기가 살아 있기
+ * `GET /api/v1/reports/{id}.pdf`를 걸어야 새로고침과 새 탭 열기가 살아 있기
  * 때문이다. 두 번째 요청은 보관된 파일을 읽을 뿐이라 AI도 렌더도 다시
  * 돌지 않는다.
  */
 export async function postReportPdf(
   input: SimulationInputPayload,
 ): Promise<string> {
-  const response = await fetch("/api/reports?format=pdf", {
+  const response = await fetch("/api/v1/reports?format=pdf", {
     method: "POST",
     headers: { "content-type": "application/json" },
     body: JSON.stringify(input),
@@ -1945,7 +1945,7 @@ import { PortfolioView } from "./portfolio-view";
  * 대시보드의 계산 주체.
  *
  * 두 호출은 서로를 기다리지 않는다. 카드는 AI를 부르지 않는
- * `/api/simulations`로 1~2초에 뜨고, 보고서는 AI 두 번과 PDF 렌더를 거쳐
+ * `/api/v1/simulations`로 1~2초에 뜨고, 보고서는 AI 두 번과 PDF 렌더를 거쳐
  * 나중에 붙는다. 하나로 묶으면 카드까지 20~30초를 기다린다.
  */
 export function LiveDashboard({ profile }: { profile: PersonaProfile }) {
@@ -2069,7 +2069,7 @@ git commit -m "feat: 대시보드를 실시간 계산으로 전환한다
 지금까지 대시보드는 픽스처 result.json만 읽고 백엔드를 한 번도 부르지
 않았다.
 
-두 호출을 분리한다. 카드는 AI를 부르지 않는 /api/simulations로 바로 뜨고
+두 호출을 분리한다. 카드는 AI를 부르지 않는 /api/v1/simulations로 바로 뜨고
 보고서는 뒤따른다. 묶으면 카드까지 AI를 기다린다.
 
 '변경한 목표값은 연동 후 반영됩니다' 안내를 지운다 — 이제 거짓이다."
@@ -2129,7 +2129,7 @@ describe("ReportViewer", () => {
 
     await waitFor(() => {
       const frame = screen.getByTitle("실행 보고서");
-      expect(frame).toHaveAttribute("src", `/api/reports/${REPORT_ID}.pdf`);
+      expect(frame).toHaveAttribute("src", `/api/v1/reports/${REPORT_ID}.pdf`);
     });
   });
 
@@ -2140,7 +2140,7 @@ describe("ReportViewer", () => {
     await waitFor(() =>
       expect(screen.getByRole("link", { name: /새 탭/ })).toHaveAttribute(
         "href",
-        `/api/reports/${REPORT_ID}.pdf`,
+        `/api/v1/reports/${REPORT_ID}.pdf`,
       ),
     );
   });
@@ -2232,7 +2232,7 @@ export function ReportViewer({ input }: { input: SimulationInputPayload }) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [JSON.stringify(input)]);
 
-  const href = reportId ? `/api/reports/${reportId}.pdf` : null;
+  const href = reportId ? `/api/v1/reports/${reportId}.pdf` : null;
 
   return (
     <section className="grid gap-3 pb-12">

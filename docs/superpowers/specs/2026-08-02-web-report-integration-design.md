@@ -38,9 +38,9 @@ Step1 폼 확장  →  [폼값 → SimulationInput → 백엔드 호출]  →  �
 | 있는 것 | 위치 |
 | --- | --- |
 | 백엔드 프록시 | `web/src/app/api/[...path]/route.ts` → `BACKEND_API_URL` |
-| 시뮬레이션 엔드포인트 | `POST /api/simulations` → `SimulationResult` |
-| 보고서 PDF 생성 | `POST /api/reports?format=pdf` |
-| 보관 PDF 조회 | `GET /api/reports/{report_id}.pdf` |
+| 시뮬레이션 엔드포인트 | `POST /api/v1/simulations` → `SimulationResult` |
+| 보고서 PDF 생성 | `POST /api/v1/reports?format=pdf` |
+| 보관 PDF 조회 | `GET /api/v1/reports/{report_id}.pdf` |
 | 인라인 응답 헤더 | `reports.py:69-83` — `Content-Disposition: inline` + `X-Report-Id` |
 
 `reports.py:70-75`의 주석이 의도를 명시한다 — *"브라우저 내장 뷰어에서 열리도록
@@ -111,7 +111,7 @@ Pango·cairo 같은 시스템 라이브러리를 요구해서 Windows 로컬에�
 보관을 건너뛰고 PDF 바이트만 돌려주는 경로를 core에 새로 낼 수도 있었지만
 채택하지 않았다. 두 가지 이유다.
 
-- 보관을 건너뛰면 `GET /api/reports/{id}.pdf`라는 **iframe에 물릴 URL이
+- 보관을 건너뛰면 `GET /api/v1/reports/{id}.pdf`라는 **iframe에 물릴 URL이
   사라진다.** blob URL로 대체할 수 있으나 새로고침·새 탭 열기가 깨진다.
 - 보고서는 규제 수치와 가정을 담은 문서다. 무엇을 언제 어떤 기준일로 냈는지
   남기지 않는 경로를 새로 만드는 것은 이 저장소의 방향과 반대다.
@@ -182,8 +182,8 @@ Pango·cairo 같은 시스템 라이브러리를 요구해서 Windows 로컬에�
 
 ### 2.7 결정 7 — 느린 호출과 빠른 호출을 분리한다
 
-`POST /api/reports`는 AI 두 번(작성·판정)과 PDF 렌더를 거친다. `POST
-/api/simulations`는 AI를 부르지 않는다. 두 요청을 하나로 묶으면 카드까지 AI를
+`POST /api/v1/reports`는 AI 두 번(작성·판정)과 PDF 렌더를 거친다. `POST
+/api/v1/simulations`는 AI를 부르지 않는다. 두 요청을 하나로 묶으면 카드까지 AI를
 기다린다.
 
 세 아키텍처 중 A를 채택한다.
@@ -231,7 +231,7 @@ REPORT_ARCHIVE_PROVIDER=filesystem
 
 `report_storage_root`는 `app/core/config.py:67`의 기본값 `var/reports`를 쓴다.
 
-**검증**: 페르소나 하나로 `POST /api/reports?format=pdf`를 호출해 200과
+**검증**: 페르소나 하나로 `POST /api/v1/reports?format=pdf`를 호출해 200과
 `%PDF` 매직바이트를 확인하고, `embedded_font_names()`로 CJK 폰트가 임베드됐는지
 본다. 두부 검사(`verify_korean_glyphs`)가 통과하지 못하면 이 단계는 실패다.
 
@@ -310,8 +310,8 @@ REPORT_ARCHIVE_PROVIDER=filesystem
 
 ```
 위저드 제출 → sessionStorage[폼값] → /dashboard?persona=...
-                                        ├─ POST /api/simulations   → 카드 (1~2초)
-                                        └─ POST /api/reports?format=pdf → 뷰어 (20~30초)
+                                        ├─ POST /api/v1/simulations   → 카드 (1~2초)
+                                        └─ POST /api/v1/reports?format=pdf → 뷰어 (20~30초)
 ```
 
 두 호출은 서로를 기다리지 않는다.
@@ -329,9 +329,9 @@ REPORT_ARCHIVE_PROVIDER=filesystem
 
 `src/features/report/report-viewer.tsx`.
 
-1. `POST /api/reports?format=pdf` 호출
+1. `POST /api/v1/reports?format=pdf` 호출
 2. 응답 헤더 `X-Report-Id`를 읽는다
-3. `<iframe src={"/api/reports/" + id + ".pdf"} />`
+3. `<iframe src={"/api/v1/reports/" + id + ".pdf"} />`
 
 스크롤·페이지 번호·확대는 브라우저 내장 PDF 뷰어가 처리한다. 높이는 `80vh`
 고정, 상단에 새 탭에서 열기 링크를 둔다.
@@ -392,7 +392,7 @@ AI 키가 없을 때 `app/reports/ai_explanation/gemini.py:75-77`이 남기는 �
 | `report_storage_root` 기본값 | `var/reports` (`app/core/config.py:67`) |
 | PDF 보관의 DB 의존 | 있음. `insert_report`가 메타데이터를 쓴다 |
 | `X-Report-Id` 헤더 | 있음 (`reports.py:81`) |
-| `POST /api/simulations` | 있음. `SimulationResult` 반환 |
+| `POST /api/v1/simulations` | 있음. `SimulationResult` 반환 |
 | `result.json`의 정체 | `SimulationResult`가 아니라 웹 전용 뷰모델. `build-fixtures.mjs:226`이 `college_student_portfolio_results.json`에서 만든다 |
 | 정책 검증 3필드 | `SimulationResult`에 없음 → §2.6 |
 

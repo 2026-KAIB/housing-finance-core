@@ -280,7 +280,25 @@ def test_a_caller_supplied_result_is_not_recalculated() -> None:
 
     # 후보를 안 넘겼는데도 결과가 살아 있다 — 다시 계산했다면 결측으로 막혔다.
     assert reused.savings_portfolio.run_status is SectionRunStatus.COMPLETED
-    assert reused.savings_portfolio.result == first.savings_portfolio.result
+    # 정책 재검증 키(final_policy_status 등)는 예외다: `reused`는 완성된
+    # ``SavingsPortfolioResult``만 넘겼을 뿐 재검증 판정은 함께 넘기지 않았으므로
+    # 배분 자체가 같아도 판정은 없다 — 판정을 받지 못한 상태를 PASS로 채우지
+    # 않는다는 계약(§22.1)이 여기서도 지켜져야 한다.
+    policy_keys = {"final_policy_status", "final_policy_valid", "validation_reasons"}
+    assert first.savings_portfolio.result is not None
+    assert reused.savings_portfolio.result is not None
+    first_engine_result = {
+        key: value
+        for key, value in first.savings_portfolio.result.items()
+        if key not in policy_keys
+    }
+    reused_engine_result = {
+        key: value
+        for key, value in reused.savings_portfolio.result.items()
+        if key not in policy_keys
+    }
+    assert reused_engine_result == first_engine_result
+    assert policy_keys.isdisjoint(reused.savings_portfolio.result)
 
 
 # --------------------------------------------------------------------------

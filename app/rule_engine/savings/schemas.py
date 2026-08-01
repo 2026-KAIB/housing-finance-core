@@ -22,7 +22,12 @@ class SavingsProduct:
     maturity_months: int
     is_principal_protected: bool
     is_deposit_protected: bool
+    source_type: str = "api"
+    regulatory_review_no: str | None = None
+    regulatory_review_date: date | None = None
 
     @property
     def data_version(self) -> str:
+        if self.regulatory_review_no:
+            return f"{self.product_id}@{self.regulatory_review_no}"
         return f"{self.product_id}@{self.confirmed_date.isoformat()}"

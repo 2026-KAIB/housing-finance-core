@@ -151,3 +151,42 @@ def test_dsr_limit_uses_dsr_that_already_includes_existing_and_new_debt() -> Non
     decision = next(d for d in result.decisions if d.rule_code == "LOAN_DSR_LIMIT")
 
     assert decision.passed is True
+
+
+def test_missing_loan_limit_is_not_a_rejection() -> None:
+    # DESIGN SSOT 부록 B-5: 원천 loan_lmt는 자유텍스트라 파싱 실패 시 None일 수 있다.
+    product = replace(BASE_PRODUCT, loan_limit=None)
+    context = replace(BASE_CONTEXT, product=product, requested_loan_amount=Decimal("999999999999"))
+
+    result = evaluate_loan_eligibility(context)
+    decision = next(d for d in result.decisions if d.rule_code == "LOAN_PRODUCT_LIMIT")
+
+    assert decision.passed is True
+
+
+def test_missing_ltv_dti_dsr_limits_are_not_a_rejection() -> None:
+    # DESIGN SSOT 부록 B-5: LTV·DTI·DSR 상한은 상품 데이터가 아니라 별도 규제
+    # 상수표에서 매칭되며, 매칭 실패 시 None일 수 있다.
+    product = replace(BASE_PRODUCT, max_ltv=None, max_dti=None, max_dsr=None)
+    context = replace(
+        BASE_CONTEXT,
+        product=product,
+        computed_ltv=Decimal("0.99"),
+        computed_dti=Decimal("0.99"),
+        computed_dsr=Decimal("0.99"),
+    )
+
+    result = evaluate_loan_eligibility(context)
+
+    assert result.eligible is True
+
+
+def test_data_version_prefers_regulatory_review_number_when_present() -> None:
+    # DESIGN SSOT 부록 B-2/B-6: manual_pdf 소스는 심의필 번호가 확인일보다 우선하는 출처 근거.
+    product = replace(
+        BASE_PRODUCT,
+        source_type="manual_pdf",
+        regulatory_review_no="준법감시인 심의필 제2025-4098-2호",
+    )
+
+    assert product.data_version == f"{product.product_id}@준법감시인 심의필 제2025-4098-2호"

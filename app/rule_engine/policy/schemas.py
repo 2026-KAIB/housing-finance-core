@@ -24,7 +24,12 @@ class PolicyProduct:
     max_ltv: Decimal | None = None
     max_dti: Decimal | None = None
     max_dsr: Decimal | None = None
+    source_type: str = "api"
+    regulatory_review_no: str | None = None
+    regulatory_review_date: date | None = None
 
     @property
     def data_version(self) -> str:
+        if self.regulatory_review_no:
+            return f"{self.policy_id}@{self.regulatory_review_no}"
         return f"{self.policy_id}@{self.confirmed_date.isoformat()}"

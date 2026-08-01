@@ -24,6 +24,13 @@ dev = [
     "pytest-cov>=5.0",
     "ruff>=0.8",
 ]
+# PDF 보관용. 기본 의존성에 넣지 않는 이유는 WeasyPrint가 Pango·cairo 같은
+# **시스템 라이브러리**를 요구해서 Windows 로컬에서는 pip 설치만으로 동작하지
+# 않기 때문이다. 없으면 PDF 경로만 막히고(`reports/pdf.py`) 계산·HTML 보고서는
+# 그대로 돈다. 컨테이너(Dockerfile)에는 라이브러리와 함께 설치한다.
+pdf = [
+    "weasyprint>=62",
+]
 
 [tool.hatch.build.targets.wheel]
 packages = ["app"]

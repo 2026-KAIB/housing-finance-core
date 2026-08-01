@@ -58,6 +58,14 @@ class Settings(BaseSettings):
     # 명시적으로 꺼야 한다(`reports/ai_explanation/egress.py`).
     report_ai_egress_guard: bool = True
 
+    # 보고서 PDF 보관. 기본이 "none"인 이유는 보관이 **되돌리기 어려운 부수효과**
+    # 이기 때문이다 — 켜는 순간 계산 요청마다 디스크에 파일이 쌓이고 개인 재무
+    # 정보가 담긴 문서가 영구 저장된다. 그건 명시적으로 켜야 하는 결정이다.
+    report_archive_provider: Literal["none", "filesystem"] = "none"
+    # 보관 루트. 파일명은 서버가 만든 UUID로만 구성되며 사용자 입력이 경로에
+    # 섞이지 않는다(`reports/storage.py`).
+    report_storage_root: Path = Path("var/reports")
+
     @property
     def cors_origins_list(self) -> list[str]:
         return [origin.strip() for origin in self.cors_origins.split(",") if origin.strip()]

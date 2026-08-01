@@ -84,6 +84,35 @@ class TestEgressGuard:
         assert not report.allowed
         assert report.findings[0].kind == "account_number"
 
+    def test_a_compliance_review_number_is_not_mistaken_for_an_account_number(self) -> None:
+        """`제2024-5992-12호`의 가운데는 계좌번호 형태와 겹친다.
+
+        이 번호는 상품 Rule Pack 버전 문자열에 들어 있다. 걸러내지 않으면 예·적금이
+        실린 **종합 보고서 전체가 AI에 나가지 못한다.** 실제로 그렇게 됐다.
+        """
+        # 실제 DB에서 온 값이다.
+        source_version = "일반정기적금@준법감시인 심의필 제2024-5992-12호"
+        report = scan_payload(
+            {
+                "sections": {
+                    "savings": {
+                        "facts": {"allocations": [{"source_version": source_version}]}
+                    }
+                }
+            }
+        )
+
+        assert report.allowed, report.findings
+
+    def test_stripping_review_numbers_still_leaves_real_account_numbers_visible(self) -> None:
+        """감싸개(`제…호`) 없는 맨 숫자는 그대로 걸려야 한다."""
+        report = scan_payload(
+            {"memo": "심의필 제2024-5992-12호, 입금계좌 110-234-567890"}
+        )
+
+        assert not report.allowed
+        assert report.findings[0].kind == "account_number"
+
     def test_policy_version_is_not_mistaken_for_an_email(self) -> None:
         report = scan_payload({"policy_sources": ["cashflow-policy@1.0.0"]})
 

@@ -68,7 +68,14 @@ def test_maturity_after_fund_needed_date_is_filtered_before_scoring() -> None:
     assert "자금 필요시점" in result.reasons[0]
 
 
-def test_deposit_protection_limit_is_a_hard_filter() -> None:
+def test_exceeding_the_protection_limit_with_the_full_budget_is_not_ineligible() -> None:
+    """전액이 한도를 넘는 것과 한 푼도 못 넣는 것은 다르다.
+
+    기존 예치액 4,500만원에 한도가 5,000만원이면 500만원은 보호받으며 넣을 수
+    있다. 여기서 상품을 버리면 "일부 가능"이 "전부 불가"로 뭉개진다 — 실제로
+    목돈 1.5억 사용자에게 예금이 한 건도 추천되지 않았다. 상한 절단은 기관
+    단위로 배분을 아는 포트폴리오 계층이 한다.
+    """
     result = evaluate_savings_option(
         _payload(
             existing_institution_deposit=Decimal("45000000"),
@@ -76,8 +83,36 @@ def test_deposit_protection_limit_is_a_hard_filter() -> None:
         )
     )
 
+    assert result.status is SavingsEvaluationStatus.ELIGIBLE
+    # 전액을 넣었을 때의 예상 예치액은 사실대로 남는다. 판정 근거가 아니라
+    # 배분 계층이 얼마를 잘라야 하는지 알려 주는 값이다.
+    assert result.projected_institution_deposit == Decimal("55423000")
+
+
+def test_a_full_institution_leaves_nothing_to_allocate() -> None:
+    """기존 예치액만으로 한도가 찼으면 절단할 여지가 없다 — 그때는 부적격이다."""
+    result = evaluate_savings_option(
+        _payload(
+            existing_institution_deposit=Decimal("50000000"),
+            deposit_protection_limit=Decimal("50000000"),
+        )
+    )
+
     assert result.status is SavingsEvaluationStatus.INELIGIBLE
-    assert any("예금자보호 한도" in reason for reason in result.reasons)
+    assert result.score is None
+    assert any("추가로 예치할 수 있는 금액이 없습니다" in reason for reason in result.reasons)
+
+
+def test_an_unprotected_product_is_not_judged_by_the_protection_limit() -> None:
+    result = evaluate_savings_option(
+        _payload(
+            is_deposit_protected=False,
+            existing_institution_deposit=Decimal("50000000"),
+            deposit_protection_limit=Decimal("50000000"),
+        )
+    )
+
+    assert result.status is SavingsEvaluationStatus.ELIGIBLE
 
 
 def test_add_months_clamps_month_end() -> None:

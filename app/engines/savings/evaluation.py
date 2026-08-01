@@ -92,13 +92,23 @@ def evaluate_savings_option(payload: SavingsEvaluationInput) -> SavingsEvaluatio
         )
     if not payload.is_principal_protected and not payload.accepts_principal_risk:
         reasons.append("원금손실 가능 상품이며 사용자의 위험성향과 맞지 않습니다.")
+    # 예산 전액을 넣으면 한도를 넘는다는 것은 **부적격이 아니다.** 넘지 않는
+    # 만큼만 넣으면 되고, 실제 상한 절단은 포트폴리오 배분이 기관 단위로 한다
+    # (``portfolio._institution_capacity``). 여기서 상품을 통째로 버리면 "일부
+    # 가능"이 "전부 불가"로 뭉개진다 — 실제로 목돈 1.5억 사용자에게 예금이 한 건도
+    # 추천되지 않고 1.39억이 통째로 미배분으로 남았다. 보호 한도 안에서 예치할 수
+    # 있는 9,600만원까지 놀리는 것은 보수적인 답이 아니라 틀린 답이다.
+    #
+    # 정말로 넣을 수 없는 경우는 **기존 예치액만으로 이미 한도가 찬** 때다. 그때는
+    # 보호받으며 추가로 넣을 수 있는 금액이 0원이라 절단할 여지가 없다.
     if (
         payload.is_deposit_protected
-        and projected_deposit > payload.deposit_protection_limit
+        and payload.existing_institution_deposit >= payload.deposit_protection_limit
     ):
         reasons.append(
-            f"동일 금융회사 예상 예치액 {projected_deposit}원이 예금자보호 한도"
-            f" {payload.deposit_protection_limit}원을 초과합니다."
+            f"동일 금융회사 기존 예치액 {payload.existing_institution_deposit}원이"
+            f" 예금자보호 한도 {payload.deposit_protection_limit}원 이상이어서"
+            " 보호받으며 추가로 예치할 수 있는 금액이 없습니다."
         )
 
     if reasons:

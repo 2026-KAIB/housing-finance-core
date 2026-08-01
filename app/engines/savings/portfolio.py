@@ -17,7 +17,7 @@
 """
 
 from dataclasses import dataclass
-from decimal import Decimal
+from decimal import ROUND_HALF_UP, Decimal
 from itertools import combinations
 
 from app.engines.savings.models import SavingsEvaluationStatus, SavingsProductKind
@@ -501,24 +501,67 @@ def _is_complete(payload: SavingsPortfolioInput, plan: _PortfolioPlan) -> bool:
     )
 
 
+def _expected_net_interest(plan: _PortfolioPlan) -> Decimal:
+    """이 조합이 만기까지 벌어들이는 세후 이자 총액. **원 단위로 끊는다.**
+
+    배분하지 않은 예산은 이 합계에 0으로 들어간다 — 원금은 이미 사용자 돈이므로
+    "얼마를 담았는가"가 아니라 "얼마를 더 벌었는가"로 조합을 비교해야 한다.
+
+    원 미만을 남기면 안 된다. 보호 한도 절단은 ``remaining / 만기배수``라 나누어
+    떨어지지 않는 잔차를 남기는데, 이자가 실질적으로 같은 두 조합이 그 잔차로
+    갈린다. 실제로 한도까지 채운 조합이 1원도 안 되는 차이로 져서 상품 하나가
+    통째로 빠졌다. 원 미만의 차이는 사용자에게 존재하지 않는 차이이므로 여기서
+    끊고, 남은 순위 기준이 판단하게 둔다.
+    """
+    total = sum(
+        (allocation.expected_net_interest for allocation in plan.allocations),
+        start=Decimal(0),
+    )
+    return total.quantize(Decimal(1), rounding=ROUND_HALF_UP)
+
+
 def _plan_is_better(
     payload: SavingsPortfolioInput,
     candidate: _PortfolioPlan,
     current: _PortfolioPlan | None,
 ) -> bool:
+    """예산을 다 쓴 조합을 먼저 보고, 그 다음은 **벌어들이는 이자 총액**으로 가른다.
+
+    ``coverage_ratio``(예산 소진율)와 ``objective_score``는 둘 다 이 자리에 맞지
+    않는다. 예금자보호 한도가 물리면 상한 절단이 **만기금액** 기준으로 이뤄져
+    (``_institution_capacity``) 어떤 조합이든 만기 합계가 같은 한도에 도달한다.
+    남는 차이는 그 금액을 만드는 데 원금이 얼마나 드는가뿐인데, 만기가 짧을수록
+    이자가 적어 원금이 더 든다. 원금을 더 쓰는 것이 곧 소진율이 높은 것이므로
+    소진율을 앞에 두면 **수익률이 낮은 쪽이 이긴다** — 2년 뒤가 목표인 사용자에게
+    1개월 정기예금이 뽑혔다.
+
+    그렇다고 ``objective_score``를 앞에 둘 수도 없다. 그것은 원금 가중 **평균**
+    이라 수익률이 조금 낮은 상품을 더해 이자 총액을 늘리면 오히려 내려간다.
+    그래서 "가장 좋은 하나만 담고 나머지 예산은 놀린다"가 최적이 된다 — 실제로
+    보호 한도 여유 4,100만원을 남긴 채 예금을 한 건도 담지 않았다.
+
+    두 실패는 같은 원인이다. 소진율은 원금의, 목적함수는 비율의 지표인데 사용자가
+    원하는 것은 **필요시점에 돈이 얼마나 더 있는가**다. 그 값이 이자 총액이다.
+    놀린 돈은 이자 0으로 정직하게 반영되므로 "덜 담고 놀리는" 조합은 저절로 진다.
+
+    ``_is_complete``는 그대로 맨 앞에 둔다. 예산을 온전히 배분할 수 있는 국면에서
+    동작을 바꾸지 않기 위해서다.
+    """
     if current is None:
         return True
     candidate_key = (
         int(_is_complete(payload, candidate)),
-        candidate.coverage_ratio,
+        _expected_net_interest(candidate),
         candidate.objective_score,
+        candidate.coverage_ratio,
         candidate.weighted_product_score,
         -len(candidate.allocations),
     )
     current_key = (
         int(_is_complete(payload, current)),
-        current.coverage_ratio,
+        _expected_net_interest(current),
         current.objective_score,
+        current.coverage_ratio,
         current.weighted_product_score,
         -len(current.allocations),
     )

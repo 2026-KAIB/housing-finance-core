@@ -8,11 +8,11 @@
 """
 
 from collections.abc import Sequence
-from datetime import datetime
+from datetime import date, datetime
 from typing import Annotated, Literal
-from uuid import UUID
+from uuid import UUID, uuid4
 
-from fastapi import APIRouter, Depends, HTTPException, Query, status
+from fastapi import APIRouter, Depends, HTTPException, Query, Response, status
 from fastapi.responses import HTMLResponse
 from pydantic import BaseModel, ConfigDict
 
@@ -52,9 +52,106 @@ from app.services.cashflow_diagnosis import diagnose_financial_snapshot
 from app.services.property_affordability_api import (
     evaluate_property_search_affordability,
 )
+from app.services.report_archive import (
+    PDF_MEDIA_TYPE,
+    PdfRenderingUnavailable,
+    ReportArchiveDisabled,
+    ReportArchiveUnavailable,
+    ReportStorageError,
+    archive_pdf_report,
+    load_archived_pdf,
+)
 from app.services.simulation_orchestrator import run_simulation
 
 router = APIRouter()
+
+
+def _pdf_response(content: bytes, *, report_id: UUID) -> Response:
+    """브라우저 내장 뷰어에서 열리도록 **inline**으로 내보낸다.
+
+    ``attachment``면 다운로드로 떨어져 웹에서 바로 볼 수 없다. 파일명은 서버가
+    만든 UUID뿐이다 — 사용자 이름이나 매물명을 파일명에 넣으면 저장·공유 과정에서
+    그대로 새어 나간다.
+    """
+    return Response(
+        content=content,
+        media_type=PDF_MEDIA_TYPE,
+        headers={
+            "Content-Disposition": f'inline; filename="{report_id}.pdf"',
+            "X-Report-Id": str(report_id),
+        },
+    )
+
+
+def _archive_or_raise(
+    html: str,
+    *,
+    report_id: UUID,
+    kind: str,
+    source_id: UUID,
+    created_at: datetime,
+    as_of: date,
+    report,
+    policy_sources: Sequence[str],
+) -> bytes:
+    """PDF로 굳혀 보관하고 그 바이트를 돌려준다. 실패는 원인별로 구분해 올린다."""
+    try:
+        archive_pdf_report(
+            html,
+            report_id=report_id,
+            kind=kind,
+            source_id=source_id,
+            created_at=created_at,
+            as_of=as_of,
+            fully_verified=report.fully_verified,
+            adopted_sections=report.adopted_sections,
+            figures_only_sections=report.figures_only_sections,
+            policy_sources=policy_sources,
+            notes=report.notes,
+        )
+    except ReportArchiveDisabled as exc:
+        raise HTTPException(
+            status_code=status.HTTP_501_NOT_IMPLEMENTED,
+            detail="보고서 보관이 설정되지 않았습니다(REPORT_ARCHIVE_PROVIDER).",
+        ) from exc
+    except PdfRenderingUnavailable as exc:
+        # 여기에는 "글꼴이 없어 한글이 두부로 나간다"도 포함된다. 읽을 수 없는
+        # 문서를 성공으로 돌려주지 않는다.
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail=f"PDF를 만들지 못했습니다: {exc}",
+        ) from exc
+    except (ReportStorageError, ReportArchiveUnavailable) as exc:
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail=f"보고서를 보관하지 못했습니다: {exc}",
+        ) from exc
+
+    _record, content = load_archived_pdf(report_id)
+    return content
+
+
+@router.get("/{report_id}.pdf", response_model=None)
+def read_archived_report(report_id: UUID) -> Response:
+    """보관된 보고서를 브라우저 PDF 뷰어로 바로 띄운다."""
+    try:
+        _record, content = load_archived_pdf(report_id)
+    except ReportArchiveDisabled as exc:
+        raise HTTPException(
+            status_code=status.HTTP_501_NOT_IMPLEMENTED,
+            detail="보고서 보관이 설정되지 않았습니다(REPORT_ARCHIVE_PROVIDER).",
+        ) from exc
+    except LookupError as exc:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="보관된 보고서를 찾을 수 없습니다.",
+        ) from exc
+    except (ReportStorageError, ReportArchiveUnavailable) as exc:
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail=f"보관된 보고서를 읽지 못했습니다: {exc}",
+        ) from exc
+    return _pdf_response(content, report_id=report_id)
 
 
 class SectionVerification(BaseModel):
@@ -133,8 +230,10 @@ def create_property_report(
         ProductRulePackRegistry | None, Depends(get_property_loan_rule_registry)
     ],
     calculated_at: Annotated[datetime, Depends(get_property_calculated_at)],
-    response_format: Annotated[Literal["json", "print"], Query(alias="format")] = "json",
-) -> PropertyReportResponse | HTMLResponse:
+    response_format: Annotated[
+        Literal["json", "print", "pdf"], Query(alias="format")
+    ] = "json",
+) -> PropertyReportResponse | HTMLResponse | Response:
     """검색·계산·핸드오프·보고서를 한 요청으로 처리한다(핸드오프 문서 8항 권장안 A).
 
     브라우저가 보낸 계산 결과를 받지 않는다. 이 경계는 검색 조건과 재무 사실만
@@ -167,8 +266,22 @@ def create_property_report(
     )
     report = build_report_from_spec(property_narration_spec(report_input))
 
-    if response_format == "print":
-        return HTMLResponse(render_property_official_report(report, report_input))
+    if response_format in {"print", "pdf"}:
+        html = render_property_official_report(report, report_input)
+        if response_format == "print":
+            return HTMLResponse(html)
+        report_id = uuid4()
+        content = _archive_or_raise(
+            html,
+            report_id=report_id,
+            kind="property",
+            source_id=affordability.search_result.search_snapshot_id,
+            created_at=calculated_at,
+            as_of=calculated_at.date(),
+            report=report,
+            policy_sources=report_input.policy_sources,
+        )
+        return _pdf_response(content, report_id=report_id)
 
     return PropertyReportResponse(
         search_snapshot_id=affordability.search_result.search_snapshot_id,
@@ -195,9 +308,9 @@ def create_report(
     calculated_at: Annotated[datetime, Depends(get_calculated_at)],
     simulation_id: Annotated[UUID, Depends(get_simulation_id)],
     response_format: Annotated[
-        Literal["json", "html", "print"], Query(alias="format")
+        Literal["json", "html", "print", "pdf"], Query(alias="format")
     ] = "json",
-) -> ReportResponse | HTMLResponse:
+) -> ReportResponse | HTMLResponse | Response:
     """계산하고, 두 에이전트를 돌리고, 통과한 것만 조합해 보고서를 돌려준다."""
     simulation = run_simulation(
         payload,
@@ -211,10 +324,24 @@ def create_report(
     report_input = build_report_ai_input(simulation)
     report = build_final_report(report_input)
 
-    if response_format == "print":
+    if response_format in {"print", "pdf"}:
         # 인쇄용 정식 보고서. 우대조건 원문은 넘기지 않는다 — 자유텍스트 자격조건을
         # 문서에 확정 사실처럼 싣지 않는다는 규약(부록 B-3)과 같은 이유다.
-        return HTMLResponse(render_official_report(report, simulation))
+        html = render_official_report(report, simulation)
+        if response_format == "print":
+            return HTMLResponse(html)
+        report_id = uuid4()
+        content = _archive_or_raise(
+            html,
+            report_id=report_id,
+            kind="simulation",
+            source_id=simulation_id,
+            created_at=calculated_at,
+            as_of=calculated_at.date(),
+            report=report,
+            policy_sources=report_input.policy_sources,
+        )
+        return _pdf_response(content, report_id=report_id)
 
     if response_format == "html":
         # 우대조건 원문은 화면 표시 전용이다. 계산에도 AI 전송에도 쓰지 않으므로

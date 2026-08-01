@@ -39,7 +39,11 @@ PRINT_STYLE = """
 * { box-sizing: border-box; }
 body {
   margin: 0 auto; max-width: 190mm; padding: 12mm 8mm 20mm;
-  font-family: "Malgun Gothic", "맑은 고딕", "Noto Serif KR", serif;
+  /* "Noto Serif CJK KR"은 Debian/Ubuntu의 fonts-noto-cjk가 실제로 설치하는
+     패밀리 이름이다. 예전에 적혀 있던 "Noto Serif KR"은 그 이름이 아니어서
+     리눅스 컨테이너에서 fontconfig가 못 찾고 한글이 두부로 나간다. */
+  font-family: "Malgun Gothic", "맑은 고딕",
+               "Noto Serif CJK KR", "Noto Sans CJK KR", serif;
   font-size: 10.5pt; line-height: 1.65; color: #111; background: #fff;
 }
 h1 { font-size: 17pt; text-align: center; margin: 0 0 2mm; letter-spacing: -0.02em; }

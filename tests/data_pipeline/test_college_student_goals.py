@@ -90,6 +90,10 @@ def test_target_region_and_price_match_the_spec(persona):
     profile = persona["profile"]
     assert profile["target_region"] == region
     assert profile["target_price"] == price
+    # target_purchase_price가 Interfaces 계약상 정본이다. persona_e()는 이 값과
+    # target_price를 서로 다른 리터럴로 각각 박아 두므로, 여기서 검증하지 않으면
+    # 한쪽만 고치고 다른 쪽을 놓쳐도 테스트가 통과해 버린다.
+    assert profile["target_purchase_price"] == price
 
 
 @pytest.mark.parametrize("persona", _personas(), ids=lambda p: p["id"])

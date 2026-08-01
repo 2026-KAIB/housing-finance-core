@@ -10,6 +10,7 @@ CI와 Windows 로컬에는 없다. 엔진이 있는 환경에서만 도는 검�
 4. 한글 글꼴이 없는 PDF는 "성공"이 아니다.
 """
 
+import zlib
 from datetime import UTC, date, datetime
 from decimal import Decimal
 from pathlib import Path
@@ -223,6 +224,49 @@ def test_a_pdf_with_no_embedded_font_at_all_is_refused() -> None:
 
 def test_a_cjk_font_passes() -> None:
     verify_korean_glyphs(b"%PDF-1.7\n/BaseFont /ABCDEF+NotoSansCJKKR-Regular\n")
+
+
+def _compressed_pdf(*base_fonts: str) -> bytes:
+    """폰트 딕셔너리를 **압축된 객체 스트림에 넣은** PDF를 흉내 낸다.
+
+    WeasyPrint의 기본 출력이 이 모양이라 ``/BaseFont``가 평문으로는 한 번도
+    나타나지 않는다. 여기서 재현하지 않으면 이 실패는 엔진이 있는 환경에서만
+    드러나고, 그 검사들은 로컬에서 전부 skip이라 CI에 가서야 터진다.
+    """
+    objects = b" ".join(
+        f"<</Type/Font/Subtype/Type0/BaseFont /ABCDEF+{name}>>".encode() for name in base_fonts
+    )
+    return (
+        b"%PDF-1.7\n%\xf0\x9f\x96\xa4\n"
+        b"5 0 obj\n<</Type /ObjStm/Filter /FlateDecode>>\nstream\n"
+        + zlib.compress(b"1 0 2 60 " + objects)
+        + b"\nendstream\nendobj\nstartxref\n112496\n%%EOF\n"
+    )
+
+
+def test_fonts_hidden_inside_a_compressed_object_stream_are_still_found() -> None:
+    """평문만 훑으면 정상 문서를 "폰트 없음"으로 막는다. 실제로 CI에서 그랬다."""
+    content = _compressed_pdf("NotoSerifCJKKR-Regular")
+
+    assert b"/BaseFont" not in content, "평문으로 보이면 이 검사가 아무것도 증명하지 않는다"
+    assert embedded_font_names(content) == frozenset({"NotoSerifCJKKR-Regular"})
+    verify_korean_glyphs(content)
+
+
+def test_a_compressed_pdf_without_a_korean_font_is_still_refused() -> None:
+    """압축을 푸는 것이 검사를 무디게 만들지 않는지 확인한다."""
+    with pytest.raises(PdfRenderingUnavailable, match="한글"):
+        verify_korean_glyphs(_compressed_pdf("DejaVuSans", "DejaVuSans-Bold"))
+
+
+def test_a_stream_that_is_not_compressed_does_not_break_the_scan() -> None:
+    """이미지·폰트 본문처럼 zlib이 아닌 스트림이 섞여도 훑기가 멈추면 안 된다."""
+    content = (
+        b"%PDF-1.7\n7 0 obj\n<</Length 8>>\nstream\n\x00\x01\x02\x03rawbytes\nendstream\nendobj\n"
+        + _compressed_pdf("NotoSansCJKKR-Regular")[9:]
+    )
+
+    assert embedded_font_names(content) == frozenset({"NotoSansCJKKR-Regular"})
 
 
 # --------------------------------------------------------------------------

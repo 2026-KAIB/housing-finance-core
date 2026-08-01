@@ -39,6 +39,7 @@ from app.data_pipeline.adapters.savings_engine_adapter import (
     SavingsCalculationPolicy,
     adapt_handoff_for_savings_calculation,
     compute_savings,
+    resolve_allocation_bounds,
 )
 from app.data_pipeline.adapters.savings_portfolio_policy_adapter import (
     SavingsPortfolioPolicyValidation,
@@ -67,14 +68,6 @@ from app.rule_engine.product_packs.handoff import (
 )
 from app.rule_engine.product_packs.models import (
     EvaluationStatus,
-    ProductCategory,
-)
-from app.rule_engine.product_packs.registry import (
-    DEFAULT_PRODUCT_RULE_PACK_REGISTRY,
-)
-from app.rule_engine.product_packs.rules import (
-    ComparisonOperator,
-    ComparisonRule,
 )
 
 
@@ -167,53 +160,6 @@ def _liquidity_score(value: object) -> Decimal:
         return scores[str(value)]
     except KeyError as error:
         raise ValueError(f"지원하지 않는 liquidity_preference입니다: {value}") from error
-
-
-def _allocation_field(category: ProductCategory) -> str:
-    if category is ProductCategory.TERM_DEPOSIT:
-        return "deposit_amount"
-    if category is ProductCategory.INSTALLMENT_SAVINGS:
-        return "monthly_payment_amount"
-    raise ValueError(f"예적금이 아닌 상품 분류입니다: {category}")
-
-
-def _allocation_bounds(
-    handoff: ProductEngineHandoff,
-) -> tuple[Decimal, Decimal | None]:
-    """Rule Pack의 단순 금액비교 규칙을 포트폴리오 납입범위로 변환한다."""
-
-    field_name = _allocation_field(handoff.rule_result.category)
-    pack = DEFAULT_PRODUCT_RULE_PACK_REGISTRY.resolve(
-        handoff.product.product_name,
-        handoff.rule_result.as_of,
-    )
-    minimum = Decimal(1)
-    maximum: Decimal | None = None
-    for rule in pack.rules:
-        if not isinstance(rule, ComparisonRule) or rule.field_name != field_name:
-            continue
-        if rule.operator is ComparisonOperator.GTE:
-            minimum = max(minimum, _decimal(rule.expected))
-        elif rule.operator is ComparisonOperator.GT:
-            minimum = max(minimum, _decimal(rule.expected) + Decimal(1))
-        elif rule.operator is ComparisonOperator.LTE:
-            candidate_maximum = _decimal(rule.expected)
-            maximum = candidate_maximum if maximum is None else min(maximum, candidate_maximum)
-        elif rule.operator is ComparisonOperator.LT:
-            candidate_maximum = _decimal(rule.expected) - Decimal(1)
-            maximum = candidate_maximum if maximum is None else min(maximum, candidate_maximum)
-        elif rule.operator is ComparisonOperator.BETWEEN:
-            if (
-                isinstance(rule.expected, (str, bytes))
-                or not isinstance(rule.expected, Sequence)
-                or len(rule.expected) != 2
-            ):
-                raise ValueError(f"{rule.code}: BETWEEN 범위가 올바르지 않습니다.")
-            lower, upper = rule.expected
-            minimum = max(minimum, _decimal(lower))
-            candidate_maximum = _decimal(upper)
-            maximum = candidate_maximum if maximum is None else min(maximum, candidate_maximum)
-    return minimum, maximum
 
 
 def _user_facts(persona: PersonaFiles) -> dict[str, object]:
@@ -320,7 +266,7 @@ def _build_evaluated_candidates(
                 deposit_protection_limit=protection_limit,
             )
         )
-        minimum, maximum = _allocation_bounds(handoff)
+        minimum, maximum = resolve_allocation_bounds(handoff)
         evaluated.append(
             EvaluatedCandidate(
                 candidate=SavingsPortfolioCandidate(

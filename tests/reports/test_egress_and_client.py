@@ -60,6 +60,30 @@ class TestEgressGuard:
 
         assert report.allowed, report.findings
 
+    def test_uuids_are_not_mistaken_for_account_numbers(self) -> None:
+        """UUID의 가운데 토막이 계좌번호 형태와 겹친다.
+
+        매물 검색 스냅샷 식별자가 여기 걸려 매물 보고서 전체가 AI에 나가지
+        못했다. 금액 키 예외로 개별 대응하면 새 식별자가 생길 때마다 반복된다.
+        """
+        report = scan_payload(
+            {
+                "search_snapshot_id": "00000000-0000-0000-0000-000000000009",
+                "simulation_id": "0f9b21e4-4c1a-4d7f-9c3e-2b6a5d8e1f30",
+            }
+        )
+
+        assert report.allowed, report.findings
+
+    def test_stripping_uuids_still_leaves_real_account_numbers_visible(self) -> None:
+        """UUID를 지우는 것이 계좌번호 검사를 무디게 만들지 않는지 확인한다."""
+        report = scan_payload(
+            {"memo": "00000000-0000-0000-0000-000000000009 / 110-234-567890"}
+        )
+
+        assert not report.allowed
+        assert report.findings[0].kind == "account_number"
+
     def test_policy_version_is_not_mistaken_for_an_email(self) -> None:
         report = scan_payload({"policy_sources": ["cashflow-policy@1.0.0"]})
 

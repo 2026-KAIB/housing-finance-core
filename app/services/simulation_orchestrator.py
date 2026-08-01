@@ -36,6 +36,10 @@ from app.rule_engine.product_packs.handoff import ProductCandidate
 from app.rule_engine.product_packs.registry import ProductRulePackRegistry
 from app.schemas.simulation import GoalType, LoanRequestInput, SimulationInput, SimulationResult
 from app.services.cashflow_diagnosis import diagnose_cashflow
+from app.services.housing_scenarios import (
+    HousingScenarioBuild,
+    build_housing_cost_scenarios,
+)
 from app.services.loan_combination import combine_loan_options
 from app.services.loan_simulation import (
     LoanSimulationRequest,
@@ -45,6 +49,11 @@ from app.services.loan_simulation import (
     simulate_loan_options,
 )
 from app.services.recommendation import LoanRecommendationSupplement, recommend_from_results
+from app.services.savings_portfolio import (
+    SavingsPortfolioBlocked,
+    SavingsPortfolioOutcome,
+    simulate_savings_portfolio,
+)
 from app.services.simulation_result import build_simulation_result
 from app.services.strategy_comparison import compare_recommended_purchase_strategies
 from app.services.stress_simulation import stress_recommendation
@@ -247,6 +256,8 @@ def run_simulation(
     loan_candidates: Sequence[ProductCandidate] = (),
     registry: ProductRulePackRegistry | None = None,
     loan_supplements: Mapping[str, LoanRecommendationSupplement] | None = None,
+    savings_candidates: Sequence[ProductCandidate] = (),
+    savings_registry: ProductRulePackRegistry | None = None,
     savings_portfolio_result: SavingsPortfolioResult | None = None,
     savings_validation: SavingsPortfolioPolicyValidation | None = None,
     stress_scenarios: tuple[StressScenario, ...] = DEFAULT_STRESS_SCENARIOS,
@@ -267,6 +278,27 @@ def run_simulation(
         payload,
         as_of=as_of,
     )
+
+    # 예·적금은 대출과 독립이다. 대출을 못 돌려도 저축 계획은 세울 수 있어야 한다.
+    # 호출자가 결과를 직접 넘겼으면 그것을 쓴다 — 이 계층이 다시 계산하면 두
+    # 경로가 다른 답을 낼 수 있다.
+    savings_outcome: SavingsPortfolioOutcome | SavingsPortfolioBlocked | None = None
+    if savings_portfolio_result is None:
+        savings_outcome = simulate_savings_portfolio(
+            payload,
+            savings_candidates,
+            as_of=as_of,
+            cashflow_result=cashflow_result,
+            **(
+                {"registry": savings_registry}
+                if savings_registry is not None
+                else {}
+            ),
+        )
+        if isinstance(savings_outcome, SavingsPortfolioOutcome):
+            savings_portfolio_result = savings_outcome.result
+            if savings_validation is None:
+                savings_validation = savings_outcome.validation
 
     loan_result: LoanSimulationResult | None = None
     if loan_request is not None and not loan_candidates:
@@ -318,11 +350,18 @@ def run_simulation(
             scenarios=stress_scenarios,
         )
 
-    if recommendation is not None and housing_scenarios:
+    # 호출자가 근거와 함께 넘긴 시나리오가 언제나 우선한다. 없을 때만 §8.1
+    # [B-6 확정] 표로 만든다 — 변동률을 지어내는 것이 아니라 설계안이 확정한
+    # 값을 출처와 함께 적용하는 것이다. 취득 사실이 없으면 만들지 않는다.
+    scenario_build = HousingScenarioBuild(scenarios=housing_scenarios)
+    if not housing_scenarios:
+        scenario_build = build_housing_cost_scenarios(payload, as_of=as_of)
+
+    if recommendation is not None and scenario_build.scenarios:
         strategy = compare_recommended_purchase_strategies(
             recommendation,
             target_purchase_date=target_purchase_date or payload.housing_goal.target_date,
-            housing_scenarios=housing_scenarios,
+            housing_scenarios=scenario_build.scenarios,
             early_purchase_equity=payload.financial_snapshot.liquid_assets,
             additional_accumulation_equity=additional_accumulation_equity,
             stress_result=stress,
@@ -342,24 +381,68 @@ def run_simulation(
         savings_portfolio_result=savings_portfolio_result,
         strategy_comparison_result=strategy,
     )
-    if not loan_missing and not loan_assumptions and not loan_reasons:
+    # 구간을 못 돌린 이유와 파생 가정은 조립 결과에 담기지 않으므로 여기서
+    # 각 구간에 덧붙인다. 숫자만 내보내면 근거 없는 확언이 된다(§20).
+    result = _annotate_section(
+        result,
+        "loan_simulation",
+        missing=loan_missing,
+        reasons=loan_reasons,
+        assumptions=loan_assumptions,
+    )
+    savings_missing, savings_reasons, savings_assumptions = _savings_notes(savings_outcome)
+    result = _annotate_section(
+        result,
+        "savings_portfolio",
+        missing=savings_missing,
+        reasons=savings_reasons,
+        assumptions=savings_assumptions,
+    )
+    return _annotate_section(
+        result,
+        "strategy_comparison",
+        missing=scenario_build.missing_inputs,
+        reasons=scenario_build.reasons,
+        assumptions=scenario_build.assumptions,
+    )
+
+
+def _savings_notes(
+    outcome: SavingsPortfolioOutcome | SavingsPortfolioBlocked | None,
+) -> tuple[tuple[str, ...], tuple[str, ...], tuple[str, ...]]:
+    if outcome is None:
+        return (), (), ()
+    if isinstance(outcome, SavingsPortfolioBlocked):
+        return outcome.missing_inputs, outcome.reasons, ()
+    return outcome.missing_inputs, outcome.reasons, outcome.assumptions
+
+
+def _annotate_section(
+    result: SimulationResult,
+    name: str,
+    *,
+    missing: tuple[str, ...],
+    reasons: tuple[str, ...],
+    assumptions: tuple[str, ...],
+) -> SimulationResult:
+    """한 구간에 결측·사유·가정을 덧붙이고 전체 결측 목록에도 반영한다."""
+    if not missing and not reasons and not assumptions:
         return result
-    # 대출 구간을 못 돌린 이유와 파생 가정은 조립 결과에 담기지 않으므로
-    # 여기서 그 구간에 덧붙인다. 숫자만 내보내면 근거 없는 확언이 된다(§20).
+    section = getattr(result, name)
     return result.model_copy(
         update={
-            "loan_simulation": result.loan_simulation.model_copy(
+            name: section.model_copy(
                 update={
                     "missing_inputs": tuple(
-                        dict.fromkeys(result.loan_simulation.missing_inputs + loan_missing)
+                        dict.fromkeys(section.missing_inputs + missing)
                     ),
-                    "reasons": tuple(dict.fromkeys(result.loan_simulation.reasons + loan_reasons)),
+                    "reasons": tuple(dict.fromkeys(section.reasons + reasons)),
                     "assumptions": tuple(
-                        dict.fromkeys(result.loan_simulation.assumptions + loan_assumptions)
+                        dict.fromkeys(section.assumptions + assumptions)
                     ),
                 }
             ),
-            "missing_inputs": tuple(dict.fromkeys(result.missing_inputs + loan_missing)),
+            "missing_inputs": tuple(dict.fromkeys(result.missing_inputs + missing)),
         }
     )
 

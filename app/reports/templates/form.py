@@ -271,30 +271,158 @@ def _worst_scenario(stress: dict[str, object]) -> dict[str, object]:
     return {}
 
 
+# 예금은 지금 있는 목돈을 넣는 것이고 적금은 앞으로 벌 돈을 넣는 것이다.
+# 부족액을 메우는 계산에서 둘을 같게 다루면 안 된다.
+_TERM_DEPOSIT_KIND = "term_deposit"
+
+
+def _savings_contribution(payload: ReportAIInput) -> Decimal | None:
+    """예·적금이 부족액에 **새로 보태는** 금액.
+
+    만기 수령액을 그대로 쓰면 안 된다. 예금에 넣은 목돈은 필요 대출금액을 구할 때
+    이미 자기자본으로 한 번 빠졌으므로(목표금액 − 유동자산), 그 원금을 다시 더하면
+    같은 돈을 두 번 세게 된다. 그래서 배분마다 이렇게 센다.
+
+    - 예금: 만기 수령액 − 원금. 새로 생기는 것은 **이자뿐**이다.
+    - 적금: 만기 수령액 전액. 앞으로 벌 소득에서 넣는 돈이라 지금 자기자본에
+      들어 있지 않다.
+
+    배분 목록은 예·적금 계산 결과와 종합추천 요약이 **둘 다** 같은 모양으로
+    싣는다. 상위 합계(``lump_sum_allocated``)는 추천 요약에 없으므로 여기서 쓰지
+    않는다 — 어느 쪽이 실렸는지에 따라 절이 사라지면 안 된다.
+    """
+    savings = _facts(payload.sections.savings)
+    allocations = savings.get("allocations")
+    if not isinstance(allocations, list) or not allocations:
+        return None
+
+    total = Decimal(0)
+    for item in allocations:
+        if not isinstance(item, dict):
+            return None
+        maturity = _decimal(item.get("expected_maturity_amount"))
+        if maturity is None:
+            return None
+        if str(item.get("product_kind")) == _TERM_DEPOSIT_KIND:
+            principal = _decimal(item.get("allocation_amount"))
+            if principal is None:
+                return None
+            maturity -= principal
+        total += maturity
+    return max(total, Decimal(0))
+
+
 def _shortfall_and_extension(payload: ReportAIInput) -> tuple[str, ...]:
     loan = _facts(payload.sections.loan)
     strategy = _facts(payload.sections.strategy_comparison)
     lines: list[str] = []
+    shortfall_amount: Decimal | None = None
     if loan:
         required = loan.get("required_amount")
-        shortfall = loan.get("funding_shortfall")
+        shortfall_amount = _decimal(loan.get("funding_shortfall"))
         lines.append(f"- 필요 대출금액: {_won(required)}")
         lines.append(f"- 계산된 최대 조달액: {_won(loan.get('maximum_recommendable_amount'))}")
-        parsed = _decimal(shortfall)
-        if parsed is not None and parsed > 0:
+        if shortfall_amount is not None and shortfall_amount > 0:
             # 부족액의 기준을 문장에 박아 둔다. AI가 "목표 금액 대비"로 잘못
             # 귀속했던 자리다.
-            lines.append(f"- **필요 대출금액 대비** 부족액: {_won(parsed)}")
+            lines.append(f"- **필요 대출금액 대비** 부족액: {_won(shortfall_amount)}")
         else:
             lines.append("- 필요 대출금액을 계산된 한도 안에서 충당할 수 있습니다.")
     else:
         lines.append(f"- 대출 조달: {_NOT_CALCULATED}")
 
+    contribution = _savings_contribution(payload)
+    if contribution is None:
+        lines.append(
+            "- 예·적금으로 메울 수 있는 금액은 예·적금 포트폴리오가 계산된 뒤에 산출됩니다."
+        )
+    else:
+        lines.append(
+            f"- 예·적금이 목표 시점까지 새로 보태는 금액: {_won(contribution)} "
+            "(예금은 이자만, 적금은 만기 수령액 전액. 예금 원금은 이미 "
+            "자기자본으로 계산돼 있어 두 번 세지 않습니다.)"
+        )
+        if shortfall_amount is not None and shortfall_amount > 0:
+            remaining = max(shortfall_amount - contribution, Decimal(0))
+            if remaining > 0:
+                lines.append(f"- 예·적금을 반영해도 남는 부족액: {_won(remaining)}")
+            else:
+                lines.append(
+                    "- 예·적금이 목표 시점까지 부족액을 모두 메우는 것으로 계산됐습니다."
+                )
+
     if strategy:
         lines.append(f"- 전략 비교 상태: {strategy.get('status')}")
+        lines.extend(_scenario_lines(strategy))
     else:
         lines.append(
             "- 목표 시점 연장 폭은 자산축적형 전략 비교가 계산된 뒤에 산출됩니다."
+        )
+    return tuple(lines)
+
+
+_STRATEGY_LABELS = {
+    "ASSET_ACCUMULATION": "자산축적형(목표 시점에 구매)",
+    "EARLY_PURCHASE": "조기구매형(지금 구매)",
+}
+
+_SCENARIO_STATUS_LABELS = {
+    "PASS": "달성",
+    "FAIL": "미달",
+    "UNKNOWN": "판단 불가",
+}
+
+
+def _scenario_lines(strategy: dict[str, object]) -> tuple[str, ...]:
+    """전략별 시나리오 커버리지와 시나리오별 목표금액(§8.1·§8.3).
+
+    **어느 시나리오가 더 그럴듯한지 말하지 않는다.** 확률을 붙이지 않고 "몇 개를
+    충족하는지"만 남기는 것이 §8.3의 운영 원칙이다.
+    """
+    lines: list[str] = []
+    for key in ("asset_accumulation", "early_purchase"):
+        evaluation = strategy.get(key)
+        if not isinstance(evaluation, dict):
+            continue
+        label = _STRATEGY_LABELS.get(str(evaluation.get("kind")), str(evaluation.get("kind")))
+        lines.append(
+            f"- {label} 시나리오 충족: 달성 {evaluation.get('attainable_count')} / "
+            f"미달 {evaluation.get('unattainable_count')} / "
+            f"판단 불가 {evaluation.get('unknown_count')}"
+        )
+        scenarios = evaluation.get("scenarios")
+        if not isinstance(scenarios, list):
+            continue
+        for item in scenarios:
+            if not isinstance(item, dict):
+                continue
+            scenario = item.get("scenario")
+            name = scenario.get("name") if isinstance(scenario, dict) else None
+            status = _SCENARIO_STATUS_LABELS.get(
+                str(item.get("status")), str(item.get("status"))
+            )
+            gap = _decimal(item.get("funding_shortfall"))
+            gap_text = (
+                f", 부족액 {_won(gap)}"
+                if gap is not None and gap > 0
+                else ", 부족액 없음"
+                if gap is not None
+                else ""
+            )
+            lines.append(
+                f"  - {name}: 목표금액 {_won(item.get('target_purchase_cost'))}, "
+                f"{status}{gap_text}"
+            )
+        if key == "early_purchase":
+            # 네 줄이 같은 금액이라 오류로 읽힐 수 있다. 같은 것이 맞고 그게 요점이다.
+            lines.append(
+                "  - 지금 구매하면 목표금액이 네 시나리오에서 모두 같습니다. "
+                "가격 변동 위험은 구매를 미룰 때만 생깁니다."
+            )
+    if lines:
+        lines.append(
+            "- 시나리오에는 확률을 붙이지 않습니다. 몇 개를 충족하는지만 제시하며, "
+            "어느 시나리오가 더 일어나기 쉬운지는 판단하지 않습니다."
         )
     return tuple(lines)
 

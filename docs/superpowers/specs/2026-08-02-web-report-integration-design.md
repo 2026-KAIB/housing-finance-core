@@ -350,12 +350,17 @@ REPORT_ARCHIVE_PROVIDER=filesystem
 | 501 (보관 미설정) | "보고서 보관이 설정되지 않았습니다(REPORT_ARCHIVE_PROVIDER)" |
 | 503 (렌더·보관 실패) | 서버가 준 원인 그대로. 폰트 누락·DB 접속 실패가 여기 온다 |
 | 502 (백엔드 없음) | "백엔드가 실행 중인지 확인하세요" |
-| AI 키 없음 | 보고서는 **수치만**으로 나온다. 그 사실을 뷰어 상단에 표시 |
+| AI 키 없음 | 보고서는 **수치만**으로 나온다. 그 사실은 **보고서 문서 안에** 실린다(아래) |
 | 절이 `NOT_RUN` | 보고서 안의 `missing_inputs`가 어떤 필드가 없는지 이름으로 |
 
 AI 키가 없을 때 `app/reports/ai_explanation/gemini.py:75-77`이 남기는 문구는
 *"환경변수 GEMINI_API_KEY를 설정하면 AI 설명이 추가됩니다"*이다. 보고서 전체를
 버리지 않는다는 규약대로 수치는 그대로 실린다.
+
+이 문구를 **뷰어 상단에 띄우지는 않는다.** `format=pdf`는 PDF 바이트와
+`X-Report-Id`만 돌려주고 `notes`·`figures_only_sections`는 `format=json`
+응답에만 있다. 알아내려고 요청을 한 번 더 보내면 AI와 렌더가 다시 돈다.
+문구는 파이프라인이 `notes`에 담아 보고서 문서 자체에 싣는다.
 
 ### 3.9 검증
 

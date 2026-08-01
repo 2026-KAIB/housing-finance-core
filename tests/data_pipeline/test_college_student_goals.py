@@ -38,28 +38,40 @@ EXPECTED_GOALS = {
 
 RENT_KEYS = ("target_lease_deposit", "target_monthly_rent", "target_management_fee")
 
-# 전환 이전 값. (월소득, 월평균지출, 월저축예산)
+# 전환 이전 값. (월소득, 월평균지출, 월저축예산, 유동자산 합계(current_assets),
+# 월부채상환액(monthly_debt_payment))
+#
+# current_assets는 checking_balance + savings_balance + term_deposit_balance의
+# 합이다(COLLEGE_STUDENT_VARIANT_SPECS). 이 두 필드를 검증하지 않으면 스펙의
+# 잔액을 올려 모든 페르소나의 유동자산과 구매 가능성 판정을 바꿔도 이 테스트가
+# 계속 통과한다 — 재무를 "손대지 않는다"는 설계 결정 4를 실제로는 지키지 못한다.
+#
+# persona_e_college_student_basic은 예외다. 손으로 작성한 유일한 페르소나라
+# generate_all.py의 profile 리터럴에 current_assets/monthly_debt_payment 키 자체가
+# 없다(계좌 잔액 1,000,000원은 generation_metadata.json의 provided_facts에만
+# 있다). 있지도 않은 값을 여기서 지어내 박지 않는다 — None은 "0"이 아니라
+# "이 테스트가 그 키의 부재를 확인한다"는 뜻이다.
 EXPECTED_FINANCES = {
-    "persona_e_college_student_basic": (800_000, 700_000, 100_000),
-    "persona_f_college_student_02_basic": (900_000, 700_000, 200_000),
-    "persona_g_college_student_03_basic": (1_200_000, 900_000, 300_000),
-    "persona_h_college_student_04_basic": (1_100_000, 850_000, 250_000),
-    "persona_i_college_student_05_basic": (800_000, 750_000, 50_000),
-    "persona_j_college_student_06_basic": (1_500_000, 1_100_000, 400_000),
-    "persona_k_college_student_07_basic": (1_000_000, 900_000, 100_000),
-    "persona_l_college_student_08_affluent": (2_000_000, 1_000_000, 1_000_000),
-    "persona_m_college_student_09_affluent": (3_000_000, 1_200_000, 1_800_000),
-    "persona_n_college_student_10_affluent": (4_000_000, 1_800_000, 2_200_000),
-    "persona_o_college_student_11_affluent": (2_500_000, 1_500_000, 1_000_000),
-    "persona_p_college_student_12_affluent": (1_800_000, 900_000, 900_000),
-    "persona_q_college_student_13_affluent": (5_000_000, 2_000_000, 3_000_000),
-    "persona_r_college_student_14_poor": (600_000, 550_000, 50_000),
-    "persona_s_college_student_15_poor": (800_000, 650_000, 50_000),
-    "persona_t_college_student_16_poor": (1_000_000, 950_000, 50_000),
-    "persona_u_college_student_17_poor": (500_000, 520_000, 0),
-    "persona_v_college_student_18_poor": (700_000, 700_000, 0),
-    "persona_w_college_student_19_poor": (900_000, 800_000, 20_000),
-    "persona_x_college_student_20_poor": (400_000, 600_000, 0),
+    "persona_e_college_student_basic": (800_000, 700_000, 100_000, None, None),
+    "persona_f_college_student_02_basic": (900_000, 700_000, 200_000, 1_500_000, 0),
+    "persona_g_college_student_03_basic": (1_200_000, 900_000, 300_000, 2_000_000, 0),
+    "persona_h_college_student_04_basic": (1_100_000, 850_000, 250_000, 3_000_000, 0),
+    "persona_i_college_student_05_basic": (800_000, 750_000, 50_000, 800_000, 0),
+    "persona_j_college_student_06_basic": (1_500_000, 1_100_000, 400_000, 5_000_000, 0),
+    "persona_k_college_student_07_basic": (1_000_000, 900_000, 100_000, 1_200_000, 0),
+    "persona_l_college_student_08_affluent": (2_000_000, 1_000_000, 1_000_000, 25_000_000, 0),
+    "persona_m_college_student_09_affluent": (3_000_000, 1_200_000, 1_800_000, 50_000_000, 0),
+    "persona_n_college_student_10_affluent": (4_000_000, 1_800_000, 2_200_000, 30_000_000, 0),
+    "persona_o_college_student_11_affluent": (2_500_000, 1_500_000, 1_000_000, 80_000_000, 0),
+    "persona_p_college_student_12_affluent": (1_800_000, 900_000, 900_000, 40_000_000, 0),
+    "persona_q_college_student_13_affluent": (5_000_000, 2_000_000, 3_000_000, 120_000_000, 0),
+    "persona_r_college_student_14_poor": (600_000, 550_000, 50_000, 600_000, 0),
+    "persona_s_college_student_15_poor": (800_000, 650_000, 50_000, 350_000, 100_000),
+    "persona_t_college_student_16_poor": (1_000_000, 950_000, 50_000, 800_000, 0),
+    "persona_u_college_student_17_poor": (500_000, 520_000, 0, 150_000, 0),
+    "persona_v_college_student_18_poor": (700_000, 700_000, 0, 550_000, 0),
+    "persona_w_college_student_19_poor": (900_000, 800_000, 20_000, 450_000, 80_000),
+    "persona_x_college_student_20_poor": (400_000, 600_000, 0, 100_000, 0),
 }
 
 
@@ -104,8 +116,29 @@ def test_finances_are_untouched(persona):
     무리니 조금만 올리자'는 유혹이 생기는데, 그 시도는 두 번 다 비현실적인
     값으로 무너졌다(설계 2.2). 여기서 막는다.
     """
-    income, expense, savings = EXPECTED_FINANCES[persona["id"]]
+    income, expense, savings, current_assets, monthly_debt_payment = EXPECTED_FINANCES[
+        persona["id"]
+    ]
     profile = persona["profile"]
     assert profile["monthly_income"] == income
     assert profile["monthly_average_expense"] == expense
     assert persona["savings_preferences"]["monthly_savings_budget"] == savings
+
+    # current_assets = checking_balance + savings_balance + term_deposit_balance.
+    # 이 필드를 검증하지 않으면 세 잔액 스펙을 올려 유동자산과 구매 가능성 판정을
+    # 통째로 바꿔도 이 테스트가 통과한다.
+    if current_assets is None:
+        assert "current_assets" not in profile, (
+            f"{persona['id']}: current_assets 키가 새로 생겼습니다. "
+            "손으로 작성한 예외였다면 이 테스트도 함께 갱신하세요."
+        )
+    else:
+        assert profile["current_assets"] == current_assets
+
+    if monthly_debt_payment is None:
+        assert "monthly_debt_payment" not in profile, (
+            f"{persona['id']}: monthly_debt_payment 키가 새로 생겼습니다. "
+            "손으로 작성한 예외였다면 이 테스트도 함께 갱신하세요."
+        )
+    else:
+        assert profile["monthly_debt_payment"] == monthly_debt_payment

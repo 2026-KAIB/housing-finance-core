@@ -70,7 +70,64 @@ def _target_date(profile: dict) -> date:
     return date(int(ym[:4]), int(ym[4:6]), 1)
 
 
-def build_input(profile: dict) -> SimulationInput:
+def _load_generation_metadata(directory: str) -> dict:
+    """``user_profile.json``과 같은 폴더의 ``generation_metadata.json``을 읽는다.
+
+    없으면 빈 dict를 돌려준다 — 20명 전원이 이 파일을 갖고 있지만, 없는
+    경우에도 호출부가 폴백 하나를 잃을 뿐 죽지 않게 한다.
+    """
+    path = os.path.join(directory, "generation_metadata.json")
+    if not os.path.exists(path):
+        return {}
+    with open(path, encoding="utf-8") as fh:
+        return json.load(fh)
+
+
+def _resolve_financial_fact(
+    profile: dict,
+    metadata: dict,
+    field: str,
+) -> tuple[Decimal | None, str]:
+    """``profile``에 없으면 ``generation_metadata.provided_facts``에서 찾는다.
+
+    이전에는 ``profile.get(field, 0)``으로 결측을 조용히 0으로 뭉갰다 —
+    ``persona_e_college_student_basic``은 손으로 작성한 유일한 페르소나라
+    ``user_profile.json``에 ``current_assets``/``monthly_debt_payment`` 키
+    자체가 없는데, 이 값이 유동자산 0원으로 계산되어 부족액이 실제보다
+    1,000,000원(계좌 잔액) 더 크게 나왔다.
+
+    ``current_assets``는 여기서 실제 값(1,000,000원)을 회복한다 —
+    ``generation_metadata.json``의 ``provided_facts.current_assets``가 그
+    페르소나 본인이 준 사실이고, 계좌 스냅샷(``bank_003_deposit_detail_*.json``의
+    ``balance_amt``)과도 일치한다. ``monthly_debt_payment``는
+    ``provided_facts.has_loans is False``일 때만 확정 0(§22.1의 "해당 없음")으로
+    돌려준다 — 부채가 있는데 상환액 숫자만 없는 경우까지 0으로 채우지 않는다.
+
+    두 출처 어디에도 없으면 (None, 사유)를 돌려주고 호출부가 확인불가로
+    분류하게 한다. 절대 조용히 0을 대신 넣지 않는다.
+    """
+    if profile.get(field) is not None:
+        return Decimal(str(profile[field])), ""
+
+    provided_facts = metadata.get("provided_facts", {})
+    if provided_facts.get(field) is not None:
+        return Decimal(str(provided_facts[field])), ""
+
+    if field == "monthly_debt_payment" and provided_facts.get("has_loans") is False:
+        return Decimal(0), ""
+
+    reason = (
+        f"{field} 필드가 user_profile.json과 generation_metadata.json "
+        "어디에도 없음"
+    )
+    return None, reason
+
+
+def build_input(
+    profile: dict,
+    liquid_assets: Decimal,
+    monthly_debt_payment: Decimal,
+) -> SimulationInput:
     return SimulationInput(
         profile=UserProfile(
             persona_name=profile.get("persona_type"),
@@ -90,8 +147,8 @@ def build_input(profile: dict) -> SimulationInput:
         financial_snapshot=FinancialSnapshot(
             monthly_income=Decimal(profile["monthly_income"]),
             monthly_expense=Decimal(profile["monthly_average_expense"]),
-            liquid_assets=Decimal(profile.get("current_assets", 0)),
-            monthly_debt_payment=Decimal(profile.get("monthly_debt_payment", 0)),
+            liquid_assets=liquid_assets,
+            monthly_debt_payment=monthly_debt_payment,
         ),
         loan_request=LoanRequestInput(
             months=360,
@@ -157,7 +214,17 @@ def main() -> int:
     except LoanProductCatalogUnavailable as exc:
         print("BLOCKED: 대출 상품 카탈로그를 불러올 수 없습니다.")
         print(f"  원인: {exc}")
-        print("  DB 터널(localhost:15432)이 열려 있는지 확인하세요.")
+        print(
+            "  기본 설정(LOAN_PRODUCT_PROVIDER=json)에서는 DB가 아니라 "
+            "sample_data/loan_products/*.json을 읽습니다."
+        )
+        print(
+            "  LOAN_PRODUCT_PROVIDER/LOAN_PRODUCT_BASE_JSON_PATH/"
+            "LOAN_PRODUCT_OPTION_JSON_PATH 설정과 그 JSON 파일의 존재를 확인하세요."
+        )
+        print(
+            "  provider를 database로 바꿔 쓰는 환경에서만 DB 터널이 필요합니다."
+        )
         print("  값을 추정해 문서에 적지 않습니다.")
         return 1
 
@@ -166,9 +233,35 @@ def main() -> int:
         directory = os.path.dirname(path)
         with open(path, encoding="utf-8") as fh:
             profile = json.load(fh)
+        metadata = _load_generation_metadata(directory)
+
+        liquid_assets, liquid_reason = _resolve_financial_fact(
+            profile, metadata, "current_assets"
+        )
+        monthly_debt_payment, debt_reason = _resolve_financial_fact(
+            profile, metadata, "monthly_debt_payment"
+        )
+        if liquid_assets is None or monthly_debt_payment is None:
+            # §22.1 — 결측을 0으로 뭉개지 않는다. 시뮬레이션 자체를 돌리지
+            # 않고 확인불가로 남기며, 어떤 필드가 없는지 이름으로 남긴다.
+            missing_reason = "; ".join(
+                reason for reason in (liquid_reason, debt_reason) if reason
+            )
+            rows.append(
+                {
+                    "name": os.path.basename(directory),
+                    "target_price": int(profile["target_price"]),
+                    "target_ym": profile["target_move_in_ym"],
+                    "verdict": "확인불가",
+                    "reason": missing_reason,
+                    "shortfall": None,
+                    "status": None,
+                }
+            )
+            continue
 
         result = run_simulation(
-            build_input(profile),
+            build_input(profile, liquid_assets, monthly_debt_payment),
             simulation_id=uuid4(),
             as_of=AS_OF,
             calculated_at=datetime.now(tz=UTC),

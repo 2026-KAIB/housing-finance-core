@@ -349,7 +349,7 @@ Expected: FAIL — `test_goal_is_home_purchase`가 `'monthly_rent' != 'purchase'
 - [ ] **Step 8: 테스트를 돌려 통과를 확인한다**
 
 Run: `python -m pytest tests/data_pipeline/test_college_student_goals.py -q`
-Expected: PASS — 101개 통과 (20 × 5 파라미터 테스트 + 1)
+Expected: PASS — 81개 통과 (20 × 4 파라미터 테스트 + 1)
 
 - [ ] **Step 9: 전체 테스트와 린트를 돌린다**
 

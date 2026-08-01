@@ -1432,6 +1432,13 @@ export function toPortfolioResult(
   const payload = sec.result ?? null;
   const asOf = (simulation as { as_of?: string })?.as_of ?? "";
 
+  // 아래 금액들의 "0" 대체는 `payload`가 null일 때 — 즉 저축 절이 NOT_RUN일
+  // 때 — 만 쓰인다. 계약이 이 필드들을 필수 문자열로 요구해서 자리를 비울 수
+  // 없기 때문이다. 그때 status는 INFEASIBLE이고, 금액을 그리는
+  // `PortfolioSummary`는 COMPLETE/PARTIAL에서만 렌더되므로 이 "0"은 화면에
+  // 닿지 않는다. 사용자가 보는 것은 `PortfolioStatusNotice`의 사유 목록이다.
+  // 이 조건이 바뀌면(예: 요약 카드를 모든 상태에서 그리게 되면) 0과 미계산이
+  // 같은 값으로 보이므로, 그때는 계약을 optional로 바꿔야 한다.
   const candidate = {
     persona_id: profile.persona_id,
     display_name: profile.display_name,

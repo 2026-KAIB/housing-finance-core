@@ -2,7 +2,7 @@
   "persona_name": "대학생7(기본형)",
   "persona_category": "basic",
   "character_summary": "졸업 예정, 취업준비와 카페 아르바이트 병행",
-  "purpose": "기대 결과를 미리 정하지 않고 해당 학생의 재무 사실로 예적금 평가와 월세 보증금 마련 가능성을 관찰한다.",
+  "purpose": "기대 결과를 미리 정하지 않고 해당 학생의 재무 사실로 예적금 평가와 주택 구매 가능성을 관찰한다.",
   "provided_facts": {
     "generation_request": "대학생 기본형·부유형·가난형 총 20명"
   },
@@ -12,8 +12,8 @@
     "monthly_average_expense": 900000,
     "monthly_debt_payment": 0,
     "current_assets": 1200000,
-    "target_lease_deposit": 8000000,
-    "target_monthly_rent": 350000,
+    "target_purchase_price": 365000000,
+    "target_region": "11500",
     "target_move_in_ym": "202801",
     "emergency_reserve": 700000,
     "lump_sum_budget": 0,

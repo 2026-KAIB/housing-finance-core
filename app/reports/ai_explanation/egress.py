@@ -76,6 +76,14 @@ _UUID_LIKE = re.compile(
     r"(?<![\w-])[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-"
     r"[0-9a-fA-F]{4}-[0-9a-fA-F]{12}(?![\w-])"
 )
+# 준법감시인 심의필 번호도 같은 자리에서 겹친다 — `제2024-5992-12호`의 가운데가
+# `\d{2,6}-\d{2,6}-\d{2,8}`에 그대로 들어맞는다. 이 번호는 상품 Rule Pack의
+# 버전 문자열(`"{상품명}@{pack_version}"`)에 들어 있어서, 예·적금을 실제 DB로
+# 붙이자 **종합 보고서 전체가 AI에 나가지 못했다.**
+#
+# 계좌번호는 `제…호`로 감싸이지 않는다. 그 감싸개까지 포함해 일치할 때만 지우므로
+# 맨 숫자 계좌번호는 그대로 걸린다.
+_REVIEW_NUMBER_LIKE = re.compile(r"제\s*\d{2,4}(?:\s*-\s*\d{1,6}){1,3}\s*호")
 
 # 판정 순서가 중요하다. 휴대전화번호(010-1234-5678)는 계좌번호 형태에도 들어맞으므로
 # 더 구체적인 패턴을 먼저 본다 — 첫 일치에서 멈추기 때문이다.
@@ -148,9 +156,11 @@ def scan_payload(payload: dict[str, Any]) -> EgressReport:
                 if key in _NUMERIC_VALUE_KEYS:
                     # 금액 필드의 큰 정수는 계좌번호가 아니다.
                     continue
-                # 날짜와 UUID를 지운 뒤에 본다. 지우지 않으면 기준일·시행일과
-                # 산출 식별자가 모두 계좌번호로 잡힌다.
-                target = _UUID_LIKE.sub(" ", _DATE_LIKE.sub(" ", text))
+                # 날짜·UUID·심의필 번호를 지운 뒤에 본다. 지우지 않으면 기준일과
+                # 시행일, 산출 식별자, 상품 Rule Pack 버전이 모두 계좌번호로 잡힌다.
+                target = _REVIEW_NUMBER_LIKE.sub(
+                    " ", _UUID_LIKE.sub(" ", _DATE_LIKE.sub(" ", text))
+                )
             if pattern.search(target):
                 findings.append(EgressFinding(path=path, kind=kind, detail=detail))
                 break

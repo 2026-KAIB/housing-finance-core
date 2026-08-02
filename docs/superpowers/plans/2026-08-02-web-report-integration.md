@@ -1912,6 +1912,20 @@ describe("LiveDashboard", () => {
       expect(screen.getByText(/실행 중인지/)).toBeInTheDocument(),
     );
   });
+
+  it("프로필에 없는 값이 있으면 부르지 않고 그 필드 이름을 알린다", async () => {
+    // persona_e는 프로필에 current_assets가 없다. 그대로 보내면 엔진이
+    // 필수로 받는 liquid_assets에 undefined가 도달한다. 0으로 메우지도,
+    // 조용히 실패하지도 않고 무엇을 채워야 하는지 이름으로 말한다.
+    const fetchSpy = vi.fn(() => Response.json(SIMULATION));
+    vi.stubGlobal("fetch", fetchSpy);
+    sessionStorage.clear();
+
+    render(<LiveDashboard profile={await loadProfile(PERSONA)} />);
+
+    expect(screen.getByText(/보유 자산/)).toBeInTheDocument();
+    expect(fetchSpy).not.toHaveBeenCalled();
+  });
 });
 ```
 
@@ -1929,7 +1943,7 @@ Expected: FAIL — `Failed to resolve import "./live-dashboard"`
 
 import { useEffect, useState } from "react";
 
-import { toFormValues } from "@/features/input/form-schema";
+import { inputFormSchema, toFormValues } from "@/features/input/form-schema";
 import { ReportViewer } from "@/features/report/report-viewer";
 import { apiErrorMessage } from "@/lib/api/errors";
 import { postSimulation } from "@/lib/api/client";
@@ -1940,6 +1954,27 @@ import type { PortfolioResult } from "@/lib/contracts/result";
 import { readInputHandoff } from "@/lib/session/input-handoff";
 
 import { PortfolioView } from "./portfolio-view";
+
+/** 검증에 걸린 필드 이름을 사용자가 화면에서 찾을 수 있는 라벨로 옮긴다. */
+const FIELD_LABELS: Record<string, string> = {
+  current_assets: "보유 자산",
+  monthly_income: "월 소득",
+  monthly_average_expense: "월 평균 지출",
+  monthly_essential_expense: "필수 생활비",
+  monthly_savings_budget: "월 저축 예산",
+  lump_sum_budget: "일시 예치금",
+  emergency_reserve: "비상 예비금",
+  target_region: "지역",
+  target_price: "목표 가격",
+  target_move_in_ym: "목표 시점",
+  exclusive_area_m2: "전용면적",
+  months: "만기",
+  housing_status: "주택 보유 상태",
+};
+
+function fieldLabel(name: string): string {
+  return FIELD_LABELS[name] ?? name;
+}
 
 /**
  * 대시보드의 계산 주체.
@@ -1953,10 +1988,18 @@ export function LiveDashboard({ profile }: { profile: PersonaProfile }) {
   const [error, setError] = useState<string | null>(null);
 
   // 위저드를 거치지 않고 바로 들어온 경우 페르소나 기준값으로 계산한다.
-  const values = readInputHandoff(profile.persona_id) ?? toFormValues(profile);
-  const input = buildSimulationInput(values, profile);
+  // **반드시 검증을 거친다.** 페르소나 프로필에 없는 값이 있을 수 있고
+  // (persona_e에는 current_assets가 없다), 그대로 보내면 엔진이 필수로 받는
+  // liquid_assets에 undefined가 도달한다. 검증에 실패하면 API를 부르지 않고
+  // **어떤 필드가 없는지 이름으로** 알린다 — "계산 불가"가 아니라 "무엇을
+  // 알려주면 계산되는지"로 읽혀야 한다.
+  const raw = readInputHandoff(profile.persona_id) ?? toFormValues(profile);
+  const parsed = inputFormSchema.safeParse(raw);
+  const values = parsed.success ? parsed.data : null;
+  const input = values ? buildSimulationInput(values, profile) : null;
 
   useEffect(() => {
+    if (input === null || values === null) return;
     let cancelled = false;
 
     postSimulation(input)
@@ -1975,6 +2018,28 @@ export function LiveDashboard({ profile }: { profile: PersonaProfile }) {
     // 입력이 같으면 다시 계산하지 않는다.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [JSON.stringify(input)]);
+
+  // 검증 실패는 오류가 아니라 "덜 채워진 상태"다. 어떤 필드가 없는지 이름으로
+  // 알리고 입력 화면으로 보낸다. 빈 값을 0으로 메워 계산하지 않는다.
+  if (values === null) {
+    const missing = parsed.success
+      ? []
+      : [...new Set(parsed.error.issues.map((issue) => String(issue.path[0])))];
+    return (
+      <section className="py-12">
+        <p className="rounded-xl border border-line bg-accent-soft p-4 text-sm">
+          이 페르소나만으로는 계산에 필요한 값이 모두 채워지지 않습니다. 입력
+          화면에서 다음 값을 넣어 주세요: {missing.map(fieldLabel).join(", ")}
+        </p>
+        <a
+          className="mt-3 inline-block text-sm font-semibold text-accent underline"
+          href={`/input?persona=${profile.persona_id}`}
+        >
+          입력 화면으로 이동
+        </a>
+      </section>
+    );
+  }
 
   if (error) {
     return (

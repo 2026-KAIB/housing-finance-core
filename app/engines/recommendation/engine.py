@@ -379,6 +379,9 @@ def recommend_loans(
         alternatives=alternatives,
         unresolved_count=payload.unresolved_count,
         rejected_count=payload.rejected_count,
+        # 모든 후보를 같은 기간으로 비교했으므로 그 기간이 곧 추천안의 상환 기간이다.
+        # 뒤 계층이 요청 만기로 되돌아가지 않도록 결과에 실어 보낸다.
+        months=payload.months,
         missing_inputs=_dedupe(payload.missing_inputs),
         reasons=_dedupe(reasons),
         policy_sources=_dedupe(payload.policy_sources),

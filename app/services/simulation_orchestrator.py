@@ -31,6 +31,7 @@ from app.engines.strategy.models import (
     HousingCostScenario,
     StrategyPolicy,
 )
+from app.engines.stress.engine import run_stress_test
 from app.engines.stress.models import DEFAULT_STRESS_SCENARIOS, StressScenario
 from app.regulations.regulated_regions import ResolvedRegion
 from app.rule_engine.product_packs.handoff import ProductCandidate
@@ -64,7 +65,8 @@ from app.services.savings_portfolio import (
 )
 from app.services.simulation_result import build_simulation_result
 from app.services.strategy_comparison import compare_recommended_purchase_strategies
-from app.services.stress_simulation import stress_recommendation
+from app.services.stress_simulation import build_stress_input
+from app.services.term_plans import compare_term_plans
 
 # 대출 이후 구간을 실행하지 못했을 때 붙이는 사유. 사용자에게 "계산 불가"가 아니라
 # "무엇을 알려주면 계산되는지"로 읽히게 한다(§19).
@@ -472,6 +474,7 @@ def run_simulation(
     recommendation = None
     stress = None
     strategy = None
+    term_plans = None
     if loan_result is not None or savings_portfolio_result is not None:
         recommendation = recommend_from_results(
             as_of=as_of,
@@ -483,10 +486,20 @@ def run_simulation(
         )
 
     if recommendation is not None and loan_request is not None:
-        stress = stress_recommendation(
+        # 입력을 한 번만 만들어 스트레스 판정과 기간안 비교가 **같은 것**을 보게
+        # 한다. 두 벌로 만들면 두 판정이 갈리고, 문서에는 갈린 쪽이 실린다.
+        stress_input = build_stress_input(
             recommendation,
             loan_request=loan_request,
             scenarios=stress_scenarios,
+        )
+        stress = run_stress_test(stress_input)
+        # 요청 만기가 기간을 늘릴 수 있는 상한이다. 그보다 길게 잡으면 사용자가
+        # 요청하지 않은 기간을 권하게 된다.
+        term_plans = compare_term_plans(
+            stress_input,
+            stress,
+            maximum_months=loan_request.months,
         )
 
     # 호출자가 근거와 함께 넘긴 시나리오가 언제나 우선한다. 없을 때만 §8.1
@@ -532,6 +545,7 @@ def run_simulation(
         savings_portfolio_result=savings_portfolio_result,
         savings_policy_validation=savings_validation,
         strategy_comparison_result=strategy,
+        term_plan_comparison=term_plans,
     )
     # 구간을 못 돌린 이유와 파생 가정은 조립 결과에 담기지 않으므로 여기서
     # 각 구간에 덧붙인다. 숫자만 내보내면 근거 없는 확언이 된다(§20).

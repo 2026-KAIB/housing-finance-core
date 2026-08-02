@@ -352,6 +352,13 @@ class LoanRecommendationSummary:
     alternatives: tuple[LoanOptionRecommendation, ...]
     unresolved_count: int
     rejected_count: int
+    # 추천된 대출을 **실제로 갚는 기간**. 요청 만기가 아니다 — 계산 계층이 갚을 수
+    # 있는 가장 짧은 기간으로 줄이면 둘은 달라진다(`shorten_to_serviceable_term`).
+    #
+    # 이 값이 없으면 뒤에 오는 계층이 요청 만기로 되돌아가고, 그러면 월 상환액을
+    # 실제보다 **작게** 잡는다. 스트레스 판정이 그만큼 느슨해지므로 위험한 방향이다.
+    # 추천할 대출이 없을 때만 ``None``이며, 그때는 갚을 원금도 없다.
+    months: int | None = None
     missing_inputs: tuple[str, ...] = field(default_factory=tuple)
     reasons: tuple[str, ...] = field(default_factory=tuple)
     policy_sources: tuple[str, ...] = field(default_factory=tuple)

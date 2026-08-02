@@ -182,7 +182,7 @@ class TestTheDocumentNamesItsBasis:
 
         # 목차에도 같은 제목이 있으므로 **본문 제목**으로 위치를 잡는다.
         board = html.index("산출 기준별 비교")
-        reasons = html.index("<h2>4. 추천·탈락 사유</h2>")
+        reasons = html.index("<h2>5. 추천·탈락 사유</h2>")
         assert board < reasons, "비교표가 개별 절보다 먼저 나와야 한다"
         assert html.count("<strong>대출 1건만 실행하는 경우</strong>") >= 2
 
@@ -318,11 +318,12 @@ class TestOfficialDocumentShape:
 
         headings = re.compile(r"<h2>(.*?)</h2>")
         assert headings.findall(with_plans) == headings.findall(without_plans)
-        # 조합안이 없어도 2·3절 자리를 지킨다. 빈 자리가 남는 편이 번호가 밀리는
-        # 것보다 낫다.
+        # 조합안이 없어도 2·3·4절 자리를 지킨다. 빈 자리가 남는 편이 번호가
+        # 밀리는 것보다 낫다.
         assert "2. 대출 조달방안" in without_plans
         assert "3. 생애주기" in without_plans
-        assert "4. 추천·탈락 사유" in without_plans
+        assert "4. 상환 기간안" in without_plans
+        assert "5. 추천·탈락 사유" in without_plans
 
     def test_the_table_of_contents_matches_the_body_headings(
         self,

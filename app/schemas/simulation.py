@@ -428,6 +428,20 @@ class SimulationResult(BaseModel):
     recommendation: CalculationSection
     stress_test: CalculationSection
     strategy_comparison: CalculationSection
+    # 같은 대출을 갚는 두 기간안(최소이자 / 충격대비). 어느 쪽이 나은지는 계산이
+    # 정할 문제가 아니라 사용자가 고를 문제라, 고르지 않고 둘 다 싣는다. 문서의
+    # 나머지 절이 어느 안을 기준으로 쓰였는지는 `is_basis`가 밝힌다.
+    #
+    # 위 `loan_combination`과 같은 이유로 하위 호환 추가이며 최상위
+    # `schema_version`은 올리지 않는다. 기본값이 있어 예전 호출자도 그대로 돈다.
+    term_plans: CalculationSection = Field(
+        default_factory=lambda: CalculationSection(
+            run_status=SectionRunStatus.NOT_RUN,
+            section_schema_version="term-plans@1.0.0",
+            engine_status=None,
+            result=None,
+        )
+    )
     missing_inputs: tuple[str, ...] = ()
     warnings: tuple[str, ...] = ()
     policy_sources: tuple[str, ...] = ()

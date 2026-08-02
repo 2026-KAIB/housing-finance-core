@@ -284,6 +284,65 @@ def _lifecycle(simulation: SimulationResult) -> str:
     return head + note + chart + table + caveat
 
 
+_STRESS_LABELS = {"PASS": "통과", "FAIL": "미통과", "UNKNOWN": "확인되지 않음"}
+
+
+def _term_plans(simulation: SimulationResult) -> str:
+    """4항 — 같은 대출을 갚는 두 기간안.
+
+    **고르지 않고 둘 다 싣는다.** 이자를 적게 낼 것인가, 충격 여유를 둘 것인가는
+    계산이 정할 수 있는 문제가 아니다. 계산이 할 수 있는 것은 각 선택의 값을
+    정확히 적어 두는 것까지다.
+
+    기준안이 이미 모든 시나리오를 통과하면 대안이 없고, 그때는 그 사실을 적는다 —
+    "대안을 못 만들었다"와 "만들 필요가 없었다"는 다른 상태다.
+    """
+    head = "<h2>4. 상환 기간안</h2>"
+    facts = _section_facts(simulation, "term_plans")
+    plans = facts.get("plans")
+    if not isinstance(plans, list) or not plans:
+        return (
+            head
+            + "<p>상환 기간안을 산출하지 않았습니다. 갚을 대출이 확정되지 않았습니다.</p>"
+        )
+
+    body = "".join(
+        "<tr>"
+        f"<td>{escape(str(plan.get('label') or ''))}"
+        f"{' <strong>(이 문서의 기준)</strong>' if plan.get('is_basis') else ''}</td>"
+        f'<td class="mid">{_months(plan.get("months"))}</td>'
+        f'<td class="num">{_won(plan.get("monthly_payment"))}</td>'
+        f'<td class="num">{_won(plan.get("total_interest"))}</td>'
+        f'<td class="mid">'
+        f"{escape(_STRESS_LABELS.get(str(plan.get('stress_status')), _UNKNOWN))}</td>"
+        "</tr>"
+        for plan in plans
+        if isinstance(plan, Mapping)
+    )
+    table = (
+        "<table><caption>가. 기간에 따른 상환 부담</caption>"
+        "<thead><tr><th>구분</th><th>기간</th><th>월 상환액</th>"
+        "<th>총이자</th><th>스트레스</th></tr></thead>"
+        f"<tbody>{body}</tbody></table>"
+    )
+
+    note = (
+        "<p class='note'><strong>조달액은 두 안이 같습니다.</strong> 기간이 바꾸는 것은 "
+        "이자와 충격 여유뿐입니다. 스트레스 칸은 금리 상승·소득 감소·생활비 증가 "
+        "시나리오를 모두 견디는지를 말하며, 미통과는 그 계획이 실행 불가라는 뜻이 "
+        "아니라 <strong>여유가 없다</strong>는 뜻입니다.</p>"
+    )
+    reasons = [str(item) for item in (facts.get("reasons") or ())]
+    detail = (
+        "<ul class='plain'>"
+        + "".join(f"<li>{escape(text)}</li>" for text in reasons)
+        + "</ul>"
+        if reasons
+        else ""
+    )
+    return head + table + note + detail
+
+
 def _toc(narrated_titles: Sequence[str]) -> str:
     """목차. **자동 번호를 쓰지 않는다** — 제목이 이미 번호를 갖고 있어서 겹친다.
 
@@ -292,7 +351,7 @@ def _toc(narrated_titles: Sequence[str]) -> str:
     조합안 유무로 목록을 바꾸지 않는다. 목차가 입력에 따라 달라지면 본문 번호도
     함께 밀려 같은 항목이 문서마다 다른 번호를 갖는다.
     """
-    items = ["1. 산출 조건", "2. 대출 조달방안", "3. 생애주기"]
+    items = ["1. 산출 조건", "2. 대출 조달방안", "3. 생애주기", "4. 상환 기간안"]
     items.extend(narrated_titles)
     items.extend(["붙임 1. 적용 규제·정책 근거", "붙임 2. 확인되지 않은 항목"])
     body = "".join(f"<li>{escape(title)}</li>" for title in items)
@@ -750,7 +809,7 @@ def render_official_report(
     #
     # 그래서 조합안이 없어도 2절 자리를 지키고 "산출하지 않았습니다"로 채운다 —
     # 빈 자리가 남는 편이 번호가 밀리는 것보다 낫다.
-    narrated, titles = _narrated_sections(report, start=4, has_combination=has_combination)
+    narrated, titles = _narrated_sections(report, start=5, has_combination=has_combination)
     return (
         # 완전한 문서로 낸다. 이 보고서의 정상 사용법이 **파일로 저장해 열고
         # 인쇄하는 것**이라, 문서 자체에 charset이 없으면 한글이 깨진다. API
@@ -767,6 +826,7 @@ def render_official_report(
         + _conditions(simulation)
         + _combination(simulation)
         + _lifecycle(simulation)
+        + _term_plans(simulation)
         + narrated
         + _attachment_sources(simulation, report)
         + _attachment_missing(simulation)

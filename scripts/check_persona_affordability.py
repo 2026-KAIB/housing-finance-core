@@ -60,6 +60,10 @@ MYDATA = os.path.join("app", "data_pipeline", "mydata")
 _UNRESOLVED_LOAN_STATUSES = {"UNKNOWN", "NOT_REQUESTED"}
 
 
+class _UnresolvedHousingStatus(ValueError):
+    """주택보유상태를 확정할 수 없다. 임의로 고르지 않고 확인불가로 넘긴다."""
+
+
 def _target_date(profile: dict) -> date:
     """페르소나 자신의 ``target_move_in_ym``(YYYYMM)을 그 달 1일로 바꾼다.
 
@@ -123,6 +127,50 @@ def _resolve_financial_fact(
     return None, reason
 
 
+def _housing_status(profile: dict) -> HousingStatus:
+    """페르소나가 말한 주택 사실에서 보유상태를 고른다.
+
+    예전에는 20명 전원에게 ``FIRST_HOME_BUYER``를 박아 넣었다. 대학생 20명이
+    마침 전원 생애최초라 결과는 맞았지만, 글롭이 넓어지는 순간 조용히 틀린다 —
+    ``persona_c``는 ``is_first_home_buyer=false`` / ``owns_property=true``이고,
+    그 차주에게 생애최초 LTV 70%가 붙으면 **한도가 커지는 방향**의 오류다.
+
+    보유 주택이 있으면 세우지 않는다. 프로필에 1주택 유지·처분조건부·다주택을
+    가를 필드가 없고, 셋은 LTV가 서로 다르다. 그 경우 호출부가 확인불가로
+    분류하게 예외를 올린다 — 셋 중 아무거나 고르면 그게 곧 추측이다.
+    """
+    if profile.get("owns_property"):
+        raise _UnresolvedHousingStatus(
+            "owns_property=true인데 1주택 유지·처분조건부·다주택을 가를 필드가 "
+            "프로필에 없어 LTV 구분을 확정할 수 없음"
+        )
+    if profile.get("is_first_home_buyer"):
+        return HousingStatus.FIRST_HOME_BUYER
+    return HousingStatus.NO_HOUSE
+
+
+def _usable_equity(profile: dict, current_assets: Decimal) -> tuple[Decimal, str]:
+    """임차보증금을 자기자본에 더한다. 표준 API에 없어 프로필로만 온다.
+
+    은행은 전세대출은 알아도 **보증금 총액은 모른다.** 설계서가 "누락 시 전세
+    거주 페르소나의 자기자본이 억 단위로 틀린다"고 경고하는 자리인데, 이 점검은
+    ``current_assets``만 읽어 보증금을 통째로 빼고 있었다. 대학생 중 3명이
+    보증금을 갖고 있고 ``persona_b``는 3.2억이다.
+
+    **반환값의 두 번째는 가정 문구다.** 보증금을 더하면 자기자본이 늘어 필요
+    대출금액이 줄고, 그건 계획이 쉬워 보이는 방향이다. 조용히 더하지 않는다.
+    ``lease_end_date``로 회수 시점을 확인하지 않는다는 사실도 함께 적는다.
+    """
+    deposit = profile.get("lease_deposit") or 0
+    if not deposit:
+        return current_assets, ""
+    note = (
+        f"임차보증금 {int(deposit):,}원을 자기자본에 포함했습니다. "
+        "회수 시점(lease_end_date)은 확인하지 않았습니다."
+    )
+    return current_assets + Decimal(str(deposit)), note
+
+
 def build_input(
     profile: dict,
     liquid_assets: Decimal,
@@ -152,7 +200,7 @@ def build_input(
         ),
         loan_request=LoanRequestInput(
             months=360,
-            housing_status=HousingStatus.FIRST_HOME_BUYER,
+            housing_status=_housing_status(profile),
             monthly_essential_expense=Decimal(profile["monthly_average_expense"]),
         ),
     )
@@ -175,16 +223,37 @@ def _loan_facts(result) -> tuple[dict | None, str]:
     return loan_facts, ""
 
 
+def _covers_required_amount(loan_facts: dict) -> bool | None:
+    """추천된 대출이 필요액을 실제로 덮는가. 엔진이 낸 판정을 그대로 읽는다."""
+    primary = loan_facts.get("primary")
+    if not isinstance(primary, dict):
+        return None
+    covers = primary.get("covers_required_amount")
+    return covers if isinstance(covers, bool) else None
+
+
 def classify(result) -> tuple[str, str, Decimal | None, dict | None]:
     """(구매가능|미달|확인불가), 사유, 부족액, 대출 facts를 돌려준다.
 
     세 상태를 뭉개지 않는다:
-      - 구매가능: 부족액이 계산됐고 0 이하
-      - 미달    : 부족액이 계산됐고 0보다 큼(스트레스 가산금리·상품별 한도·
-                  Rule Pack 자격 탈락으로 한도가 0인 경우도 포함 — 이것도
-                  "계산해 보니 0"이라는 확정 결과이지 모름이 아니다)
+      - 구매가능: 추천 대출이 필요액을 덮는다
+      - 미달    : 덮지 못한다(스트레스 가산금리·상품별 한도·Rule Pack 자격
+                  탈락으로 한도가 0인 경우도 포함 — 이것도 "계산해 보니 0"이라는
+                  확정 결과이지 모름이 아니다)
       - 확인불가: 종합추천이 안 돌았거나, loan facts가 없거나, 상태가
-                  UNKNOWN/NOT_REQUESTED거나, funding_shortfall 키 자체가 없음
+                  UNKNOWN/NOT_REQUESTED거나, 판정 근거 자체가 없음
+
+    **``funding_shortfall > 0``으로 미달을 판정하지 않는다.** ``loan_max``는
+    이분 탐색이고 ``epsilon``이 100,000원이라, 필요액이 탐색 상한일 때
+    최대 10만원의 잔차가 남는다. 그 잔차를 자금 부족으로 세면 **필요액을 이미
+    다 조달한 차주가 미달로 분류된다.**
+
+    실제로 그랬다. 유동자산 1.2억 페르소나의 부족액이 61,035원으로 나왔는데
+    같은 응답의 ``covers_required_amount``는 ``True``였다. 자금이 6만원 모자란
+    것이 아니라 탐색이 6만원 아래에서 멈춘 것이다.
+
+    그래서 판정은 엔진이 낸 ``covers_required_amount``를 읽고, ``funding_shortfall``
+    은 **얼마나 모자라는지 보여주는 숫자로만** 쓴다.
     """
     loan_facts, reason = _loan_facts(result)
     if loan_facts is None:
@@ -194,18 +263,20 @@ def classify(result) -> tuple[str, str, Decimal | None, dict | None]:
     if status in _UNRESOLVED_LOAN_STATUSES:
         return "확인불가", f"대출 상태={status}", None, loan_facts
 
+    shortfall: Decimal | None = None
     raw_shortfall = loan_facts.get("funding_shortfall")
-    if raw_shortfall is None:
-        return "확인불가", "funding_shortfall 키가 없음", None, loan_facts
+    if raw_shortfall is not None:
+        try:
+            shortfall = Decimal(str(raw_shortfall))
+        except InvalidOperation:
+            reason = f"funding_shortfall 값을 해석할 수 없음: {raw_shortfall!r}"
+            return "확인불가", reason, None, loan_facts
 
-    try:
-        shortfall = Decimal(str(raw_shortfall))
-    except InvalidOperation:
-        reason = f"funding_shortfall 값을 해석할 수 없음: {raw_shortfall!r}"
-        return "확인불가", reason, None, loan_facts
+    covers = _covers_required_amount(loan_facts)
+    if covers is None:
+        return "확인불가", "covers_required_amount 판정이 없음", shortfall, loan_facts
 
-    verdict = "구매가능" if shortfall <= 0 else "미달"
-    return verdict, "", shortfall, loan_facts
+    return ("구매가능" if covers else "미달"), "", shortfall, loan_facts
 
 
 def main() -> int:
@@ -260,8 +331,26 @@ def main() -> int:
             )
             continue
 
+        equity, equity_note = _usable_equity(profile, liquid_assets)
+        try:
+            payload = build_input(profile, equity, monthly_debt_payment)
+        except _UnresolvedHousingStatus as exc:
+            # 주택보유상태를 임의로 고르면 LTV가 통째로 달라진다. 확인불가다.
+            rows.append(
+                {
+                    "name": os.path.basename(directory),
+                    "target_price": int(profile["target_price"]),
+                    "target_ym": profile["target_move_in_ym"],
+                    "verdict": "확인불가",
+                    "reason": str(exc),
+                    "shortfall": None,
+                    "status": None,
+                }
+            )
+            continue
+
         result = run_simulation(
-            build_input(profile, liquid_assets, monthly_debt_payment),
+            payload,
             simulation_id=uuid4(),
             as_of=AS_OF,
             calculated_at=datetime.now(tz=UTC),
@@ -274,7 +363,7 @@ def main() -> int:
                 "target_price": int(profile["target_price"]),
                 "target_ym": profile["target_move_in_ym"],
                 "verdict": verdict,
-                "reason": reason,
+                "reason": "; ".join(note for note in (reason, equity_note) if note),
                 "shortfall": shortfall,
                 "status": None if loan_facts is None else loan_facts.get("status"),
             }

@@ -12,22 +12,7 @@ import glob
 import json
 import os
 from datetime import UTC, date, datetime
-from decimal import Decimal
 from uuid import uuid4
-
-from app.regulations.mortgage_limits import HousingStatus
-from app.schemas.simulation import (
-    FinancialSnapshot,
-    HousingGoal,
-    LoanRequestInput,
-    SimulationInput,
-    UserProfile,
-)
-from app.services.loan_product_catalog import (
-    LoanProductCatalogUnavailable,
-    load_configured_loan_candidates,
-)
-from app.services.simulation_orchestrator import run_simulation
 
 from check_persona_affordability import (
     _load_generation_metadata,
@@ -35,6 +20,12 @@ from check_persona_affordability import (
     build_input,
     classify,
 )
+
+from app.services.loan_product_catalog import (
+    LoanProductCatalogUnavailable,
+    load_configured_loan_candidates,
+)
+from app.services.simulation_orchestrator import run_simulation
 
 AS_OF = date(2026, 8, 1)
 MYDATA = os.path.join("app", "data_pipeline", "mydata")

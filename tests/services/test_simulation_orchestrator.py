@@ -12,7 +12,9 @@ from uuid import UUID
 
 from app.regulations.mortgage_limits import HousingStatus
 from app.regulations.regulated_regions import DESIGNATION_LIST_VERIFIED_THROUGH
+from app.rule_engine.product_packs.handoff import ProductCandidate
 from app.schemas.simulation import (
+    AcquisitionCostInput,
     FinancialSnapshot,
     HousingGoal,
     LoanRequestInput,
@@ -201,6 +203,205 @@ def test_derived_required_amount_records_that_costs_are_missing() -> None:
 
     assert any("취득세" in note for note in assumptions)
     assert not any("취득세" in note for note in explicit)
+
+
+# --------------------------------------------------------------------------
+# 미래 대출한도 — 없으면 "목표 시점까지 모으면 되나"에 답하지 못한다
+# --------------------------------------------------------------------------
+
+_MORTGAGE = ProductCandidate(
+    product_name="KB 주택담보대출",
+    base_data={
+        "source_type": "manual_pdf",
+        "fin_prdt_nm": "KB 주택담보대출",
+        "loan_lmt": "담보조사가격 및 소득금액에 따른 대출가능금액 이내",
+    },
+    option_list=(
+        {
+            "fin_prdt_nm": "KB 주택담보대출",
+            "mrtg_type_nm": "아파트",
+            "rpay_type_nm": "분할상환방식",
+            "lend_rate_type_nm": "변동금리",
+            "lend_rate_min": 3.0,
+            "lend_rate_max": 3.0,
+            "lend_rate_avg": 3.0,
+        },
+    ),
+)
+
+_ACQUISITION = AcquisitionCostInput(
+    buyer_is_corporation=False,
+    household_home_count_after_purchase=1,
+    is_registered_housing=True,
+    is_luxury_home=False,
+    exclusive_area_m2=Decimal("84"),
+    registration_and_legal_costs=Decimal("2500000"),
+)
+
+
+def _strategy_payload(liquid_assets: Decimal = Decimal("150000000")) -> SimulationInput:
+    """전략 비교가 실제로 도는 입력. 취득 사실이 없으면 시나리오가 0건이라 건너뛴다."""
+    base = _payload(loan_request=_loan_request())
+    return base.model_copy(
+        update={
+            "acquisition_costs": _ACQUISITION,
+            "financial_snapshot": base.financial_snapshot.model_copy(
+                update={"liquid_assets": liquid_assets}
+            ),
+        }
+    )
+
+
+def _baseline_scenario(result, strategy: str) -> dict:
+    section = (result.strategy_comparison.result or {}).get(strategy) or {}
+    return (section.get("scenarios") or [{}])[0]
+
+
+def test_the_accumulation_strategy_gets_a_future_loan_limit_to_judge_against() -> None:
+    """미래 대출한도가 없으면 자산축적형의 모든 시나리오가 UNKNOWN이 된다.
+
+    그러면 두 전략을 비교할 수 없고, 사용자에게는 **"오늘 살 수 있나"의 답만**
+    나간다. 이 서비스가 답해야 하는 질문은 "목표 시점까지 모으면 살 수 있나"인데
+    그 절이 통째로 비는 것이다.
+    """
+    result = _run(_strategy_payload(), loan_candidates=[_MORTGAGE])
+
+    assert result.strategy_comparison.run_status.value == "COMPLETED"
+    scenario = _baseline_scenario(result, "asset_accumulation")
+    assert scenario["loan_capacity"] is not None
+    assert "loan_capacity" not in (scenario.get("missing_inputs") or ())
+
+
+def test_the_future_limit_is_recorded_as_an_assumption_not_a_prediction() -> None:
+    """숫자만 내보내면 근거 없는 확언이 된다. 미래 승인을 보장하지 않는다(§20)."""
+    result = _run(_strategy_payload(), loan_candidates=[_MORTGAGE])
+
+    assumptions = result.strategy_comparison.assumptions
+    assert any("현행 규제" in note for note in assumptions)
+    assert any("보장하지 않습니다" in note for note in assumptions)
+
+
+def test_a_caller_supplied_future_limit_wins_and_is_not_labelled_as_ours() -> None:
+    """호출자가 별도 근거로 마련한 계획값이 있으면 그것이 우선한다.
+
+    그 값에 우리 가정 문구를 붙이면 **남의 근거를 우리 것으로 바꿔 적는** 셈이다.
+    """
+    result = _run(
+        _strategy_payload(),
+        loan_candidates=[_MORTGAGE],
+        future_loan_capacity=Decimal("1"),
+    )
+
+    scenario = _baseline_scenario(result, "asset_accumulation")
+    assert scenario["loan_capacity"] == "1"
+    assert not any("현행 규제" in note for note in result.strategy_comparison.assumptions)
+
+
+def test_the_future_limit_is_a_conservative_floor_and_says_so() -> None:
+    """오늘 산출된 값은 **진짜 한도가 아니라 하한**이다.
+
+    ``loan_max``의 탐색 상한이 ``min(LTV, 상품한도, DTI, 필요액)``이라 오늘의
+    필요액에도 묶인다. 유동자산이 많아 필요액이 작으면 그만큼만 나온다 — 미래에
+    쓸 수 있는 한도가 그것뿐이라는 뜻이 아니다. 과소평가라 방향은 안전하지만,
+    그 사실을 모르고 읽으면 "모아도 안 된다"를 과하게 믿게 된다.
+    """
+    result = _run(
+        _strategy_payload(liquid_assets=Decimal("450000000")),
+        loan_candidates=[_MORTGAGE],
+    )
+
+    scenario = _baseline_scenario(result, "asset_accumulation")
+    needed_today = Decimal("500000000") - Decimal("450000000")
+    assert Decimal(scenario["loan_capacity"]) <= needed_today
+    assert any(
+        "실제 한도보다 작을 수 있습니다" in note
+        for note in result.strategy_comparison.assumptions
+    )
+
+
+# --------------------------------------------------------------------------
+# 구매 후 보유 주택 수 — 사용자가 이미 말한 사실을 다시 묻지 않는다
+# --------------------------------------------------------------------------
+
+_ACQUISITION_WITHOUT_COUNT = _ACQUISITION.model_copy(
+    update={"household_home_count_after_purchase": None}
+)
+
+
+def _payload_without_home_count(status: HousingStatus) -> SimulationInput:
+    base = _strategy_payload()
+    return base.model_copy(
+        update={
+            "acquisition_costs": _ACQUISITION_WITHOUT_COUNT,
+            "loan_request": _loan_request(housing_status=status),
+        }
+    )
+
+
+def _strategy_missing(result) -> tuple[str, ...]:
+    return result.strategy_comparison.missing_inputs
+
+
+def test_the_home_count_is_derived_from_the_housing_status() -> None:
+    """같은 사실을 두 곳이 다르게 다루면 안 된다.
+
+    Rule Pack용 ``owned_house_count``는 이미 ``housing_status``에서 유도하면서
+    취득세용 주택 수만 결측으로 두면, **사용자가 이미 말한 사실 때문에** 총
+    구매비용이 확정되지 않고 전략 비교가 통째로 비어버린다.
+    """
+    result = _run(
+        _payload_without_home_count(HousingStatus.FIRST_HOME_BUYER),
+        loan_candidates=[_MORTGAGE],
+    )
+
+    assert result.strategy_comparison.run_status.value == "COMPLETED"
+    assert "household_home_count_after_purchase" not in _strategy_missing(result)
+
+
+def test_a_disposal_pledge_does_not_get_a_guessed_count() -> None:
+    """산술로는 2채지만 일시적 2주택 특례가 걸린다.
+
+    특례 요건·기한을 1차 출처로 확인하지 못했다. 1로 적으면 취득세를 **작게**
+    잡는 방향이므로 추측하지 않고 결측으로 남긴다.
+    """
+    result = _run(
+        _payload_without_home_count(HousingStatus.ONE_HOUSE_DISPOSAL_PLEDGED),
+        loan_candidates=[_MORTGAGE],
+    )
+
+    assert "household_home_count_after_purchase" in _strategy_missing(result)
+
+
+def test_multi_house_does_not_get_a_guessed_count() -> None:
+    """"2채 이상"은 개수가 아니다. 3으로 적으면 4주택 차주를 3주택으로 통과시킨다."""
+    result = _run(
+        _payload_without_home_count(HousingStatus.MULTI_HOUSE),
+        loan_candidates=[_MORTGAGE],
+    )
+
+    assert "household_home_count_after_purchase" in _strategy_missing(result)
+
+
+def test_a_supplied_home_count_is_never_overwritten() -> None:
+    """사용자가 직접 말한 사실이 유도값보다 우선한다.
+
+    무주택이라도 세대 기준으로 이미 보유 주택이 있을 수 있다. 유도가 그 답을
+    덮으면 사용자가 고칠 방법이 없어진다.
+    """
+    base = _payload_without_home_count(HousingStatus.NO_HOUSE)
+    supplied = base.model_copy(
+        update={
+            "acquisition_costs": _ACQUISITION_WITHOUT_COUNT.model_copy(
+                update={"household_home_count_after_purchase": 3}
+            )
+        }
+    )
+
+    result = _run(supplied, loan_candidates=[_MORTGAGE])
+
+    # 3주택은 v1 취득세 범위 밖이라 총비용이 확정되지 않는다. 유도값 1로 덮였다면
+    # 계산이 성립해 시나리오가 만들어졌을 것이다.
+    assert result.strategy_comparison.run_status.value == "NOT_RUN"
 
 
 def test_derived_required_amount_never_exceeds_the_funding_gap() -> None:

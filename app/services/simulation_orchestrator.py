@@ -75,6 +75,53 @@ _FUTURE_CAPACITY_ASSUMPTION = (
 )
 
 
+def _with_derived_home_count(payload: SimulationInput) -> SimulationInput:
+    """구매 후 보유 주택 수를 ``housing_status``에서 채운다.
+
+    같은 사실을 두 곳이 다르게 다루고 있었다. Rule Pack용 ``owned_house_count``는
+    이미 ``housing_status``에서 유도하면서(``_user_facts``), 취득세용
+    ``household_home_count_after_purchase``는 결측으로 두어 **총 구매비용이 통째로
+    확정되지 않고** 시나리오도 전략 비교도 만들어지지 않았다. 사용자는 이미 같은
+    사실을 말했는데 한쪽만 쓰고 있던 것이다.
+
+    유도하는 것은 **산술뿐이다**(현재 보유 + 이번 취득 1채). 세법 판단은 하지 않는다.
+
+    - 무주택·생애최초 → 1채
+    - 1주택 유지 → 2채
+    - **1주택 처분조건부 → 채우지 않는다.** 산술로는 2채지만 일시적 2주택 특례가
+      적용되면 1주택 세율이다. 그 특례의 요건·기한을 1차 출처로 확인하지 못했고,
+      1로 적으면 취득세를 **작게** 잡는 방향이라 추측하지 않는다.
+    - **다주택 → 채우지 않는다.** "2채 이상"은 개수가 아니다. 3으로 적으면 4주택
+      차주를 3주택으로 통과시키고, 그것도 비용을 작게 잡는 방향이다.
+
+    호출자가 값을 넣었으면 건드리지 않는다 — 사용자가 직접 말한 사실이 우선한다.
+    """
+    acquisition = payload.acquisition_costs
+    loan_request = payload.loan_request
+    if (
+        acquisition is None
+        or loan_request is None
+        or acquisition.household_home_count_after_purchase is not None
+    ):
+        return payload
+
+    status = loan_request.housing_status.value
+    if status in ("NO_HOUSE", "FIRST_HOME_BUYER"):
+        count = 1
+    elif status == "ONE_HOUSE_KEEPING":
+        count = 2
+    else:
+        return payload
+
+    return payload.model_copy(
+        update={
+            "acquisition_costs": acquisition.model_copy(
+                update={"household_home_count_after_purchase": count}
+            )
+        }
+    )
+
+
 def _future_loan_capacity(
     recommendation: CombinedRecommendationResult | None,
 ) -> Decimal | None:
@@ -437,7 +484,10 @@ def run_simulation(
     # 값을 출처와 함께 적용하는 것이다. 취득 사실이 없으면 만들지 않는다.
     scenario_build = HousingScenarioBuild(scenarios=housing_scenarios)
     if not housing_scenarios:
-        scenario_build = build_housing_cost_scenarios(payload, as_of=as_of)
+        scenario_build = build_housing_cost_scenarios(
+            _with_derived_home_count(payload),
+            as_of=as_of,
+        )
 
     strategy_assumptions: tuple[str, ...] = ()
     if recommendation is not None and scenario_build.scenarios:

@@ -77,8 +77,48 @@ def load_region_trades(
     )
 
 
+# 조회 경로를 태우기 위한 코드일 뿐이다. 이 구에 거래가 없어도(빈 결과) 준비
+# 확인은 통과한다 — 데이터 없음과 조회 불가는 다른 상태다.
+_PROBE_SGG_CODE = "11680"
+
+
+def probe_region_trades(
+    *,
+    config: Settings | None = None,
+    engine: Engine | None = None,
+) -> None:
+    """설정된 실거래 공급원이 **실제로 조회되는지**만 확인한다.
+
+    준비 확인용이라 페이지를 만들지 않고 한 행만 읽는다. `SELECT 1`로 대신하지
+    않는 이유는, 접속은 되지만 `apt_trades`·`sgg_codes` 권한이 없는 배포가
+    이 저장소에서 실제로 겪은 형태이기 때문이다 — 연결만 확인하면 그 배포가
+    '준비됨'으로 통과한다.
+    """
+
+    resolved = config or get_settings()
+    if resolved.region_price_provider != "database":
+        raise RegionTradesUnavailable("the region trade provider is not configured")
+
+    try:
+        database_engine = engine or get_database_engine()
+        with database_engine.connect() as connection:
+            fetch_region_name(connection, _PROBE_SGG_CODE)
+            fetch_region_trade_rows(
+                connection,
+                _PROBE_SGG_CODE,
+                TradeSort.AREA_ASC,
+                limit=1,
+                offset=0,
+            )
+    except (DatabaseConfigurationError, SQLAlchemyError) as exc:
+        raise RegionTradesUnavailable(
+            "the configured database region-trade provider is unavailable"
+        ) from exc
+
+
 __all__ = [
     "RegionNotFound",
     "RegionTradesUnavailable",
     "load_region_trades",
+    "probe_region_trades",
 ]

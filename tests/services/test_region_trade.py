@@ -10,6 +10,7 @@ from app.services.region_trade import (
     RegionNotFound,
     RegionTradesUnavailable,
     load_region_trades,
+    probe_region_trades,
 )
 
 ROW = {
@@ -159,3 +160,21 @@ def test_page_past_the_end_returns_empty_without_error() -> None:
 def test_connection_failure_raises_unavailable() -> None:
     with pytest.raises(RegionTradesUnavailable):
         load_region_trades("11680", config=_config("database"), engine=BrokenEngine())
+
+
+def test_probe_passes_when_the_query_path_works() -> None:
+    """준비 확인은 페이지를 만들지 않고 조회 경로만 태운다."""
+
+    connection = FakeConnection([FakeResult(["강남구"]), FakeResult([ROW])])
+
+    probe_region_trades(config=_config("database"), engine=FakeEngine(connection))
+
+
+def test_probe_fails_when_the_provider_is_not_configured() -> None:
+    with pytest.raises(RegionTradesUnavailable):
+        probe_region_trades(config=_config("disabled"))
+
+
+def test_probe_fails_when_the_database_is_unreachable() -> None:
+    with pytest.raises(RegionTradesUnavailable):
+        probe_region_trades(config=_config("database"), engine=BrokenEngine())

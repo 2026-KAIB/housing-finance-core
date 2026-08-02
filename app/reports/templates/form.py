@@ -244,7 +244,10 @@ def _base_vs_stress(payload: ReportAIInput) -> tuple[str, ...]:
     if margin is not None:
         parsed = _decimal(margin)
         if parsed is not None and parsed < 0:
-            lines.append(f"- 최소 여유자금 부족액: {_won(abs(parsed))}")
+            # `minimum_buffer_margin`은 시나리오 전체에서 **가장 작은** 여유,
+            # 곧 가장 큰 부족액이다. 이것을 "최소 부족액"으로 적으면 뜻이
+            # 뒤집혀 "잘해야 이만큼 모자란다"로 읽힌다. 실제로는 최악이다.
+            lines.append(f"- 최악 시나리오 여유자금 부족액: {_won(abs(parsed))}")
     return tuple(lines)
 
 
@@ -433,19 +436,24 @@ def _user_confirmations(payload: ReportAIInput) -> tuple[str, ...]:
         lines.append("확인이 필요한 입력:")
         lines.extend(f"- {_missing_label(name)}" for name in payload.missing_inputs)
         lines.append("")
+    # 가정은 `assumptions`에서 그대로 읽는다. 예전에는 `reasons`를 낱말("가정",
+    # "파생", "같다고")로 훑었는데, 가정은 애초에 다른 칸에 담기므로 한 건도
+    # 걸리지 않았다. 무엇이 가정인지는 엔진이 정하게 두고 양식이 다시 추측하지
+    # 않는다 — 추측이 이 결함을 만들었다.
     assumptions = tuple(
-        note
-        for section in (
-            payload.sections.loan,
-            payload.sections.savings,
-            payload.sections.recommendation,
+        dict.fromkeys(
+            note
+            for section in (
+                payload.sections.loan,
+                payload.sections.savings,
+                payload.sections.recommendation,
+            )
+            for note in section.assumptions
         )
-        for note in section.reasons
-        if "가정" in note or "파생" in note or "같다고" in note
     )
     if assumptions:
         lines.append("계산에 사용한 가정:")
-        lines.extend(f"- {note}" for note in dict.fromkeys(assumptions))
+        lines.extend(f"- {note}" for note in assumptions)
         lines.append("")
     lines.append("상품 설명서에서 직접 확인할 것:")
     lines.append("- 우대금리 조건과 그 달성 가능성")

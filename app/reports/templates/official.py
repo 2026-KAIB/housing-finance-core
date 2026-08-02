@@ -23,6 +23,7 @@
     확인할 조건)를 그대로 따르고, 조합안 절과 붙임을 더한다.
 """
 
+import re
 from collections.abc import Mapping, Sequence
 from decimal import ROUND_HALF_UP, Decimal, InvalidOperation
 from html import escape
@@ -182,6 +183,22 @@ def _section_facts(simulation: SimulationResult, name: str) -> dict[str, object]
     return dict(section.result or {})
 
 
+_BOLD = re.compile(r"\*\*(.+?)\*\*")
+
+
+def _inline_markdown(text: str) -> str:
+    """양식의 인라인 강조만 HTML로 옮긴다.
+
+    양식(``templates/form.py``)이 만드는 것은 마크다운 문자열이다. 그대로
+    이스케이프하면 ``**필요 대출금액 대비** 부족액``이 별표까지 인쇄된다. 그 강조는
+    부족액의 기준을 문장에 박아 두려고 붙인 것이라(AI가 "목표 금액 대비"로 잘못
+    귀속했던 자리다) 지울 수 없으므로, 표시만 옮긴다.
+
+    이스케이프를 **먼저** 한다. 순서를 뒤집으면 본문에 든 ``<``가 태그로 살아난다.
+    """
+    return _BOLD.sub(r"<strong>\1</strong>", escape(text))
+
+
 def _rows(*pairs: tuple[str, str]) -> str:
     return "".join(
         f'<tr><th class="rowhead">{escape(label)}</th><td>{value}</td></tr>'
@@ -220,19 +237,37 @@ def _toc(has_combination: bool, narrated_titles: Sequence[str]) -> str:
     return f'<section class="toc"><h2>목차</h2><ul>{body}</ul></section>'
 
 
+def _required_loan_amount(simulation: SimulationResult) -> Decimal | None:
+    """필요 대출금액. **추천 구간이 산출한 값을 먼저 읽는다.**
+
+    예전에는 대출 조합의 첫 조합안에서만 역산했다(``total_amount +
+    funding_shortfall``). 조합안이 하나도 없으면 그 역산이 성립하지 않아 이 칸이
+    "확인되지 않음"으로 인쇄됐는데, 같은 문서의 7항은 같은 값을 금액으로 적고
+    있었다. 한 문서가 같은 값을 두 곳에서 다르게 말하면 어느 쪽이 사실인지
+    독자가 가릴 수 없다.
+
+    조합안에서 역산하는 경로는 추천이 실행되지 않은 경우를 위해 남긴다. 둘 다
+    없을 때만 ``None``이며, 그때는 정말로 확인되지 않은 상태다.
+    """
+    loan = _section_facts(simulation, "recommendation").get("loan")
+    if isinstance(loan, Mapping):
+        required = _decimal(loan.get("required_amount"))
+        if required is not None:
+            return required
+
+    plans = _section_facts(simulation, "loan_combination").get("plans") or []
+    if isinstance(plans, list) and plans and isinstance(plans[0], Mapping):
+        total = _decimal(plans[0].get("total_amount"))
+        short = _decimal(plans[0].get("funding_shortfall"))
+        if total is not None and short is not None:
+            return total + short
+    return None
+
+
 def _conditions(simulation: SimulationResult) -> str:
     user = simulation.user_summary
     loan = _section_facts(simulation, "loan_simulation")
-    combination = _section_facts(simulation, "loan_combination")
-    plans = combination.get("plans") or []
-    required = None
-    if isinstance(plans, list) and plans:
-        first = plans[0]
-        if isinstance(first, Mapping):
-            total = _decimal(first.get("total_amount"))
-            short = _decimal(first.get("funding_shortfall"))
-            if total is not None and short is not None:
-                required = total + short
+    required = _required_loan_amount(simulation)
 
     return (
         "<h2>1. 산출 조건</h2>"
@@ -543,7 +578,12 @@ def _narrated_sections(
         figures = section.figures or ("아직 계산하지 않았습니다.",)
         body += "<ul class='plain'>"
         for line in figures:
-            body += f"<li>{escape(str(line).lstrip('- '))}</li>"
+            text = str(line).strip()
+            # 양식은 마크다운이라 빈 줄이 문단 구분자다. 목록으로 그대로 옮기면
+            # 내용 없는 항목이 하나 생긴다.
+            if not text:
+                continue
+            body += f"<li>{_inline_markdown(text.lstrip('- '))}</li>"
         body += "</ul>"
 
         outcome = outcomes.get(section.key)

@@ -382,3 +382,80 @@ class TestNarrationAndDisclaimer:
 
         assert "붙임 2. 확인되지 않은 항목" in html
         assert "0이나 해당 없음이 아니며" in html
+
+
+_REQUIRED_ROW = re.compile(r"필요 대출금액</th><td>([^<]*)</td>")
+
+
+class TestTheDocumentDoesNotContradictItself:
+    """한 문서가 같은 값을 두 곳에서 다르게 말하면 독자는 어느 쪽이 사실인지 가릴 수 없다.
+
+    실제로 그랬다. 조합안이 하나도 없는 결과에서 1항은 필요 대출금액을 "확인되지
+    않음"으로, 7항은 같은 값을 금액으로 인쇄했다.
+    """
+
+    def test_the_required_amount_survives_without_a_combination(
+        self,
+        report_input: ReportAIInput,
+        simulation: SimulationResult,
+    ) -> None:
+        """조합안이 없다고 해서 엔진이 아는 값을 모른다고 적지 않는다."""
+        html = render_official_report(_report(report_input), _without_combination(simulation))
+
+        row = _REQUIRED_ROW.search(html)
+        assert row is not None
+        assert row.group(1) != "확인되지 않음"
+
+    def test_both_places_state_the_same_required_amount(
+        self,
+        report_input: ReportAIInput,
+        simulation: SimulationResult,
+    ) -> None:
+        """1항의 표와 7항의 목록이 같은 금액을 말해야 한다."""
+        html = render_official_report(_report(report_input), _without_combination(simulation))
+
+        row = _REQUIRED_ROW.search(html)
+        assert row is not None
+        assert f"필요 대출금액: {row.group(1)}" in html
+
+
+class TestTheFormMarkupDoesNotLeak:
+    """양식은 마크다운을 만들고 이 렌더러는 HTML을 만든다. 경계에서 표기가 새면 안 된다."""
+
+    def test_emphasis_is_converted_not_printed(
+        self,
+        report_input: ReportAIInput,
+        simulation: SimulationResult,
+    ) -> None:
+        """`**필요 대출금액 대비**`가 별표까지 인쇄되던 자리다."""
+        html = render_official_report(_report(report_input), _with_combination(simulation))
+
+        assert "**" not in html
+        assert "<strong>필요 대출금액 대비</strong> 부족액" in html
+
+    def test_blank_form_lines_do_not_become_empty_bullets(
+        self,
+        report_input: ReportAIInput,
+        simulation: SimulationResult,
+    ) -> None:
+        """마크다운의 문단 구분용 빈 줄이 내용 없는 항목으로 찍히던 자리다."""
+        html = render_official_report(_report(report_input), _with_combination(simulation))
+
+        assert "<li></li>" not in html
+
+
+class TestTheEngineAssumptionsReachTheDocument:
+    def test_the_derived_required_amount_states_what_it_excludes(
+        self,
+        report_input: ReportAIInput,
+        simulation: SimulationResult,
+    ) -> None:
+        """필요 대출금액은 목표금액 − 유동자산이라 부대비용이 빠져 있다.
+
+        구매 총비용은 **작게 잡는 것이 위험한** 축이므로, 그 사실이 문서에
+        남아야 한다. 엔진이 만든 이 경고가 보고서까지 오지 못하던 자리다.
+        """
+        html = render_official_report(_report(report_input), _with_combination(simulation))
+
+        assert "계산에 사용한 가정" in html
+        assert "부대비용이 빠져 있어 실제 필요금액은 더 클 수 있습니다" in html

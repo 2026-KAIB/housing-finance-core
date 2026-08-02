@@ -14,7 +14,13 @@ from app.schemas.property import (
     PropertySearchResult,
     PropertySourceMetadata,
 )
-from app.schemas.simulation import FinancialSnapshot, JsonValue, LoanRequestInput, UserProfile
+from app.schemas.simulation import (
+    FinancialSnapshot,
+    JsonValue,
+    LoanRequestInput,
+    ResolvesAnnualIncome,
+    UserProfile,
+)
 
 PROPERTY_AFFORDABILITY_RESULT_SCHEMA_VERSION = "1.0.0"
 PROPERTY_AFFORDABILITY_AI_HANDOFF_SCHEMA_VERSION = "1.0.0"
@@ -92,7 +98,7 @@ class PropertyAcquisitionProfileInput(BaseModel):
         return PropertyAcquisitionFactsInput.model_validate(merged)
 
 
-class PropertyAffordabilitySearchRequest(BaseModel):
+class PropertyAffordabilitySearchRequest(BaseModel, ResolvesAnnualIncome):
     """Frontend filters and finance facts for a single search-and-evaluate call."""
 
     model_config = ConfigDict(extra="forbid")

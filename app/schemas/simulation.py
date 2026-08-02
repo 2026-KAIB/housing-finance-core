@@ -51,7 +51,11 @@ class UserProfile(BaseModel):
     persona_name: str | None = None
     age: int = Field(ge=19, le=120)
     household_size: int = Field(default=1, ge=1)
-    annual_income: Decimal = Field(ge=0)
+    # DSR 분모. **금융사 인정소득**이며 거래내역에서 집계한 실수령 소득과 다르다
+    # (`mydata_design.md` §9). 없으면 월소득 × 12로 파생하고 그 사실을 가정으로
+    # 남긴다 — 파생값은 세후 실수령 기준이라 인정소득보다 작고, 소득이 작으면
+    # DSR이 커져 **한도가 작게** 나온다. 과소평가는 안전한 방향이다(§22.3).
+    annual_income: Decimal | None = Field(default=None, ge=0)
     employment_type: str | None = None
     is_first_home_buyer: bool = False
     is_married: bool = False
@@ -280,7 +284,56 @@ class AcquisitionCostInput(BaseModel):
         return self
 
 
-class SimulationInput(BaseModel):
+# 연소득을 월소득에서 파생했을 때 결과에 남기는 문구. 숫자만 내보내면 근거 없는
+# 확언이 된다(§20).
+DERIVED_ANNUAL_INCOME_NOTE = (
+    "연소득을 월소득 × 12로 파생했습니다. DSR 심사는 금융사 인정소득으로 하며 "
+    "그 값은 보통 세후 실수령액보다 큽니다. 따라서 실제 한도는 여기 계산보다 "
+    "클 수 있습니다."
+)
+
+
+class AnnualIncomeSource(StrEnum):
+    """연소득이 어디서 왔는지. 결과를 읽는 쪽이 가정 여부를 알아야 한다."""
+
+    PROVIDED = "PROVIDED"
+    DERIVED_FROM_MONTHLY = "DERIVED_FROM_MONTHLY"
+
+
+class ResolvesAnnualIncome:
+    """``profile``과 ``financial_snapshot``을 함께 가진 입력이 공유하는 규칙.
+
+    ``/simulations``와 ``/properties/affordability``가 같은 값을 다르게 계산하면
+    같은 차주에게 두 화면이 다른 한도를 보여준다.
+    """
+
+    profile: UserProfile
+    financial_snapshot: FinancialSnapshot
+
+    @property
+    def annual_income_source(self) -> AnnualIncomeSource:
+        if self.profile.annual_income is None:
+            return AnnualIncomeSource.DERIVED_FROM_MONTHLY
+        return AnnualIncomeSource.PROVIDED
+
+    @property
+    def resolved_annual_income(self) -> Decimal:
+        """DSR 분모로 쓸 연소득. 없으면 월소득 × 12로 파생한다.
+
+        **파생값은 인정소득보다 작다.** 마이데이터가 주는 월소득은 세후 실수령이고
+        인정소득은 보통 세전 기준이라, 12를 곱해도 인정소득에 못 미친다. 소득이
+        작으면 DSR이 커져 한도가 작게 나오므로 방향은 안전하다.
+
+        정확히 하려면 인정소득을 따로 받아야 한다(`mydata_design.md` §9가
+        "합의 필요"로 표시해 둔 항목이다). 그 전까지 이 파생을 쓰고, 쓴 사실을
+        ``DERIVED_ANNUAL_INCOME_NOTE``로 결과에 남긴다.
+        """
+        if self.profile.annual_income is not None:
+            return self.profile.annual_income
+        return self.financial_snapshot.monthly_income * Decimal(12)
+
+
+class SimulationInput(BaseModel, ResolvesAnnualIncome):
     model_config = ConfigDict(extra="forbid")
 
     profile: UserProfile

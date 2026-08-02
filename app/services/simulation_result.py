@@ -162,7 +162,9 @@ def _user_summary(payload: SimulationInput) -> PublicUserSummary:
         persona_name=profile.persona_name,
         age=profile.age,
         household_size=profile.household_size,
-        annual_income=profile.annual_income,
+        # 문서에 실리는 연소득도 **계산이 실제로 쓴 값**이어야 한다. 화면과 계산이
+        # 다른 숫자를 말하면 어느 쪽이 사실인지 독자가 가릴 수 없다.
+        annual_income=payload.resolved_annual_income,
         employment_type=profile.employment_type,
         is_first_home_buyer=profile.is_first_home_buyer,
         is_married=profile.is_married,

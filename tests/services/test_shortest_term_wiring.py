@@ -197,6 +197,60 @@ def test_a_borrower_who_cannot_repay_keeps_the_requested_term() -> None:
         assert row["months"] == _REQUESTED_MONTHS
 
 
+def _primary(result) -> dict:
+    loan = (result.recommendation.result or {}).get("loan") or {}
+    primary = loan.get("primary")
+    assert primary is not None
+    return primary
+
+
+def _stress_payments(result) -> list[Decimal]:
+    scenarios = (result.stress_test.result or {}).get("scenarios") or []
+    return [
+        Decimal(str(row["monthly_payment"]))
+        for row in scenarios
+        if row.get("monthly_payment") is not None
+    ]
+
+
+def test_the_recommendation_carries_the_term_it_was_computed_at() -> None:
+    """기간을 결과에 싣지 않으면 뒤 계층이 요청 만기로 되돌아간다.
+
+    실제로 그렇게 됐다 — 스트레스 판정만 360개월을 쓰고 있었다.
+    """
+    result = _run("10000000")
+    loan = (result.recommendation.result or {}).get("loan") or {}
+
+    assert loan.get("months") == _executable(result)[0]["months"]
+    assert loan["months"] < _REQUESTED_MONTHS
+
+
+def test_the_stress_test_judges_the_payment_the_plan_actually_makes() -> None:
+    """스트레스가 요청 만기를 쓰면 월 상환액이 실제보다 **작아진다.**
+
+    360개월과 34개월은 같은 원금에 대해 상환액이 6배 넘게 갈렸다. 작은 쪽으로
+    판정하면 통과가 실제보다 쉬워지므로 위험한 방향이다.
+
+    무충격 시나리오의 상환액은 추천안의 상환액과 **정확히 같아야** 한다. 문서의
+    두 절이 같은 계획을 두고 다른 숫자를 말하면 어느 쪽이 사실인지 가릴 수 없다.
+    """
+    result = _run("10000000")
+    recommended = Decimal(str(_primary(result)["monthly_payment"]))
+    payments = _stress_payments(result)
+
+    assert payments
+    assert min(payments) == recommended
+
+
+def test_the_stress_scope_states_which_term_it_used() -> None:
+    """어느 기간으로 판정했는지 밝히지 않으면 다른 절과 숫자가 어긋나 보인다."""
+    result = _run("10000000")
+    months = _executable(result)[0]["months"]
+
+    notes = (result.stress_test.result or {}).get("scope_notes") or []
+    assert any(f"{months}개월" in note for note in notes)
+
+
 @pytest.mark.parametrize("income", ["10000000", "7000000", "5000000"])
 def test_a_lower_income_needs_a_longer_term(income: str) -> None:
     """소득이 낮을수록 같은 금액을 더 오래 갚아야 한다."""

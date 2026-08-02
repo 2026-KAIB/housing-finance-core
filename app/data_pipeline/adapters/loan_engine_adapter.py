@@ -1,5 +1,5 @@
 from collections.abc import Callable, Mapping
-from dataclasses import dataclass, field
+from dataclasses import dataclass, field, replace
 from decimal import Decimal
 
 from app.data_pipeline.curated.loan_limits import (
@@ -11,7 +11,12 @@ from app.data_pipeline.normalizers.loan_product import (
     NormalizedLoanOption,
     normalize_loan_product,
 )
-from app.engines.loan.formulas import buffer, loan_max
+from app.engines.loan.formulas import (
+    buffer,
+    loan_max,
+    shortest_serviceable_months,
+    total_interest,
+)
 from app.rule_engine.product_packs.handoff import ProductEngineHandoff
 from app.rule_engine.product_packs.models import EvaluationStatus, ProductCategory
 
@@ -400,6 +405,100 @@ def compute_loan_max(adaptation: LoanOptionAdaptation) -> Decimal:
             f"(status={adaptation.status}, missing={adaptation.missing_inputs})."
         )
     return loan_max(**adaptation.inputs.as_kwargs())  # type: ignore[arg-type]
+
+
+def serviceable_months_for(adaptation: LoanOptionAdaptation) -> int | None:
+    """이 옵션이 조달 목표액을 갚을 수 있는 가장 짧은 기간. 못 갚으면 ``None``.
+
+    기준 금액은 **탐색 상한들의 최솟값**이다. LTV·상품·DTI 한도가 필요액보다
+    낮으면 실제 조달액은 그 한도까지이므로, 필요액을 기준으로 잡으면 갚아야 할
+    금액을 실제보다 크게 보아 기간을 필요 이상으로 길게 남긴다.
+    """
+    inputs = adaptation.inputs
+    if inputs is None:
+        return None
+
+    target = min(
+        inputs.ltv_limit_amount,
+        inputs.product_limit_amount,
+        inputs.dti_limit_amount,
+        inputs.required_amount,
+    )
+    if target <= 0:
+        return None
+
+    return shortest_serviceable_months(
+        principal=target,
+        annual_rate=inputs.annual_rate,
+        maximum_months=inputs.months,
+        annual_income=inputs.annual_income,
+        existing_annual_debt_service=inputs.existing_annual_debt_service,
+        safe_dsr=inputs.safe_dsr,
+        post_purchase_monthly_income=inputs.post_purchase_monthly_income,
+        post_purchase_monthly_expense=inputs.post_purchase_monthly_expense,
+        other_existing_monthly_debt_service=(
+            inputs.other_existing_monthly_debt_service
+        ),
+        buffer_target=inputs.buffer_target,
+        dsr_annual_rate=inputs.dsr_annual_rate,
+    )
+
+
+def shorten_to_serviceable_term(
+    adaptation: LoanOptionAdaptation,
+    *,
+    months: int | None = None,
+) -> LoanOptionAdaptation:
+    """요청 만기를 **필요액을 갚을 수 있는 가장 짧은 기간**으로 줄인다.
+
+    왜 줄이는가:
+        원리금균등에서 총이자는 기간에 대해 단조증가한다. 요청 만기를 그대로 쓰면
+        월소득 1,000만원인 차주가 3억을 빌리면서도 360개월로 계산돼, **갚을 수
+        있는데도 필요 이상으로 오래 갚는다.** 3억·연 4.1% 기준으로 100개월이면
+        끝나고 이자 1억 6,718만원이 덜 나간다.
+
+    무엇을 기준으로 "갚을 수 있다"고 보는가:
+        ``loan_max``가 쓰는 판정과 같은 식이다(``term_is_serviceable``). 기간을
+        줄이면 월 상환액이 올라 DSR과 현금흐름이 동시에 빠듯해지므로, 더 느슨한
+        기준으로 줄이면 **실행할 수 없는 계획**이 된다.
+
+    줄이지 않는 경우:
+        요청 만기로도 필요액을 다 갚지 못하면 그대로 둔다. 그때는 기간이 아니라
+        **금액이 문제**이며, 기간을 건드려도 답이 달라지지 않는다.
+
+    필요액이 상한이 아닌 경우:
+        LTV·상품·DTI 한도가 필요액보다 낮으면 실제 조달액은 그 한도까지다. 기준을
+        필요액으로 잡으면 갚아야 할 금액을 실제보다 크게 보아 기간을 필요 이상으로
+        길게 남긴다. 그래서 **탐색 상한들의 최솟값**을 기준으로 삼는다.
+    """
+    inputs = adaptation.inputs
+    if inputs is None:
+        return adaptation
+
+    shortest = months if months is not None else serviceable_months_for(adaptation)
+    if shortest is None or shortest >= inputs.months:
+        return adaptation
+
+    target = min(
+        inputs.ltv_limit_amount,
+        inputs.product_limit_amount,
+        inputs.dti_limit_amount,
+        inputs.required_amount,
+    )
+    saved = total_interest(target, inputs.annual_rate, inputs.months) - total_interest(
+        target, inputs.annual_rate, shortest
+    )
+    note = (
+        f"만기를 {inputs.months}개월에서 {shortest}개월로 줄였습니다. "
+        f"같은 금액을 갚을 수 있는 가장 짧은 기간이며 총이자가 "
+        f"{saved.quantize(Decimal(1)):,}원 적습니다. "
+        "월 상환액은 그만큼 커집니다."
+    )
+    return replace(
+        adaptation,
+        inputs=replace(inputs, months=shortest),
+        assumptions=(*adaptation.assumptions, note),
+    )
 
 
 def compute_loan_option(adaptation: LoanOptionAdaptation) -> LoanComputation:

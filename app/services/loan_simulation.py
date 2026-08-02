@@ -10,6 +10,8 @@ from app.data_pipeline.adapters.loan_engine_adapter import (
     PolicyLimits,
     adapt_handoff_for_loan_max,
     compute_loan_option,
+    serviceable_months_for,
+    shorten_to_serviceable_term,
 )
 from app.regulations.mortgage_limits import (
     BANK_DSR_LIMIT,
@@ -119,6 +121,22 @@ class LoanSimulationResult:
         return max(self.executable, key=lambda computation: computation.amount)
 
 
+def _common_serviceable_months(adaptations: Sequence[LoanOptionAdaptation]) -> int | None:
+    """모든 후보가 함께 쓸 수 있는 가장 짧은 기간. 줄일 수 없으면 ``None``.
+
+    후보별 최단 기간의 **최댓값**이다. 그보다 짧게 잡으면 어떤 후보는 그 기간에
+    필요액을 못 갚아 한도가 조용히 깎이는데, 문서에는 "왜 줄었는지"가 남지 않는다.
+    한 후보라도 줄이지 못하면(``None``) 요청 만기를 그대로 쓴다.
+    """
+    shortest: list[int] = []
+    for adaptation in adaptations:
+        months = serviceable_months_for(adaptation)
+        if months is None:
+            return None
+        shortest.append(months)
+    return max(shortest) if shortest else None
+
+
 def simulate_loan_options(
     request: LoanSimulationRequest,
     candidates: Iterable[ProductCandidate],
@@ -199,6 +217,7 @@ def simulate_loan_options(
     not_executable: list[LoanComputation] = []
     unresolved: list[LoanOptionAdaptation] = []
     rejected: list[LoanOptionAdaptation] = []
+    passed: list[LoanOptionAdaptation] = []
 
     stress_sources: list[str] = []
 
@@ -240,9 +259,24 @@ def simulate_loan_options(
             elif adaptation.status is EvaluationStatus.UNKNOWN:
                 unresolved.append(adaptation)
             else:
-                computation = compute_loan_option(adaptation)
-                target = executable if computation.is_executable else not_executable
-                target.append(computation)
+                passed.append(adaptation)
+
+    # 요청 만기는 **상한**으로 쓴다. 같은 금액을 갚을 수 있는 가장 짧은 기간으로
+    # 줄여야 총이자가 최소가 된다 — 요청값을 그대로 쓰면 갚을 수 있는데도 필요
+    # 이상으로 오래 갚는다.
+    #
+    # **모든 후보에 같은 기간을 쓴다.** 옵션마다 자기 최단 기간을 쓰면 금리가 낮은
+    # 상품이 더 짧은 만기를 갖게 되어 총비용을 나란히 둘 수 없다(추천 엔진이 같은
+    # 이유로 기간 일치를 요구한다). 기준은 후보들의 최단 기간 중 **가장 긴 값**이다
+    # — 그보다 짧게 잡으면 어떤 후보는 그 기간에 필요액을 못 갚는데, 그 사실이
+    # 한도 축소로만 나타나 "왜 줄었는지"가 사라진다.
+    common_months = _common_serviceable_months(passed)
+    for adaptation in passed:
+        computation = compute_loan_option(
+            shorten_to_serviceable_term(adaptation, months=common_months)
+        )
+        target = executable if computation.is_executable else not_executable
+        target.append(computation)
 
     return LoanSimulationResult(
         executable=tuple(executable),

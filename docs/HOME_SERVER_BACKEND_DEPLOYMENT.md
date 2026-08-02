@@ -67,6 +67,8 @@ chmod 600 /opt/housing-finance/backend.env
 ```dotenv
 APP_ENV=production
 LOAN_PRODUCT_PROVIDER=database
+REGION_PRICE_PROVIDER=database
+SAVINGS_PRODUCT_PROVIDER=database
 DATABASE_HOST=postgres
 DATABASE_PORT=5432
 DATABASE_NAME=mydb
@@ -79,6 +81,13 @@ PROPERTY_LISTING_JSON_PATH=sample_data/property_listings/property_listings.v1.js
 CORS_ORIGINS=http://localhost:3000
 REPORT_AI_EGRESS_GUARD=true
 ```
+
+**공급자 세 줄을 모두 넣는다.** 구간마다 공급자가 따로이고 셋 다 기본값이
+"끔"이라, 한 줄이 빠지면 DB가 멀쩡해도 그 구간만 막힌다. `REGION_PRICE_PROVIDER`가
+없으면 실거래 조회가 503을 내고 화면에는 "실거래를 불러오지 못했습니다"만 뜬다.
+`SAVINGS_PRODUCT_PROVIDER`가 없으면 예·적금 포트폴리오가 `NOT_RUN`으로 남는다.
+DB 사용자는 `sgg_codes`, `apt_trades`를 포함해 각 구간이 읽는 테이블에
+`SELECT` 권한이 있어야 한다 — 접속만 되고 권한이 없으면 같은 503으로 보인다.
 
 비밀번호에 `#`, `$`, 공백 같은 문자가 있으면 값을 작은따옴표로 감싼다.
 별도 필드로 전달하므로 URL 인코딩은 필요 없다. AI 보고서를 호출하려면 같은
@@ -128,19 +137,28 @@ docker exec housing-finance-api \
   "status": "ready",
   "service": "Housing Finance Core",
   "loan_product_provider": "database",
-  "loan_product_count": 9
+  "loan_product_count": 9,
+  "providers": {
+    "loan_product": { "provider": "database", "status": "ok", "count": 9 },
+    "savings_product": { "provider": "database", "status": "ok", "count": 23 },
+    "region_price": { "provider": "database", "status": "ok" }
+  }
 }
 ```
 
 개수는 DB 기준일과 유효기간에 따라 달라질 수 있다. 중요한 기준은 HTTP 200,
-`database` 공급자 표시, 그리고 쿼리가 오류 없이 끝나는 것이다.
+`database` 공급자 표시, 그리고 쿼리가 오류 없이 끝나는 것이다. `disabled`는
+설정에서 그 구간을 끈 상태이고, `error`는 켜 놓고 조회에 실패한 상태다 —
+`error`가 하나라도 있으면 503과 함께 어느 구간인지 `detail`에 나온다.
 
-프론트까지 올라온 뒤에는 홈서버에서 다음을 확인한다.
+프론트까지 올라온 뒤에는 홈서버에서 다음을 확인한다. 프록시는 `/api/...`만
+백엔드로 넘기므로 준비 확인도 API 접두사 경로로 건다.
 
 ```bash
 curl --fail http://127.0.0.1:18082/health
-curl -i http://127.0.0.1:18082/api/health
-curl -i http://127.0.0.1:18082/api/ready
+curl -i http://127.0.0.1:18082/api/v1/health
+curl -i http://127.0.0.1:18082/api/v1/ready
+curl -i "http://127.0.0.1:18082/api/v1/properties/trades?sgg_code=11680"
 ```
 
 ## 5. 실행과 중단

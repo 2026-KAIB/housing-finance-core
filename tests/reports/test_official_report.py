@@ -155,6 +155,22 @@ def _with_combination(simulation: SimulationResult) -> SimulationResult:
     )
 
 
+def _without_combination(simulation: SimulationResult) -> SimulationResult:
+    """조합안이 없는 문서. 픽스처는 후보를 넘겨 계산하므로 조합이 이미 들어 있다.
+
+    이걸 만들지 않으면 "조합 유무로 번호가 밀리지 않는다"는 검사가 같은 문서를
+    두 번 비교하며 그냥 통과한다.
+    """
+    return simulation.model_copy(
+        update={
+            "loan_combination": build_calculation_section(
+                None,
+                section_schema_version="loan-combination@1.0.0",
+            )
+        }
+    )
+
+
 class TestTheDocumentNamesItsBasis:
     """가장 중요한 불변식 — 두 기준의 숫자가 섞이지 않는다."""
 
@@ -296,6 +312,59 @@ class TestOfficialDocumentShape:
 
         assert "<ol>" not in html
         assert not re.search(r"<li>\s*\d+\.\s*\d+\.", html)
+
+    def test_section_numbers_do_not_shift_with_the_input(
+        self,
+        report_input: ReportAIInput,
+        simulation: SimulationResult,
+    ) -> None:
+        """공문서 양식에서 목차는 고정이어야 한다.
+
+        예전에는 조합안이 없으면 2절을 통째로 빼고 뒤 번호를 당겼다. 그래서 같은
+        항목이 어떤 문서에서는 "3. 추천·탈락 사유"이고 다른 문서에서는
+        "2. 추천·탈락 사유"였다. 두 사람이 뽑은 문서를 나란히 두면 서로 다른
+        양식으로 보이고, "3항을 보라"는 안내도 문서마다 다른 곳을 가리킨다.
+        """
+        with_plans = render_official_report(
+            _report(report_input), _with_combination(simulation)
+        )
+        without_plans = render_official_report(
+            _report(report_input), _without_combination(simulation)
+        )
+
+        headings = re.compile(r"<h2>(.*?)</h2>")
+        assert headings.findall(with_plans) == headings.findall(without_plans)
+        # 조합안이 없어도 2절 자리를 지킨다. 빈 자리가 남는 편이 번호가 밀리는
+        # 것보다 낫다.
+        assert "2. 대출 조달방안" in without_plans
+        assert "3. 추천·탈락 사유" in without_plans
+
+    def test_the_table_of_contents_matches_the_body_headings(
+        self,
+        report_input: ReportAIInput,
+        simulation: SimulationResult,
+    ) -> None:
+        """목차와 본문이 갈리면 어느 쪽이 문서의 구조인지 알 수 없다."""
+        html = render_official_report(
+            _report(report_input), _without_combination(simulation)
+        )
+
+        toc = re.search(r'<section class="toc">.*?</section>', html, re.S)
+        assert toc is not None
+        listed = re.findall(r"<li>(.*?)</li>", toc.group(0))
+        body = re.findall(r"<h2>(.*?)</h2>", html)[1:]  # 첫 h2는 "목차" 자신
+        assert listed == body
+
+    def test_the_number_of_plans_is_stated_so_one_is_not_read_as_the_only_option(
+        self,
+        report_input: ReportAIInput,
+        simulation: SimulationResult,
+    ) -> None:
+        """뒤 절들이 대출 1건 기준이라 밝히지 않으면 "대안을 하나만 줬다"로 읽힌다."""
+        html = render_official_report(_report(report_input), _with_combination(simulation))
+
+        assert re.search(r"실행 가능한 조합 \d+개", html)
+        assert "내림차순" in html
 
     def test_enum_values_are_shown_in_korean(
         self,

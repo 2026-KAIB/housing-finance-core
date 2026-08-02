@@ -232,14 +232,15 @@ def _masthead(simulation: SimulationResult) -> str:
     )
 
 
-def _toc(has_combination: bool, narrated_titles: Sequence[str]) -> str:
+def _toc(narrated_titles: Sequence[str]) -> str:
     """목차. **자동 번호를 쓰지 않는다** — 제목이 이미 번호를 갖고 있어서 겹친다.
 
     처음에 `<ol>`로 만들었더니 "3. 3. 추천·탈락 사유"처럼 번호가 두 번 찍혔다.
+
+    조합안 유무로 목록을 바꾸지 않는다. 목차가 입력에 따라 달라지면 본문 번호도
+    함께 밀려 같은 항목이 문서마다 다른 번호를 갖는다.
     """
-    items = ["1. 산출 조건"]
-    if has_combination:
-        items.append("2. 대출 조달방안")
+    items = ["1. 산출 조건", "2. 대출 조달방안"]
     items.extend(narrated_titles)
     items.extend(["붙임 1. 적용 규제·정책 근거", "붙임 2. 확인되지 않은 항목"])
     body = "".join(f"<li>{escape(title)}</li>" for title in items)
@@ -443,6 +444,13 @@ def _combination(simulation: SimulationResult) -> str:
     if isinstance(plans, list) and plans:
         body += _basis_comparison(simulation, plans)
         body += "<h3>나. 방안별 내역</h3>"
+        # 방안이 몇 개이고 무엇으로 정렬됐는지 문서가 밝힌다. 이 줄이 없으면 뒤
+        # 절들이 대출 1건 기준으로 쓰여 있어 "대안을 하나만 제시했다"로 읽힌다.
+        body += (
+            f"<p class='note'>실행 가능한 조합 {len(plans)}개를 §14 전략점수 "
+            "내림차순으로 싣습니다. 뒤 항목의 상세 수치는 그중 <strong>대출 1건만 "
+            "실행하는 경우</strong>를 기준으로 합니다.</p>"
+        )
         for index, plan in enumerate(plans, start=1):
             if isinstance(plan, Mapping):
                 body += _plan_table(index, plan)
@@ -682,11 +690,15 @@ def render_official_report(
     has_combination = (
         simulation.loan_combination.run_status is SectionRunStatus.COMPLETED
     )
-    narrated, titles = _narrated_sections(
-        report,
-        start=3 if has_combination else 2,
-        has_combination=has_combination,
-    )
+    # **절 번호는 입력에 따라 달라지지 않는다.** 예전에는 조합안이 없으면 2절을
+    # 통째로 빼고 뒤 번호를 당겼는데, 그러면 같은 항목이 어떤 문서에서는
+    # "3. 추천·탈락 사유"이고 다른 문서에서는 "2. 추천·탈락 사유"가 된다. 두 사람이
+    # 뽑은 문서를 나란히 두면 서로 다른 양식으로 보이고, "3항을 보라"는 안내도
+    # 문서마다 다른 곳을 가리킨다. 공문서 양식에서 목차는 고정이어야 한다.
+    #
+    # 그래서 조합안이 없어도 2절 자리를 지키고 "산출하지 않았습니다"로 채운다 —
+    # 빈 자리가 남는 편이 번호가 밀리는 것보다 낫다.
+    narrated, titles = _narrated_sections(report, start=3, has_combination=has_combination)
     return (
         # 완전한 문서로 낸다. 이 보고서의 정상 사용법이 **파일로 저장해 열고
         # 인쇄하는 것**이라, 문서 자체에 charset이 없으면 한글이 깨진다. API
@@ -699,9 +711,9 @@ def render_official_report(
         f"<p class='subtitle'>산출 기준일 {escape(simulation.as_of.isoformat())} · "
         "본 문서는 계산 결과이며 대출 승인을 의미하지 않습니다</p>"
         + _masthead(simulation)
-        + _toc(has_combination, titles)
+        + _toc(titles)
         + _conditions(simulation)
-        + (_combination(simulation) if has_combination else "")
+        + _combination(simulation)
         + narrated
         + _attachment_sources(simulation, report)
         + _attachment_missing(simulation)

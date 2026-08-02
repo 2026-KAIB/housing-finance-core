@@ -1,0 +1,21 @@
+{
+  "purpose": "정규직 고소득·고자산 페르소나가 대학생 코호트와 다른 판정(구매가능)으로 갈리는지 확인한다.",
+  "provided_facts": {
+    "persona_name": "정규직1(고소득형)",
+    "age": 34,
+    "marital_status": "married",
+    "owns_property": false,
+    "monthly_income": 6800000,
+    "monthly_average_expense": 2800000,
+    "current_assets": 200000000,
+    "has_loans": false,
+    "target_purchase_price": 380000000,
+    "employment_expected_to_continue": true
+  },
+  "generated_assumptions": {
+    "target_region": "11650",
+    "target_move_in_ym": "202807",
+    "risk_preference": "growth"
+  },
+  "expected_outcome_policy": "derive_from_engine"
+}

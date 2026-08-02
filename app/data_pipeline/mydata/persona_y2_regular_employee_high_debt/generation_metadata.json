@@ -1,0 +1,22 @@
+{
+  "purpose": "중간소득이지만 기존 대출상환 부담이 큰 페르소나가 미달로 갈리는지 확인한다.",
+  "provided_facts": {
+    "persona_name": "정규직2(다중채무형)",
+    "age": 38,
+    "marital_status": "married",
+    "owns_property": false,
+    "monthly_income": 4200000,
+    "monthly_average_expense": 2500000,
+    "current_assets": 10000000,
+    "has_loans": true,
+    "monthly_debt_payment": 1200000,
+    "target_purchase_price": 500000000,
+    "employment_expected_to_continue": true
+  },
+  "generated_assumptions": {
+    "target_region": "11650",
+    "target_move_in_ym": "202807",
+    "risk_preference": "stability"
+  },
+  "expected_outcome_policy": "derive_from_engine"
+}

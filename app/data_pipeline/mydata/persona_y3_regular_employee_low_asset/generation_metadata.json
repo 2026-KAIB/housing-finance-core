@@ -1,0 +1,21 @@
+{
+  "purpose": "소득은 보통이지만 유동자산이 거의 없는 페르소나의 부족액 규모가 다른 코호트와 다른지 확인한다.",
+  "provided_facts": {
+    "persona_name": "정규직3(저자산형)",
+    "age": 30,
+    "marital_status": "single",
+    "owns_property": false,
+    "monthly_income": 3000000,
+    "monthly_average_expense": 1800000,
+    "current_assets": 2000000,
+    "has_loans": false,
+    "target_purchase_price": 480000000,
+    "employment_expected_to_continue": true
+  },
+  "generated_assumptions": {
+    "target_region": "11650",
+    "target_move_in_ym": "202807",
+    "risk_preference": "stability"
+  },
+  "expected_outcome_policy": "derive_from_engine"
+}

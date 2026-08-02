@@ -1,0 +1,19 @@
+{
+  "purpose": "자영업 소득자로 current_assets/monthly_debt_payment 사실이 없을 때 확인불가 경로가 정상 동작하는지 확인한다.",
+  "provided_facts": {
+    "persona_name": "자영업1(자산정보 미확인형)",
+    "age": 41,
+    "marital_status": "married",
+    "owns_property": false,
+    "monthly_income": 3800000,
+    "monthly_average_expense": 2000000,
+    "target_purchase_price": 520000000,
+    "employment_expected_to_continue": true
+  },
+  "generated_assumptions": {
+    "target_region": "11650",
+    "target_move_in_ym": "202807",
+    "risk_preference": "stability"
+  },
+  "expected_outcome_policy": "derive_from_engine"
+}

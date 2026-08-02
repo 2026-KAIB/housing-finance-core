@@ -1,4 +1,4 @@
-"""대학생 20명의 실제 상품 DB 기반 예적금 포트폴리오 통합 실행기.
+"""대학생 6명(기본·부유·가난 각 2명)의 실제 상품 DB 기반 예적금 포트폴리오 통합 실행기.
 
 목적:
     합성 MyData의 사용자 사실과 홈서버의 실제 상품·금리 옵션을 결합해
@@ -123,7 +123,7 @@ def _load_json(path: Path) -> Mapping[str, Any]:
 
 
 def load_college_student_personas(root: Path) -> tuple[PersonaFiles, ...]:
-    """20개 학생 폴더를 이름순으로 읽고 필수 보조 파일의 존재를 검증한다."""
+    """6개 학생 폴더를 이름순으로 읽고 필수 보조 파일의 존재를 검증한다."""
 
     directories = sorted(
         path for path in root.iterdir() if path.is_dir() and "college_student" in path.name
@@ -137,8 +137,8 @@ def load_college_student_personas(root: Path) -> tuple[PersonaFiles, ...]:
         )
         for directory in directories
     )
-    if len(personas) != 20:
-        raise ValueError(f"대학생 페르소나는 20명이어야 합니다: actual={len(personas)}")
+    if len(personas) != 6:
+        raise ValueError(f"대학생 페르소나는 6명이어야 합니다: actual={len(personas)}")
     return personas
 
 
@@ -563,7 +563,7 @@ def write_markdown_report(report: Mapping[str, object], path: Path) -> None:
         elif portfolio["status"] == SavingsPortfolioStatus.NO_ALLOCATION_REQUIRED.value:
             no_allocation_personas.append(str(result["persona_name"]))
     lines = [
-        "# 대학생 20명 예적금 포트폴리오 통합 테스트",
+        "# 대학생 6명 예적금 포트폴리오 통합 테스트",
         "",
         "## 테스트 범위",
         "",

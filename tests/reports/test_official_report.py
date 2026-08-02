@@ -155,22 +155,6 @@ def _with_combination(simulation: SimulationResult) -> SimulationResult:
     )
 
 
-def _without_combination(simulation: SimulationResult) -> SimulationResult:
-    """조합안이 없는 문서. 픽스처는 후보를 넘겨 계산하므로 조합이 이미 들어 있다.
-
-    이걸 만들지 않으면 "조합 유무로 번호가 밀리지 않는다"는 검사가 같은 문서를
-    두 번 비교하며 그냥 통과한다.
-    """
-    return simulation.model_copy(
-        update={
-            "loan_combination": build_calculation_section(
-                None,
-                section_schema_version="loan-combination@1.0.0",
-            )
-        }
-    )
-
-
 class TestTheDocumentNamesItsBasis:
     """가장 중요한 불변식 — 두 기준의 숫자가 섞이지 않는다."""
 

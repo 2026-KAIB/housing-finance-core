@@ -24,6 +24,7 @@ from app.data_pipeline.adapters.loan_engine_adapter import BorrowerFinancialStat
 from app.data_pipeline.adapters.savings_portfolio_policy_adapter import (
     SavingsPortfolioPolicyValidation,
 )
+from app.engines.recommendation.models import CombinedRecommendationResult
 from app.engines.savings.portfolio_models import SavingsPortfolioResult
 from app.engines.strategy.models import (
     DEFAULT_STRATEGY_POLICY,
@@ -63,6 +64,48 @@ from app.services.stress_simulation import stress_recommendation
 _LOAN_BLOCK_MISSING = "loan_request"
 _CANDIDATES_MISSING = "loan_product_candidates"
 _REGION_MISSING = "regulation_region"
+
+# 자산축적형 전략에 넘길 미래 대출한도의 **근거를 밝히는** 문구. 값 자체는
+# 지어내지 않고 오늘 산출된 한도를 그대로 쓰되, 그것이 예측이 아니라 가정임을
+# 결과에 남긴다(§20: 승인·실제 금리를 보장하는 문구 금지).
+_FUTURE_CAPACITY_ASSUMPTION = (
+    "미래 대출한도를 현재 산출된 대출 가능액과 같다고 보았습니다. 현행 규제·금리·"
+    "소득이 그대로 유지된다는 가정이며, 미래 승인이나 한도를 보장하지 않습니다. "
+    "이 값은 오늘의 필요 대출금액에도 묶여 있어 실제 한도보다 작을 수 있습니다."
+)
+
+
+def _future_loan_capacity(
+    recommendation: CombinedRecommendationResult | None,
+) -> Decimal | None:
+    """자산축적형이 목표 시점에 쓸 수 있다고 볼 대출한도.
+
+    이 값이 없으면 자산축적형은 **모든 시나리오가 UNKNOWN**이 되어 두 전략을
+    비교할 수 없고, 결국 사용자에게는 "오늘 살 수 있나"의 답만 나간다. 서비스가
+    답해야 할 질문은 "목표 시점까지 모으면 살 수 있나"인데 그 절이 통째로 비는
+    것이다. 그래서 근거를 밝힌 가정값을 넣는다.
+
+    미래 금리·규제·소득을 예측하지 않는다. 오늘 계산된 값을 그대로 두고 그것이
+    가정임을 ``_FUTURE_CAPACITY_ASSUMPTION``으로 밝힌다 — 시나리오별 총구매비용이
+    미래 가격에 **오늘의 세율표**를 적용하는 것과 같은 취급이다.
+
+    **이 값은 진짜 한도가 아니라 하한이다.** ``loan_max``의 탐색 상한이
+    ``min(LTV, 상품한도, DTI, 필요액)``이라 오늘의 **필요액에도 묶여 있다**
+    (``engines/loan/formulas.py``). 미래에는 자기자본이 늘어 필요액이 줄지만
+    한도 자체는 그대로이므로, 오늘 값을 쓰면 미래 한도를 **작게** 잡는다.
+    과소평가는 안전한 방향이라 그대로 두되(§22.3), 가정 문구에 그 사실을 적는다.
+    같은 이유로 ``recommended_amount``와 이 값은 실제로 항상 같다 —
+    ``principal = min(required_amount, maximum_amount)``이기 때문이다.
+    """
+    if recommendation is None:
+        return None
+    primary = recommendation.loan.primary
+    if primary is not None:
+        return primary.maximum_amount
+    if recommendation.loan.required_amount == 0:
+        # 신규 대출이 필요 없다고 **산출된** 경우다. 한도 미상이 아니라 0이다.
+        return Decimal(0)
+    return None
 
 
 def _region_code(payload: SimulationInput) -> str | None:
@@ -296,6 +339,9 @@ def run_simulation(
     housing_scenarios: tuple[HousingCostScenario, ...] = (),
     target_purchase_date: date | None = None,
     additional_accumulation_equity: Decimal = Decimal(0),
+    # 넘기지 않으면 오늘 산출된 한도를 가정으로 쓴다(`_future_loan_capacity`).
+    # 별도 근거로 마련한 계획값이 있으면 그것이 언제나 우선한다.
+    future_loan_capacity: Decimal | None = None,
     strategy_policy: StrategyPolicy = DEFAULT_STRATEGY_POLICY,
 ) -> SimulationResult:
     """실행할 수 있는 구간을 모두 계산해 단일 ``SimulationResult``로 조립한다.
@@ -393,7 +439,15 @@ def run_simulation(
     if not housing_scenarios:
         scenario_build = build_housing_cost_scenarios(payload, as_of=as_of)
 
+    strategy_assumptions: tuple[str, ...] = ()
     if recommendation is not None and scenario_build.scenarios:
+        resolved_future_capacity = (
+            future_loan_capacity
+            if future_loan_capacity is not None
+            else _future_loan_capacity(recommendation)
+        )
+        if resolved_future_capacity is not None and future_loan_capacity is None:
+            strategy_assumptions = (_FUTURE_CAPACITY_ASSUMPTION,)
         strategy = compare_recommended_purchase_strategies(
             recommendation,
             target_purchase_date=target_purchase_date or payload.housing_goal.target_date,
@@ -401,6 +455,7 @@ def run_simulation(
             early_purchase_equity=payload.financial_snapshot.liquid_assets,
             additional_accumulation_equity=additional_accumulation_equity,
             stress_result=stress,
+            future_loan_capacity=resolved_future_capacity,
             policy=strategy_policy,
         )
 
@@ -440,7 +495,7 @@ def run_simulation(
         "strategy_comparison",
         missing=scenario_build.missing_inputs,
         reasons=scenario_build.reasons,
-        assumptions=scenario_build.assumptions,
+        assumptions=(*scenario_build.assumptions, *strategy_assumptions),
     )
 
 

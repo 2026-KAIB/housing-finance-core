@@ -85,6 +85,19 @@ def _loan_input(
             f"request={request.as_of}, result={result.policy_as_of}"
         )
 
+    # 비교 기준이 되는 기간. **요청 만기가 아니라 계산이 실제로 쓴 기간**이다.
+    # 계산 계층이 "갚을 수 있는 가장 짧은 기간"으로 줄이면 요청값과 달라지는데,
+    # 여기서 봐야 할 성질은 "요청과 같은가"가 아니라 **후보들끼리 같은가**다 —
+    # 기간이 서로 다르면 총비용을 나란히 둘 수 없다.
+    effective_months = next(
+        (
+            computation.months
+            for computation in result.executable
+            if computation.months is not None
+        ),
+        request.months,
+    )
+
     candidates: list[LoanCandidateInput] = []
     missing_inputs = list(result.missing_inputs)
     for index, computation in enumerate(result.executable, start=1):
@@ -96,10 +109,11 @@ def _loan_input(
         if annual_rate is None:
             missing_inputs.append(f"{computation.product_name}.annual_rate")
             continue
-        if computation.months is not None and computation.months != request.months:
+        if computation.months is not None and computation.months != effective_months:
             raise ValueError(
-                f"{computation.product_name}: 계산 기간과 요청 기간이 다릅니다 "
-                f"(calculation={computation.months}, request={request.months})."
+                f"{computation.product_name}: 후보마다 계산 기간이 다릅니다 "
+                f"(calculation={computation.months}, 공통={effective_months}). "
+                "같은 기간이어야 총비용을 비교할 수 있습니다."
             )
         supplement = supplements.get(computation.product_name)
         option_name = _option_name(computation)
@@ -130,7 +144,7 @@ def _loan_input(
     borrower = request.borrower
     return LoanRecommendationInput(
         required_amount=request.required_amount,
-        months=request.months,
+        months=effective_months,
         annual_income=borrower.annual_income,
         existing_annual_debt_service=borrower.existing_annual_debt_service,
         post_purchase_monthly_income=borrower.post_purchase_monthly_income,

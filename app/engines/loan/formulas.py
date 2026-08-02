@@ -175,3 +175,137 @@ def loan_max(
             hi = candidate
 
     return lo
+
+
+def term_is_serviceable(
+    *,
+    principal: Decimal,
+    annual_rate: Decimal,
+    months: int,
+    annual_income: Decimal,
+    existing_annual_debt_service: Decimal,
+    safe_dsr: Decimal,
+    post_purchase_monthly_income: Decimal,
+    post_purchase_monthly_expense: Decimal,
+    other_existing_monthly_debt_service: Decimal,
+    buffer_target: Decimal,
+    dsr_annual_rate: Decimal | None = None,
+) -> bool:
+    """이 기간으로 이 금액을 갚을 수 있는가.
+
+    ``loan_max``가 금액을 이분 탐색하며 쓰는 판정과 **글자 그대로 같은 식**이다.
+    두 곳이 갈리면 "한도로는 되는데 기간으로는 안 되는" 조합이 나온다.
+
+    DSR은 심사금리로, 월 현금흐름은 실제 금리로 본다. 심사와 실제 부담은 다른
+    금리를 쓰기 때문이다(`regulations/stress_dsr.py`).
+    """
+    _require_positive(months, "months")
+    _require_non_negative(principal, "principal")
+    _require_non_negative(annual_rate, "annual_rate")
+    _require_positive(annual_income, "annual_income")
+
+    assessment_rate = annual_rate if dsr_annual_rate is None else dsr_annual_rate
+    if assessment_rate < annual_rate:
+        raise ValueError(
+            "dsr_annual_rate는 실제 금리보다 낮을 수 없습니다 "
+            f"(annual_rate={annual_rate}, dsr_annual_rate={assessment_rate})."
+        )
+
+    actual_pmt = pmt(principal, annual_rate, months)
+    assessed_pmt = (
+        actual_pmt
+        if assessment_rate == annual_rate
+        else pmt(principal, assessment_rate, months)
+    )
+    candidate_dsr = dsr(
+        existing_annual_debt_service=existing_annual_debt_service,
+        new_annual_debt_service=assessed_pmt * 12,
+        annual_income=annual_income,
+    )
+    monthly_surplus = (
+        post_purchase_monthly_income
+        - post_purchase_monthly_expense
+        - other_existing_monthly_debt_service
+        - actual_pmt
+    )
+    return candidate_dsr <= safe_dsr and monthly_surplus >= buffer_target
+
+
+def shortest_serviceable_months(
+    *,
+    principal: Decimal,
+    annual_rate: Decimal,
+    maximum_months: int,
+    annual_income: Decimal,
+    existing_annual_debt_service: Decimal,
+    safe_dsr: Decimal,
+    post_purchase_monthly_income: Decimal,
+    post_purchase_monthly_expense: Decimal,
+    other_existing_monthly_debt_service: Decimal,
+    buffer_target: Decimal,
+    dsr_annual_rate: Decimal | None = None,
+    minimum_months: int = 1,
+) -> int | None:
+    """같은 금액을 갚을 수 있는 **가장 짧은 기간**. 없으면 ``None``.
+
+    왜 짧은 쪽을 찾는가:
+        원리금균등에서 총이자는 기간에 대해 단조증가한다. 3억을 30년에 걸쳐
+        갚으면 이자가 2억을 넘지만 20년이면 그보다 훨씬 적다. 만기를 요청값
+        그대로 쓰면 **갚을 수 있는데도 필요 이상으로 오래 갚는다.**
+
+    무엇이 "현실적"인가:
+        기간을 줄이면 월 상환액이 오르고 DSR과 현금흐름이 동시에 빠듯해진다.
+        그래서 판정은 ``loan_max``와 같은 식(``term_is_serviceable``)을 쓴다.
+        더 느슨한 기준으로 짧은 기간을 권하면 **실행할 수 없는 계획**이 된다.
+
+    단조성:
+        기간이 늘면 월 상환액은 줄고, DSR도 현금흐름도 함께 완화된다. 따라서
+        실행가능 여부는 기간에 대해 단조라 이분 탐색이 성립한다.
+
+    ``None``을 돌려주는 경우:
+        최대 기간으로도 갚지 못하는 금액이다. 그때는 **기간이 아니라 금액이
+        문제**이므로, 임의로 기간을 늘려 답을 만들지 않는다.
+    """
+    if maximum_months < minimum_months:
+        raise ValueError("maximum_months는 minimum_months보다 작을 수 없습니다.")
+    _require_positive(minimum_months, "minimum_months")
+
+    def serviceable(months: int) -> bool:
+        return term_is_serviceable(
+            principal=principal,
+            annual_rate=annual_rate,
+            months=months,
+            annual_income=annual_income,
+            existing_annual_debt_service=existing_annual_debt_service,
+            safe_dsr=safe_dsr,
+            post_purchase_monthly_income=post_purchase_monthly_income,
+            post_purchase_monthly_expense=post_purchase_monthly_expense,
+            other_existing_monthly_debt_service=other_existing_monthly_debt_service,
+            buffer_target=buffer_target,
+            dsr_annual_rate=dsr_annual_rate,
+        )
+
+    # 최대 기간으로도 안 되면 더 짧은 기간은 볼 것도 없다.
+    if not serviceable(maximum_months):
+        return None
+    if serviceable(minimum_months):
+        return minimum_months
+
+    # 여기서 lo는 "안 되는" 마지막 값, hi는 "되는" 첫 값의 상한이다.
+    lo, hi = minimum_months, maximum_months
+    while hi - lo > 1:
+        middle = (lo + hi) // 2
+        if serviceable(middle):
+            hi = middle
+        else:
+            lo = middle
+    return hi
+
+
+def total_interest(principal: Decimal, annual_rate: Decimal, months: int) -> Decimal:
+    """원리금균등 총이자 = 월 상환액 × 기간 − 원금.
+
+    기간을 줄여 얼마를 아끼는지 보여줄 때 쓴다. 상환 스케줄을 펼치지 않고도
+    총액은 이 곱셈으로 정확하다.
+    """
+    return pmt(principal, annual_rate, months) * Decimal(months) - principal

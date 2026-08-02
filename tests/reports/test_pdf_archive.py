@@ -77,8 +77,14 @@ def _sqlite_engine():
 
 
 def test_archiving_is_off_by_default() -> None:
-    """기본값이 켜져 있으면 계산 한 번에 개인 재무 문서가 디스크에 쌓인다."""
-    assert Settings().report_archive_provider == "none"
+    """기본값이 켜져 있으면 계산 한 번에 개인 재무 문서가 디스크에 쌓인다.
+
+    **선언된 기본값**을 본다. ``Settings()``를 만들어 보면 `.env`와 환경변수가
+    끼어들어, 데모하려고 `REPORT_ARCHIVE_PROVIDER=filesystem`을 넣어 둔 사람의
+    로컬에서만 빨간불이 된다. 그건 "기본값이 none인가"가 아니라 "이 머신의
+    .env가 비었는가"를 검사하는 것이다.
+    """
+    assert Settings.model_fields["report_archive_provider"].default == "none"
 
 
 def test_a_disabled_archive_is_not_a_failure(tmp_path: Path) -> None:
@@ -288,6 +294,46 @@ def test_a_pdf_with_no_embedded_font_at_all_is_refused() -> None:
 
 def test_a_cjk_font_passes() -> None:
     verify_korean_glyphs(b"%PDF-1.7\n/BaseFont /ABCDEF+NotoSansCJKKR-Regular\n")
+
+
+@pytest.mark.parametrize(
+    "font_name",
+    [
+        "NotoSansKR-Regular",
+        "NotoSerifKR-Bold",
+        "IBMPlexSansKR-Text",
+        "Pretendard-SemiBold",
+        "SUIT-Regular",
+        "AppleSDGothicNeo-Regular",
+        "SpoqaHanSansNeo-Medium",
+    ],
+)
+def test_korean_fonts_not_named_cjk_are_accepted(font_name: str) -> None:
+    """이름에 CJK가 없다고 한글을 못 그리는 것이 아니다.
+
+    Google·Adobe가 배포하는 한글 글꼴 상당수는 이름이 **"…KR"로 끝날 뿐**이다.
+    예전 판정은 이들을 거부했고, macOS에 Noto Sans KR만 깔고 PDF를 구운
+    개발자가 **글자가 멀쩡히 찍힌 문서를** 막혔다. 두부를 막으려던 검사가
+    보호가 아니라 장애가 된 자리다.
+    """
+    verify_korean_glyphs(f"%PDF-1.7\n/BaseFont /ABCDEF+{font_name}\n".encode())
+
+
+@pytest.mark.parametrize(
+    "font_name",
+    [
+        "DejaVuSans",
+        "LiberationSerif-Bold",
+        "TimesNewRoman",
+        "Helvetica",
+        "Roboto-Black",
+        "OpenSans-Regular",
+    ],
+)
+def test_widening_the_font_check_still_refuses_latin_only_documents(font_name: str) -> None:
+    """넓힌 판정이 무뎌지지 않았는지 본다. 이게 없으면 위 완화가 검사를 없앤 것과 같다."""
+    with pytest.raises(PdfRenderingUnavailable, match="한글"):
+        verify_korean_glyphs(f"%PDF-1.7\n/BaseFont /ABCDEF+{font_name}\n".encode())
 
 
 def _compressed_pdf(*base_fonts: str) -> bytes:

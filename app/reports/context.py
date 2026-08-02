@@ -42,6 +42,48 @@ _BLOCKED_KEYS = {
     "transaction_detail",
 }
 
+# 위 목록은 **이름이 정확히 일치할 때만** 막는다. 그래서 같은 성격의 값이 이름만
+# 조금 달라지면 그대로 통과한다 — 실제로 ``birth_date``는 막히는데 ``birth_year``는
+# 막히지 않았고, 페르소나 프로필이 그 키를 쓴다.
+#
+# 이 게이트는 무료 등급 Gemini로 나가는 마지막 문 앞에 있다. Google 약관은 제출한
+# 프롬프트를 검토·학습에 쓸 수 있다고 명시하므로, 한 번 나간 값은 되돌릴 수 없다.
+# 그래서 "새 필드가 생기면 여기 추가하는 것을 잊지 않는다"에 기대지 않고 **계열
+# 단위로** 막는다.
+#
+# 여기 넣을 수 있는 것은 **어떤 이름 조합이어도 보고서 서술에 필요 없는 계열**뿐이다.
+# ``address``는 넣지 않았다 — 매물 소재지(``address_summary``)가 매물 보고서의
+# 정상 표시 항목이고 서술 검증도 그 값을 쓴다. 사용자 주소는 위 정확일치 목록이
+# 계속 담당한다.
+_BLOCKED_KEY_FRAGMENTS = (
+    "account",  # account_num/number/no/id/seq/type/status/list, main_account …
+    "birth",  # birth_date, birth_year, birthday
+    "resident_registration",
+    "rrn",
+    "ssn",
+    "passport",
+    "driver_license",
+    "phone",
+    "mobile",
+    "email",
+    "password",
+    "token",
+    "credential",
+    "secret",
+    "api_key",
+    "card_number",
+    "card_no",
+    "holder_name",
+    "transaction",  # transaction_list/detail/type, raw_transactions …
+)
+
+
+def _is_blocked_key(key: str) -> bool:
+    normalized = key.strip().lower()
+    if normalized in _BLOCKED_KEYS:
+        return True
+    return any(fragment in normalized for fragment in _BLOCKED_KEY_FRAGMENTS)
+
 
 def sanitize_report_facts(value: object) -> Any:
     """금융 식별자·인증정보·원천 거래 묶음을 제거한다.
@@ -56,7 +98,7 @@ def _sanitize(value: object) -> Any:
         return {
             str(key): _sanitize(item)
             for key, item in value.items()
-            if str(key).strip().lower() not in _BLOCKED_KEYS
+            if not _is_blocked_key(str(key))
         }
     if isinstance(value, list):
         return [_sanitize(item) for item in value]

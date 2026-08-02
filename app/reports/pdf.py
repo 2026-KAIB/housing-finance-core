@@ -184,12 +184,86 @@ def verify_korean_glyphs(content: bytes) -> None:
         )
 
 
+# 한글을 그릴 수 있는 글꼴의 이름에서 실제로 나타나는 조각들. 이름만 보고
+# 판정하는 이유는 PDF에서 글리프 커버리지를 읽으려면 폰트 본문을 파싱해야 하고,
+# 그건 이 검사가 막으려는 실패("컨테이너에 한글 폰트를 안 깔았다")에 비해
+# 지나치게 무겁기 때문이다.
+_KOREAN_FONT_TOKENS = (
+    "cjk",
+    "malgun",
+    "nanum",
+    "gothic",  # AppleSDGothicNeo, KoPubWorldDotum 계열도 여기 걸린다
+    "batang",
+    "myeongjo",
+    "gulim",
+    "dotum",
+    "gungsuh",
+    "pretendard",
+    "spoqa",
+    "hansans",
+    "hanserif",
+    "kopub",
+    "suit",
+)
+
+# "…KR"로 끝나는 이름은 그 글꼴의 **한글 서브셋**이라는 뜻이다(NotoSansKR,
+# NotoSerifKR, IBMPlexSansKR). 굵기·기울기 접미사는 이미 떼고 본다.
+_KOREAN_LOCALE_SUFFIXES = ("kr", "korean", "hangul")
+
+# 굵기·기울기 표기. "NotoSansKR-Regular"의 "Regular"처럼 이름 끝에 붙어 로케일
+# 접미사를 가린다.
+_STYLE_SUFFIXES = (
+    "thin",
+    "extralight",
+    "ultralight",
+    "light",
+    "regular",
+    "normal",
+    "book",
+    "text",
+    "medium",
+    "semibold",
+    "demibold",
+    "bold",
+    "extrabold",
+    "ultrabold",
+    "heavy",
+    "black",
+    "italic",
+    "oblique",
+)
+
+
 def _looks_korean_capable(font_name: str) -> bool:
-    lowered = font_name.lower().replace(" ", "").replace("-", "")
-    return any(
-        token in lowered
-        for token in ("cjk", "malgun", "nanum", "gothic", "batang", "gulim", "dotum")
-    )
+    """이름만 보고 이 글꼴이 한글을 그릴 수 있는지 판정한다.
+
+    토큰 목록만으로는 부족하다. Google·Adobe가 배포하는 한글 글꼴 상당수는
+    이름이 **"…KR"로 끝날 뿐** CJK도 Gothic도 들어가지 않는다 — NotoSansKR,
+    NotoSerifKR, IBMPlexSansKR이 그렇다. 예전 구현은 이들을 "한글을 그릴 수
+    없다"고 막았다. 실제로 macOS에 Noto Sans KR만 깔고 PDF를 구운 개발자가
+    **글자가 멀쩡히 찍힌 문서를** 거부당했다.
+
+    두부를 막으라고 넣은 검사가 멀쩡한 문서를 막으면 보호가 아니라 장애다.
+    그래서 로케일 접미사도 함께 본다. 넓혔다고 무뎌지지는 않는다 — 라틴 전용
+    글꼴(DejaVu, Liberation, Times, Helvetica)은 어느 쪽에도 걸리지 않는다.
+    """
+    lowered = font_name.lower().replace(" ", "").replace("_", "")
+    if any(token in lowered.replace("-", "") for token in _KOREAN_FONT_TOKENS):
+        return True
+    return _strip_style_suffixes(lowered).endswith(_KOREAN_LOCALE_SUFFIXES)
+
+
+def _strip_style_suffixes(lowered: str) -> str:
+    """"notosanskr-regular" → "notosanskr". 로케일 접미사를 드러낸다."""
+    stem = lowered.split("-", 1)[0] if "-" in lowered else lowered
+    changed = True
+    while changed:
+        changed = False
+        for suffix in _STYLE_SUFFIXES:
+            if stem.endswith(suffix) and len(stem) > len(suffix):
+                stem = stem[: -len(suffix)]
+                changed = True
+    return stem
 
 
 __all__ = [

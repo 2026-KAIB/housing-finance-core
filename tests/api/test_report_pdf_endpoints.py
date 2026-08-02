@@ -61,6 +61,18 @@ def fake_ai(monkeypatch: pytest.MonkeyPatch) -> None:
     )
 
 
+@pytest.fixture
+def archiving_off(monkeypatch: pytest.MonkeyPatch) -> None:
+    """보관이 꺼진 상태를 **명시적으로** 만든다.
+
+    앰비언트 `.env`에 기대면 안 된다. 보관을 켜 둔 개발자의 로컬에서는 이
+    검사가 "꺼졌을 때 501을 준다"가 아니라 실제 렌더링을 시도하고 실패한다 —
+    검사가 확인하려는 것과 무관한 이유로 빨간불이 된다.
+    """
+    settings = Settings(report_archive_provider="none")
+    monkeypatch.setattr("app.services.report_archive.get_settings", lambda: settings)
+
+
 def _simulation_payload() -> dict[str, object]:
     return {
         "profile": {"age": 34, "annual_income": "60000000", "is_first_home_buyer": True},
@@ -79,7 +91,10 @@ def _simulation_payload() -> dict[str, object]:
     }
 
 
-def test_asking_for_a_pdf_while_archiving_is_off_says_so(fake_ai: None) -> None:
+def test_asking_for_a_pdf_while_archiving_is_off_says_so(
+    fake_ai: None,
+    archiving_off: None,
+) -> None:
     """503(고장)이 아니라 501(설정 안 됨)이어야 한다. 프론트엔드가 재시도하면 안 된다."""
     with TestClient(app) as client:
         response = client.post(
@@ -90,7 +105,9 @@ def test_asking_for_a_pdf_while_archiving_is_off_says_so(fake_ai: None) -> None:
     assert "REPORT_ARCHIVE_PROVIDER" in response.json()["detail"]
 
 
-def test_reading_an_archived_report_while_archiving_is_off_says_so() -> None:
+def test_reading_an_archived_report_while_archiving_is_off_says_so(
+    archiving_off: None,
+) -> None:
     with TestClient(app) as client:
         response = client.get(f"/api/v1/reports/{uuid4()}.pdf")
 

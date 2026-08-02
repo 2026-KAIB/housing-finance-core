@@ -83,8 +83,15 @@ jobs:
           assert pdf_rendering_available(), 'WeasyPrint를 쓸 수 없습니다'
           "
 
+      # 생애주기 그림은 인쇄 엔진이 SVG를 실제로 그려야 남는다. 무시하거나
+      # 스타일을 못 받으면 PDF는 성공하고 그림만 비는데, 그건 한글 두부와 같은
+      # 종류의 실패라 크기·형식 검사로는 잡히지 않는다. 여기서 실제로 굽는다.
       - name: Run the PDF archive tests
-        run: python -m pytest tests/reports/test_pdf_archive.py tests/api/test_report_pdf_endpoints.py -q
+        run: |
+          python -m pytest -q \
+            tests/reports/test_pdf_archive.py \
+            tests/reports/test_lifecycle_chart.py \
+            tests/api/test_report_pdf_endpoints.py
 
   publish:
     if: >-

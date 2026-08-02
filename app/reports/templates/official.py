@@ -29,6 +29,11 @@ from decimal import ROUND_HALF_UP, Decimal, InvalidOperation
 from html import escape
 
 from app.reports.ai_explanation.pipeline import FinalReport
+from app.reports.lifecycle_view import build_lifecycle_chart_input
+from app.reports.templates.lifecycle_chart import (
+    LIFECYCLE_STYLE,
+    render_lifecycle_chart,
+)
 from app.schemas.simulation import SectionRunStatus, SimulationResult
 
 # 화면 대시보드와 달리 색으로 정보를 전달하지 않는다. 흑백 인쇄에서 모든 정보가
@@ -232,6 +237,53 @@ def _masthead(simulation: SimulationResult) -> str:
     )
 
 
+def _lifecycle(simulation: SimulationResult) -> str:
+    """3항 — 가장 좋은 조달방안 하나의 생애주기.
+
+    2항이 "얼마를 빌릴 수 있나"에 답한다면 여기는 **"그래서 언제까지 어떻게
+    되나"** 에 답한다. 표만으로는 32년의 모양이 보이지 않는다.
+
+    조합안이 없거나 목표 시점이 이미 지났으면 절 자리는 지키고 사유를 적는다 —
+    빈 축만 있는 그림은 "계산했는데 0이다"로 읽힌다.
+    """
+    payload = build_lifecycle_chart_input(simulation)
+    head = "<h2>3. 생애주기</h2>"
+    if payload is None:
+        return (
+            head
+            + "<p>생애주기를 그리지 않았습니다. 조달방안이 확정되지 않았거나 "
+            "목표 시점이 계산 기준일보다 앞섭니다.</p>"
+        )
+
+    note = (
+        "<p class='note'>2항의 <strong>1순위 방안</strong> 하나에 대한 그림입니다. "
+        "실선은 적립 기간에 쌓인 <strong>납입 원금</strong>이고, 파선은 매매 이후 "
+        "남은 <strong>대출 잔액</strong>입니다. 두 선은 같은 단위지만 서로 다른 것을 "
+        "세며, 겹치는 기간이 없습니다.</p>"
+    )
+    chart = render_lifecycle_chart(payload)
+    rows: list[tuple[str, str]] = [
+        ("적립 시작", escape(simulation.as_of.isoformat())),
+        ("매매 시점", escape(payload.purchase_date.isoformat())),
+    ]
+    if payload.accumulation:
+        rows.append(("매매 시점까지 납입 원금", _won(payload.accumulation[-1].amount)))
+    if payload.maturity_value is not None:
+        rows.append(("예·적금 만기 평가액", _won(payload.maturity_value)))
+    if payload.repayment:
+        rows.append(("매매 시점 대출 잔액", _won(payload.repayment[0].amount)))
+        rows.append(("상환 완료", escape(payload.repayment[-1].at.isoformat())))
+    table = f"<table><tbody>{_rows(*rows)}</tbody></table>"
+
+    caveat = (
+        "<p class='note'>적립 곡선은 <strong>납입 원금</strong>만 그립니다. 중간 시점의 "
+        "평가액은 상품별 중도해지 이율이 확인되지 않아 계산하지 않았습니다 — "
+        "만기까지 유지한 경우의 평가액만 위 표에 적습니다. 대출 잔액은 이 방안의 "
+        "금리·만기를 그대로 적용한 값이며, 실제 실행 시점의 금리와 다를 수 있습니다.</p>"
+    )
+    return head + note + chart + table + caveat
+
+
 def _toc(narrated_titles: Sequence[str]) -> str:
     """목차. **자동 번호를 쓰지 않는다** — 제목이 이미 번호를 갖고 있어서 겹친다.
 
@@ -240,7 +292,7 @@ def _toc(narrated_titles: Sequence[str]) -> str:
     조합안 유무로 목록을 바꾸지 않는다. 목차가 입력에 따라 달라지면 본문 번호도
     함께 밀려 같은 항목이 문서마다 다른 번호를 갖는다.
     """
-    items = ["1. 산출 조건", "2. 대출 조달방안"]
+    items = ["1. 산출 조건", "2. 대출 조달방안", "3. 생애주기"]
     items.extend(narrated_titles)
     items.extend(["붙임 1. 적용 규제·정책 근거", "붙임 2. 확인되지 않은 항목"])
     body = "".join(f"<li>{escape(title)}</li>" for title in items)
@@ -698,7 +750,7 @@ def render_official_report(
     #
     # 그래서 조합안이 없어도 2절 자리를 지키고 "산출하지 않았습니다"로 채운다 —
     # 빈 자리가 남는 편이 번호가 밀리는 것보다 낫다.
-    narrated, titles = _narrated_sections(report, start=3, has_combination=has_combination)
+    narrated, titles = _narrated_sections(report, start=4, has_combination=has_combination)
     return (
         # 완전한 문서로 낸다. 이 보고서의 정상 사용법이 **파일로 저장해 열고
         # 인쇄하는 것**이라, 문서 자체에 charset이 없으면 한글이 깨진다. API
@@ -706,7 +758,7 @@ def render_official_report(
         "<!doctype html><html lang='ko'><head><meta charset='utf-8'>"
         "<meta name='viewport' content='width=device-width, initial-scale=1'>"
         "<title>주택자금 대출 조달방안 산출 결과 보고서</title>"
-        f"<style>{PRINT_STYLE}</style></head><body>"
+        f"<style>{PRINT_STYLE}{LIFECYCLE_STYLE}</style></head><body>"
         "<h1>주택자금 대출 조달방안 산출 결과 보고서</h1>"
         f"<p class='subtitle'>산출 기준일 {escape(simulation.as_of.isoformat())} · "
         "본 문서는 계산 결과이며 대출 승인을 의미하지 않습니다</p>"
@@ -714,6 +766,7 @@ def render_official_report(
         + _toc(titles)
         + _conditions(simulation)
         + _combination(simulation)
+        + _lifecycle(simulation)
         + narrated
         + _attachment_sources(simulation, report)
         + _attachment_missing(simulation)

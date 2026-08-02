@@ -39,6 +39,7 @@ from app.schemas.simulation import (
     SimulationResult,
 )
 from app.services.loan_simulation import LoanSimulationResult
+from app.services.term_plans import TERM_PLANS_SCHEMA_VERSION, TermPlanComparison
 
 
 def _dedupe(values: Sequence[str]) -> tuple[str, ...]:
@@ -236,6 +237,7 @@ def build_simulation_result(
     recommendation_result: CombinedRecommendationResult | None = None,
     stress_test_result: StressTestResult | None = None,
     strategy_comparison_result: StrategyComparisonResult | None = None,
+    term_plan_comparison: TermPlanComparison | None = None,
     warnings: Sequence[str] = (),
 ) -> SimulationResult:
     """현재까지 실행된 모든 엔진 결과를 단일 JSON 원본으로 조립한다."""
@@ -281,6 +283,10 @@ def build_simulation_result(
             strategy_comparison_result,
             section_schema_version="purchase-strategy@1.0.0",
         ),
+        "term_plans": build_calculation_section(
+            term_plan_comparison,
+            section_schema_version=TERM_PLANS_SCHEMA_VERSION,
+        ),
     }
     all_sections = tuple(sections.values())
     missing = _dedupe(tuple(item for section in all_sections for item in section.missing_inputs))
@@ -298,6 +304,7 @@ def build_simulation_result(
         recommendation=sections["recommendation"],
         stress_test=sections["stress_test"],
         strategy_comparison=sections["strategy_comparison"],
+        term_plans=sections["term_plans"],
         missing_inputs=missing,
         warnings=_dedupe(tuple(warnings)),
         policy_sources=sources,

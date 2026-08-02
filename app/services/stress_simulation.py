@@ -71,13 +71,18 @@ def _monthly_savings_commitment(
     )
 
 
-def stress_recommendation(
+def build_stress_input(
     recommendation: CombinedRecommendationResult,
     *,
     loan_request: LoanSimulationRequest,
     scenarios: tuple[StressScenario, ...] = DEFAULT_STRESS_SCENARIOS,
-) -> StressTestResult:
-    """종합추천에서 선택된 계획을 금리·소득·생활비 시나리오로 검증한다."""
+) -> StressTestInput:
+    """스트레스 입력을 조립한다.
+
+    ``stress_recommendation``과 분리한 이유는, 기간만 바꿔 같은 판정을 다시 돌리는
+    쪽(``term_plans``)이 **같은 입력**을 써야 하기 때문이다. 입력을 두 벌 만들면
+    두 판정이 갈리고, 갈린 쪽이 문서에 실린다.
+    """
 
     if recommendation.as_of != loan_request.as_of:
         raise ValueError(
@@ -130,30 +135,41 @@ def stress_recommendation(
         # 월 상환액이 문서의 다른 절과 달라 보이기 때문이다.
         scope_notes.append(f"상환 기간 {months}개월 기준으로 판정합니다.")
 
-    return run_stress_test(
-        StressTestInput(
-            as_of=recommendation.as_of,
+    return StressTestInput(
+        as_of=recommendation.as_of,
+        loan_principal=principal,
+        annual_rate=annual_rate,
+        months=months,
+        annual_income=borrower.annual_income,
+        existing_annual_debt_service=borrower.existing_annual_debt_service,
+        post_purchase_monthly_income=borrower.post_purchase_monthly_income,
+        post_purchase_monthly_expense=borrower.post_purchase_monthly_expense,
+        other_existing_monthly_debt_service=borrower.other_existing_monthly_debt_service,
+        monthly_essential_expense=borrower.monthly_essential_expense,
+        safe_dsr=borrower.safe_dsr,
+        monthly_savings_commitment=monthly_savings,
+        interest_rate_shock_applicability=resolve_interest_rate_shock_applicability(
+            rate_type_name,
             loan_principal=principal,
-            annual_rate=annual_rate,
-            months=months,
-            annual_income=borrower.annual_income,
-            existing_annual_debt_service=borrower.existing_annual_debt_service,
-            post_purchase_monthly_income=borrower.post_purchase_monthly_income,
-            post_purchase_monthly_expense=borrower.post_purchase_monthly_expense,
-            other_existing_monthly_debt_service=(
-                borrower.other_existing_monthly_debt_service
-            ),
-            monthly_essential_expense=borrower.monthly_essential_expense,
-            safe_dsr=borrower.safe_dsr,
-            monthly_savings_commitment=monthly_savings,
-            interest_rate_shock_applicability=(
-                resolve_interest_rate_shock_applicability(
-                    rate_type_name,
-                    loan_principal=principal,
-                )
-            ),
+        ),
+        scenarios=scenarios,
+        precondition_missing_inputs=tuple(precondition_missing),
+        scope_notes=tuple(scope_notes),
+    )
+
+
+def stress_recommendation(
+    recommendation: CombinedRecommendationResult,
+    *,
+    loan_request: LoanSimulationRequest,
+    scenarios: tuple[StressScenario, ...] = DEFAULT_STRESS_SCENARIOS,
+) -> StressTestResult:
+    """종합추천에서 선택된 계획을 금리·소득·생활비 시나리오로 검증한다."""
+
+    return run_stress_test(
+        build_stress_input(
+            recommendation,
+            loan_request=loan_request,
             scenarios=scenarios,
-            precondition_missing_inputs=tuple(precondition_missing),
-            scope_notes=tuple(scope_notes),
         )
     )

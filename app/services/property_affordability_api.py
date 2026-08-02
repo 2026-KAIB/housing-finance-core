@@ -67,7 +67,7 @@ def build_property_loan_profile(
         )
 
     borrower = BorrowerFinancialState(
-        annual_income=payload.profile.annual_income,
+        annual_income=payload.resolved_annual_income,
         existing_annual_debt_service=existing_annual_debt_service,
         post_purchase_monthly_income=post_purchase_income,
         post_purchase_monthly_expense=post_purchase_expense,
@@ -83,7 +83,7 @@ def build_property_loan_profile(
 
     user_facts: dict[str, object] = {
         "age": payload.profile.age,
-        "annual_income": payload.profile.annual_income,
+        "annual_income": payload.resolved_annual_income,
     }
     if payload.profile.employment_type is not None:
         user_facts["employment_type"] = payload.profile.employment_type

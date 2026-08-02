@@ -35,7 +35,14 @@ from app.engines.stress.models import DEFAULT_STRESS_SCENARIOS, StressScenario
 from app.regulations.regulated_regions import ResolvedRegion
 from app.rule_engine.product_packs.handoff import ProductCandidate
 from app.rule_engine.product_packs.registry import ProductRulePackRegistry
-from app.schemas.simulation import GoalType, LoanRequestInput, SimulationInput, SimulationResult
+from app.schemas.simulation import (
+    DERIVED_ANNUAL_INCOME_NOTE,
+    AnnualIncomeSource,
+    GoalType,
+    LoanRequestInput,
+    SimulationInput,
+    SimulationResult,
+)
 from app.services.cashflow_diagnosis import diagnose_cashflow
 from app.services.housing_scenarios import (
     HousingScenarioBuild,
@@ -205,7 +212,7 @@ def _user_facts(
 
     facts: dict[str, object] = {
         "age": payload.profile.age,
-        "annual_income": payload.profile.annual_income,
+        "annual_income": payload.resolved_annual_income,
         "is_first_home_buyer": payload.profile.is_first_home_buyer,
         "owns_house": owns_house,
         "requested_amount": required_amount,
@@ -255,8 +262,11 @@ def _borrower(
             "관리비·재산세 증가는 생활 스트레스 시나리오에서 확인합니다."
         )
 
+    if payload.annual_income_source is AnnualIncomeSource.DERIVED_FROM_MONTHLY:
+        assumptions.append(DERIVED_ANNUAL_INCOME_NOTE)
+
     borrower = BorrowerFinancialState(
-        annual_income=payload.profile.annual_income,
+        annual_income=payload.resolved_annual_income,
         existing_annual_debt_service=existing_annual,
         post_purchase_monthly_income=post_income,
         post_purchase_monthly_expense=post_expense,

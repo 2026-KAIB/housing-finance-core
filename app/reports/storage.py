@@ -45,15 +45,32 @@ def build_relative_path(report_id: UUID, *, as_of: date, suffix: str = ".pdf") -
     return f"{as_of.year:04d}/{as_of.month:02d}/{report_id}{suffix}"
 
 
+def build_record_path(report_id: UUID) -> str:
+    """``records/6d/<uuid>.json``.
+
+    본문과 달리 **id만으로** 조립된다. 조회는 ``GET /{report_id}.pdf``로 들어오는데
+    그 시점에는 기준일을 모르므로, 기록 경로가 ``as_of``에 의존하면 id에서 경로를
+    되찾을 수 없다. 그래서 본문은 날짜로, 기록은 id 앞 두 자리로 나눈다 — 나누는
+    이유(한 디렉터리에 무한정 쌓이지 않게)는 같고, 열쇠만 다르다.
+    """
+    return f"records/{report_id!s:.2}/{report_id}.json"
+
+
+def _safe_target(root: Path, relative_path: str) -> Path:
+    """루트 안으로 확정된 절대 경로. 벗어나면 거부한다."""
+    base = _resolved_root(root)
+    target = (base / relative_path).resolve()
+    if not target.is_relative_to(base):
+        raise ReportStorageError("보관 경로가 저장소 루트를 벗어납니다.")
+    return target
+
+
 def store_bytes(content: bytes, *, root: Path, relative_path: str) -> StoredFile:
     """본문을 저장소에 쓰고 그 사실을 돌려준다."""
     if not content:
         raise ReportStorageError("빈 내용을 보관하지 않습니다.")
 
-    base = _resolved_root(root)
-    target = (base / relative_path).resolve()
-    if not target.is_relative_to(base):
-        raise ReportStorageError("보관 경로가 저장소 루트를 벗어납니다.")
+    target = _safe_target(root, relative_path)
 
     try:
         target.parent.mkdir(parents=True, exist_ok=True)
@@ -79,10 +96,7 @@ def load_bytes(*, root: Path, relative_path: str, expected_sha256: str | None = 
     디스크 손상이나 저장소 교체로 내용이 달라진 파일을 그대로 내보내면, 사용자는
     문서번호는 같은데 내용이 다른 문서를 받는다. 확인 실패는 조용히 지나가지 않는다.
     """
-    base = _resolved_root(root)
-    target = (base / relative_path).resolve()
-    if not target.is_relative_to(base):
-        raise ReportStorageError("보관 경로가 저장소 루트를 벗어납니다.")
+    target = _safe_target(root, relative_path)
 
     try:
         content = target.read_bytes()
@@ -98,11 +112,31 @@ def load_bytes(*, root: Path, relative_path: str, expected_sha256: str | None = 
     return content
 
 
+def read_if_present(*, root: Path, relative_path: str) -> bytes | None:
+    """있으면 내용을, 없으면 ``None``을 돌려준다.
+
+    "없음"과 "읽을 수 없음"은 다른 상태다. 앞은 404(그런 문서는 없다), 뒤는
+    503(저장소가 고장났다)이 되어야 하므로 없음만 ``None``으로 내리고 나머지
+    실패는 그대로 올린다. 없음을 읽기 실패로 뭉개면 오타 난 문서번호가 서버
+    장애로 보인다.
+    """
+    target = _safe_target(root, relative_path)
+
+    try:
+        return target.read_bytes()
+    except FileNotFoundError:
+        return None
+    except OSError as exc:
+        raise ReportStorageError("보관된 기록을 읽을 수 없습니다.") from exc
+
+
 __all__ = [
     "ReportStorageError",
     "StoredFile",
+    "build_record_path",
     "build_relative_path",
     "content_digest",
     "load_bytes",
+    "read_if_present",
     "store_bytes",
 ]

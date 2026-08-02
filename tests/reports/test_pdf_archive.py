@@ -8,8 +8,11 @@ CI와 Windows 로컬에는 없다. 엔진이 있는 환경에서만 도는 검�
 2. 저장 경로에 사용자 입력이 섞이지 않고, 루트를 벗어나지 못한다.
 3. 보관된 문서는 덮어써지지 않고, 손상되면 조용히 나가지 않는다.
 4. 한글 글꼴이 없는 PDF는 "성공"이 아니다.
+5. ``filesystem`` 보관은 DB 없이 완결된다 — 색인 한 줄을 남기지 못했다는 이유로
+   이미 디스크에 안전하게 저장된 문서를 버리지 않는다.
 """
 
+import logging
 import zlib
 from datetime import UTC, date, datetime
 from decimal import Decimal
@@ -34,13 +37,16 @@ from app.reports.pdf import (
 )
 from app.reports.storage import (
     ReportStorageError,
+    build_record_path,
     build_relative_path,
     content_digest,
     load_bytes,
+    read_if_present,
     store_bytes,
 )
 from app.services.report_archive import (
     ReportArchiveDisabled,
+    _index_in_database,
     archive_pdf_report,
     load_archived_pdf,
 )
@@ -97,6 +103,20 @@ def test_a_disabled_archive_is_not_a_failure(tmp_path: Path) -> None:
 def test_the_stored_path_is_built_from_the_server_made_id() -> None:
     """파일명이 입력에서 오면 매물명·사용자명이 그대로 새고 ``../``도 들어온다."""
     assert build_relative_path(REPORT_ID, as_of=AS_OF) == f"2026/08/{REPORT_ID}.pdf"
+
+
+def test_the_record_path_is_derivable_from_the_id_alone() -> None:
+    """조회는 ``GET /{id}.pdf``로 들어와 기준일을 모른다.
+
+    기록 경로가 본문처럼 ``as_of``에 의존하면 id에서 경로를 되찾을 수 없어, 기록을
+    찾으려고 저장소 전체를 훑어야 한다.
+    """
+    assert build_record_path(REPORT_ID) == f"records/6d/{REPORT_ID}.json"
+
+
+def test_an_absent_file_is_none_not_a_read_failure(tmp_path: Path) -> None:
+    """없음을 읽기 실패로 뭉개면 오타 난 문서번호가 서버 장애(503)로 보인다."""
+    assert read_if_present(root=tmp_path, relative_path="records/aa/absent.json") is None
 
 
 def test_a_path_escaping_the_root_is_refused(tmp_path: Path) -> None:
@@ -193,9 +213,53 @@ def test_an_unknown_id_is_absent_not_an_error() -> None:
 
 
 def test_a_missing_record_is_reported_as_missing(tmp_path: Path) -> None:
-    engine = _sqlite_engine()
     with pytest.raises(LookupError):
-        load_archived_pdf(uuid4(), config=_settings(tmp_path), engine=engine)
+        load_archived_pdf(uuid4(), config=_settings(tmp_path))
+
+
+def test_a_corrupted_record_does_not_become_a_default(tmp_path: Path) -> None:
+    """형식이 깨진 기록을 기본값으로 메우면 기준일이 사실과 다른 문서가 나간다."""
+    store_bytes(
+        b"{ this is not json",
+        root=tmp_path,
+        relative_path=build_record_path(REPORT_ID),
+    )
+
+    with pytest.raises(ReportStorageError):
+        load_archived_pdf(REPORT_ID, config=_settings(tmp_path))
+
+
+# --------------------------------------------------------------------------
+# DB 색인은 부차적이다
+# --------------------------------------------------------------------------
+
+
+def test_a_failed_database_index_does_not_discard_the_document(
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """색인 한 줄을 남기지 못한 것과 문서를 만들지 못한 것은 다른 상태다.
+
+    예전에는 이 실패가 503이 되어, 이미 렌더링·글꼴 검사를 통과해 디스크에 저장된
+    보고서를 통째로 버렸다.
+    """
+    engine = create_engine("sqlite://")  # reports 테이블을 만들지 않았다
+
+    with caplog.at_level(logging.ERROR):
+        _index_in_database(_record(), engine)
+
+    assert "not indexed in the database" in caplog.text
+
+
+def test_the_index_failure_log_does_not_carry_driver_detail(
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """드라이버 오류 문자열에는 접속 호스트·사용자명이 섞여 나온다."""
+    engine = create_engine("sqlite://")
+
+    with caplog.at_level(logging.ERROR):
+        _index_in_database(_record(), engine)
+
+    assert "no such table" not in caplog.text
 
 
 # --------------------------------------------------------------------------
@@ -310,8 +374,41 @@ def test_archiving_round_trips_through_storage_and_the_record(tmp_path: Path) ->
         config=config,
         engine=engine,
     )
-    found, content = load_archived_pdf(report_id, config=config, engine=engine)
+    found, content = load_archived_pdf(report_id, config=config)
 
     assert found.content_sha256 == record.content_sha256
     assert content.startswith(b"%PDF")
     assert Decimal(found.byte_size) > 0
+
+
+@pytest.mark.skipif(_engine_missing(), reason="WeasyPrint를 쓸 수 없는 환경")
+def test_a_report_is_archived_and_read_back_without_any_database(tmp_path: Path) -> None:
+    """``filesystem`` 공급원은 이름 그대로 파일시스템만으로 완결된다.
+
+    DB에 닿지 못하는 것은 흔한 상태다(터널이 닫혀 있는 개발 환경). 그때 보고서를
+    못 만드는 것이 아니라, 만들어 놓고 못 꺼내는 것이 문제였다.
+    """
+    config = _settings(tmp_path)
+    report_id = uuid4()
+
+    record = archive_pdf_report(
+        "<html><body><p>DB 없이 보관되는 문서입니다.</p></body></html>",
+        report_id=report_id,
+        kind="simulation",
+        source_id=SOURCE_ID,
+        created_at=CREATED_AT,
+        as_of=AS_OF,
+        fully_verified=True,
+        adopted_sections=("rates_and_policy",),
+        policy_sources=("예금자보호법 시행령(시행 2025-09-01)",),
+        config=config,
+        # 색인은 실패한다 — reports 테이블이 없다.
+        engine=create_engine("sqlite://"),
+    )
+    found, content = load_archived_pdf(report_id, config=config)
+
+    assert content.startswith(b"%PDF")
+    assert found.as_of == AS_OF
+    assert found.content_sha256 == record.content_sha256
+    assert found.adopted_sections == ("rates_and_policy",)
+    assert found.policy_sources == ("예금자보호법 시행령(시행 2025-09-01)",)

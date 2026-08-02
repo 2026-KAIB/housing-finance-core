@@ -56,7 +56,6 @@ from app.services.report_archive import (
     PDF_MEDIA_TYPE,
     PdfRenderingUnavailable,
     ReportArchiveDisabled,
-    ReportArchiveUnavailable,
     ReportStorageError,
     archive_pdf_report,
     load_archived_pdf,
@@ -109,6 +108,11 @@ def _archive_or_raise(
             policy_sources=policy_sources,
             notes=report.notes,
         )
+        # 방금 쓴 것을 다시 읽는다. 응답으로 나가는 바이트가 **보관된 그 문서**임을
+        # 해시로 확인하기 위해서다(`storage.load_bytes`). 읽기도 같은 try 안에
+        # 둔다 — 밖에 두면 되읽기 실패가 처리되지 않은 500이 되어, 사유가 있는
+        # 503으로 내려갈 수 있는 실패가 스택트레이스로 나간다.
+        _record, content = load_archived_pdf(report_id)
     except ReportArchiveDisabled as exc:
         raise HTTPException(
             status_code=status.HTTP_501_NOT_IMPLEMENTED,
@@ -121,13 +125,12 @@ def _archive_or_raise(
             status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
             detail=f"PDF를 만들지 못했습니다: {exc}",
         ) from exc
-    except (ReportStorageError, ReportArchiveUnavailable) as exc:
+    except ReportStorageError as exc:
         raise HTTPException(
             status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
             detail=f"보고서를 보관하지 못했습니다: {exc}",
         ) from exc
 
-    _record, content = load_archived_pdf(report_id)
     return content
 
 
@@ -146,7 +149,7 @@ def read_archived_report(report_id: UUID) -> Response:
             status_code=status.HTTP_404_NOT_FOUND,
             detail="보관된 보고서를 찾을 수 없습니다.",
         ) from exc
-    except (ReportStorageError, ReportArchiveUnavailable) as exc:
+    except ReportStorageError as exc:
         raise HTTPException(
             status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
             detail=f"보관된 보고서를 읽지 못했습니다: {exc}",

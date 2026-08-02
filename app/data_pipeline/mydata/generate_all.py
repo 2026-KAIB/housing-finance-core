@@ -20,8 +20,14 @@ BASE = datetime(2026, 7, 24)
 MONTHS = 12
 IN_TYPES = {"03", "04", "06", "98"}
 
-OUT_ROOT = sys.argv[1] if len(sys.argv) > 1 else os.path.dirname(os.path.abspath(__file__))
-SELECTED_PERSONA_ID = sys.argv[2] if len(sys.argv) > 2 else None
+def _default_out_root():
+    return os.path.dirname(os.path.abspath(__file__))
+
+
+# 임포트 시점에 sys.argv를 읽지 않는다 — pytest로 임포트하면 pytest의 인자가
+# 출력 경로가 된다. 명령줄 인자는 __main__ 블록에서만 읽는다.
+OUT_ROOT = _default_out_root()
+SELECTED_PERSONA_ID = None
 
 # ══════════════════════════════════════════════════════
 # 금융 계산 (역산 전용 — 출력 JSON에는 들어가지 않음)
@@ -630,10 +636,10 @@ def persona_d():
 
 # 대학생1(기본형): 군필, 부모 자가 거주, 월 80만원 고정 알바를 하는 25세 학생.
 def persona_e():
-    """E. 대학생1(기본형) — 결과를 미리 정하지 않는 월세 보증금 마련 시나리오.
+    """E. 대학생1(기본형) — 결과를 미리 정하지 않는 주택 구매 시나리오.
 
     목적:
-        사용자가 제공한 현재 자산·소득·지출과 2년 뒤 월세 입주 목표를 그대로
+        사용자가 제공한 현재 자산·소득·지출과 2년 뒤 주택 구매 목표를 그대로
         입력하고, 상품 PASS/FAIL/UNKNOWN과 목표 달성 가능성은 엔진이 판단하게 한다.
     자동 생성 근거:
         사용자가 정하지 않은 지역·거래 분류·유동성 가정은 현실적인 기본값으로
@@ -706,14 +712,11 @@ def persona_e():
             "current_housing_type": "living_with_parents",
             "lease_deposit": 0,
             "lease_end_date": None,
-            "target_housing_type": "monthly_rent",
+            "target_housing_type": "purchase",
             "target_region": "11650",
-            # 기존 profile 소비자와의 호환을 위해 목표 필요자금(보증금)을
-            # target_price에도 둔다. 신규 코드는 target_housing_type을 먼저 읽는다.
-            "target_price": 5_000_000,
-            "target_lease_deposit": 5_000_000,
-            "target_monthly_rent": 200_000,
-            "target_management_fee": 50_000,
+            # 서초구 실거래 p05. 설계 문서 3.2의 SQL 참조.
+            "target_purchase_price": 325_000_000,
+            "target_price": 325_000_000,
             "target_move_in_ym": "202807",
             "annual_income_verified": 9_600_000,
             "spouse_annual_income": 0,
@@ -744,7 +747,7 @@ def persona_e():
         "generation_metadata": {
             "purpose": (
                 "기대 결과를 지정하지 않고 대학생의 실제 입력값으로 예적금 "
-                "상품 평가와 월세 보증금 마련 가능성을 확인한다."
+                "상품 평가와 주택 구매 가능성을 확인한다."
             ),
             "provided_facts": {
                 "persona_name": "대학생1(기본형)",
@@ -759,15 +762,13 @@ def persona_e():
                 "has_loans": False,
                 "tuition_payer": "parents",
                 "target_period": "약 2년",
-                "target_lease_deposit": 5_000_000,
-                "target_monthly_rent": 200_000,
+                "target_purchase_price": 325_000_000,
                 "employment_expected_to_continue": True,
             },
             "generated_assumptions": {
                 "birth_date": "20010315",
                 "target_region": "11650",
                 "target_move_in_ym": "202807",
-                "target_management_fee": 50_000,
                 "part_time_income_start_ym": "202509",
                 "applicant_type": "individual",
                 "is_first_payment": True,
@@ -981,12 +982,12 @@ def _college_student_variant(spec):
             "current_housing_type": spec["current_housing_type"],
             "lease_deposit": spec.get("current_lease_deposit", 0),
             "lease_end_date": None,
-            "target_housing_type": "monthly_rent",
+            "target_housing_type": "purchase",
             "target_region": spec["target_region"],
-            "target_price": spec["target_lease_deposit"],
-            "target_lease_deposit": spec["target_lease_deposit"],
-            "target_monthly_rent": spec["target_monthly_rent"],
-            "target_management_fee": spec["target_management_fee"],
+            # 실거래 p05(전용 85m2 이하, 2025-01-01 이후)에서 온 값이다.
+            # 조회 SQL과 기준일은 설계 문서 3.2에 있다.
+            "target_purchase_price": spec["target_purchase_price"],
+            "target_price": spec["target_purchase_price"],
             "target_move_in_ym": target_move_in_ym,
             "annual_income_verified": monthly_income * 12,
             "spouse_annual_income": 0,
@@ -1023,7 +1024,7 @@ def _college_student_variant(spec):
             "character_summary": spec["summary"],
             "purpose": (
                 "기대 결과를 미리 정하지 않고 해당 학생의 재무 사실로 "
-                "예적금 평가와 월세 보증금 마련 가능성을 관찰한다."
+                "예적금 평가와 주택 구매 가능성을 관찰한다."
             ),
             "provided_facts": {
                 "generation_request": "대학생 기본형·부유형·가난형 총 20명",
@@ -1034,8 +1035,8 @@ def _college_student_variant(spec):
                 "monthly_average_expense": monthly_expense,
                 "monthly_debt_payment": monthly_debt_payment,
                 "current_assets": current_assets,
-                "target_lease_deposit": spec["target_lease_deposit"],
-                "target_monthly_rent": spec["target_monthly_rent"],
+                "target_purchase_price": spec["target_purchase_price"],
+                "target_region": spec["target_region"],
                 "target_move_in_ym": target_move_in_ym,
                 "emergency_reserve": emergency_reserve,
                 "lump_sum_budget": lump_sum_budget,
@@ -1070,9 +1071,7 @@ COLLEGE_STUDENT_VARIANT_SPECS = (
         "employment_type": "part_time",
         "tuition_payer": "parents",
         "target_region": "11290",
-        "target_lease_deposit": 6_000_000,
-        "target_monthly_rent": 250_000,
-        "target_management_fee": 50_000,
+        "target_purchase_price": 390_000_000,
         "target_months": 24,
     },
     # 대학생3(기본형): 기숙사에 거주하며 교내근로와 장학금으로 생활하는 22세 학생.
@@ -1097,9 +1096,7 @@ COLLEGE_STUDENT_VARIANT_SPECS = (
         "employment_type": "work_study",
         "tuition_payer": "scholarship",
         "target_region": "11260",
-        "target_lease_deposit": 8_000_000,
-        "target_monthly_rent": 300_000,
-        "target_management_fee": 60_000,
+        "target_purchase_price": 262_500_000,
         "target_months": 30,
     },
     # 대학생4(기본형): 군 복학 후 주말 서점 아르바이트를 하는 24세 통학생.
@@ -1124,9 +1121,7 @@ COLLEGE_STUDENT_VARIANT_SPECS = (
         "employment_type": "part_time",
         "tuition_payer": "parents",
         "target_region": "11350",
-        "target_lease_deposit": 7_000_000,
-        "target_monthly_rent": 300_000,
-        "target_management_fee": 50_000,
+        "target_purchase_price": 337_000_000,
         "target_months": 24,
     },
     # 대학생5(기본형): 실습·재료비 지출이 큰 예체능 전공 23세 학생.
@@ -1151,9 +1146,7 @@ COLLEGE_STUDENT_VARIANT_SPECS = (
         "employment_type": "part_time",
         "tuition_payer": "parents",
         "target_region": "11560",
-        "target_lease_deposit": 5_000_000,
-        "target_monthly_rent": 250_000,
-        "target_management_fee": 50_000,
+        "target_purchase_price": 300_000_000,
         "target_months": 24,
     },
     # 대학생6(기본형): 연구실 장려금과 조교비를 받는 26세 대학원생.
@@ -1179,9 +1172,7 @@ COLLEGE_STUDENT_VARIANT_SPECS = (
         "employment_type": "graduate_assistant",
         "tuition_payer": "scholarship",
         "target_region": "11440",
-        "target_lease_deposit": 10_000_000,
-        "target_monthly_rent": 350_000,
-        "target_management_fee": 70_000,
+        "target_purchase_price": 550_000_000,
         "target_months": 30,
     },
     # 대학생7(기본형): 졸업을 앞두고 취업준비와 카페근무를 병행하는 25세 학생.
@@ -1206,9 +1197,7 @@ COLLEGE_STUDENT_VARIANT_SPECS = (
         "employment_type": "part_time",
         "tuition_payer": "parents",
         "target_region": "11500",
-        "target_lease_deposit": 8_000_000,
-        "target_monthly_rent": 350_000,
-        "target_management_fee": 60_000,
+        "target_purchase_price": 365_000_000,
         "target_months": 18,
     },
     # 대학생8(부유형): 부모의 월 생활비 지원과 기존 목돈이 충분한 21세 학생.
@@ -1233,10 +1222,8 @@ COLLEGE_STUDENT_VARIANT_SPECS = (
         "income_memo": "부모 생활비 지원",
         "employment_type": "family_support",
         "tuition_payer": "parents",
-        "target_region": "11680",
-        "target_lease_deposit": 30_000_000,
-        "target_monthly_rent": 700_000,
-        "target_management_fee": 120_000,
+        "target_region": "11530",   # 11680 → 구로구
+        "target_purchase_price": 233_000_000,
         "target_months": 24,
     },
     # 대학생9(부유형): 가족 증여 예금과 높은 생활비 지원을 가진 23세 학생.
@@ -1261,10 +1248,8 @@ COLLEGE_STUDENT_VARIANT_SPECS = (
         "income_memo": "가족 생활비·교육비 지원",
         "employment_type": "family_support",
         "tuition_payer": "parents",
-        "target_region": "11680",
-        "target_lease_deposit": 50_000_000,
-        "target_monthly_rent": 900_000,
-        "target_management_fee": 150_000,
+        "target_region": "11260",   # 11680 → 중랑구
+        "target_purchase_price": 262_500_000,
         "target_months": 18,
     },
     # 대학생10(부유형): 고액 과외로 월 400만원을 버는 25세 학생.
@@ -1289,10 +1274,8 @@ COLLEGE_STUDENT_VARIANT_SPECS = (
         "income_memo": "개인과외 수입",
         "employment_type": "self_employed_tutor",
         "tuition_payer": "self",
-        "target_region": "11680",
-        "target_lease_deposit": 40_000_000,
-        "target_monthly_rent": 800_000,
-        "target_management_fee": 150_000,
+        "target_region": "11305",   # 11680 → 강북구
+        "target_purchase_price": 260_000_000,
         "target_months": 18,
     },
     # 대학생11(부유형): 가족사업을 도우며 급여와 큰 금융자산을 보유한 24세 학생.
@@ -1317,10 +1300,8 @@ COLLEGE_STUDENT_VARIANT_SPECS = (
         "income_memo": "가족사업 근로소득",
         "employment_type": "family_business",
         "tuition_payer": "parents",
-        "target_region": "11680",
-        "target_lease_deposit": 70_000_000,
-        "target_monthly_rent": 1_000_000,
-        "target_management_fee": 180_000,
+        "target_region": "11320",   # 11680 → 도봉구
+        "target_purchase_price": 285_000_000,
         "target_months": 24,
     },
     # 대학생12(부유형): 전액장학금과 부모 지원으로 지출 대비 여유가 큰 22세 학생.
@@ -1345,10 +1326,8 @@ COLLEGE_STUDENT_VARIANT_SPECS = (
         "income_memo": "생활비 장학금·부모 지원",
         "employment_type": "scholarship_and_support",
         "tuition_payer": "scholarship",
-        "target_region": "11290",
-        "target_lease_deposit": 30_000_000,
-        "target_monthly_rent": 600_000,
-        "target_management_fee": 100_000,
+        "target_region": "11215",   # 11290 → 광진구
+        "target_purchase_price": 259_500_000,
         "target_months": 30,
     },
     # 대학생13(부유형): 프리랜서 개발로 고소득과 1억원대 자산을 만든 26세 학생.
@@ -1375,9 +1354,7 @@ COLLEGE_STUDENT_VARIANT_SPECS = (
         "employment_type": "freelancer",
         "tuition_payer": "self",
         "target_region": "11680",
-        "target_lease_deposit": 80_000_000,
-        "target_monthly_rent": 1_200_000,
-        "target_management_fee": 200_000,
+        "target_purchase_price": 370_000_000,
         "target_months": 12,
     },
     # 대학생14(가난형): 단시간 알바와 빠듯한 생활비로 월 5만원만 남는 20세 학생.
@@ -1402,9 +1379,7 @@ COLLEGE_STUDENT_VARIANT_SPECS = (
         "employment_type": "part_time",
         "tuition_payer": "scholarship",
         "target_region": "11350",
-        "target_lease_deposit": 3_000_000,
-        "target_monthly_rent": 200_000,
-        "target_management_fee": 40_000,
+        "target_purchase_price": 337_000_000,
         "target_months": 24,
     },
     # 대학생15(가난형): 학자금대출 1,200만원을 상환 중인 24세 학생.
@@ -1432,9 +1407,7 @@ COLLEGE_STUDENT_VARIANT_SPECS = (
         "employment_type": "part_time",
         "tuition_payer": "student_loan",
         "target_region": "11320",
-        "target_lease_deposit": 5_000_000,
-        "target_monthly_rent": 250_000,
-        "target_management_fee": 50_000,
+        "target_purchase_price": 285_000_000,
         "target_months": 30,
     },
     # 대학생16(가난형): 지방 원룸 월세 때문에 소득 대부분을 쓰는 23세 학생.
@@ -1460,9 +1433,7 @@ COLLEGE_STUDENT_VARIANT_SPECS = (
         "employment_type": "part_time",
         "tuition_payer": "scholarship",
         "target_region": "11230",
-        "target_lease_deposit": 5_000_000,
-        "target_monthly_rent": 250_000,
-        "target_management_fee": 50_000,
+        "target_purchase_price": 281_700_000,
         "target_months": 24,
     },
     # 대학생17(가난형): 생활비가 수입보다 많아 잔액이 줄어드는 22세 학생.
@@ -1486,9 +1457,7 @@ COLLEGE_STUDENT_VARIANT_SPECS = (
         "employment_type": "work_study",
         "tuition_payer": "scholarship",
         "target_region": "11500",
-        "target_lease_deposit": 3_000_000,
-        "target_monthly_rent": 180_000,
-        "target_management_fee": 40_000,
+        "target_purchase_price": 365_000_000,
         "target_months": 24,
     },
     # 대학생18(가난형): 소득과 생활비가 같아 저축여력이 없는 25세 학생.
@@ -1512,9 +1481,7 @@ COLLEGE_STUDENT_VARIANT_SPECS = (
         "employment_type": "part_time",
         "tuition_payer": "scholarship",
         "target_region": "11200",
-        "target_lease_deposit": 4_000_000,
-        "target_monthly_rent": 220_000,
-        "target_management_fee": 50_000,
+        "target_purchase_price": 460_000_000,
         "target_months": 18,
     },
     # 대학생19(가난형): 가족부양과 학자금대출을 동시에 부담하는 26세 학생.
@@ -1542,9 +1509,7 @@ COLLEGE_STUDENT_VARIANT_SPECS = (
         "employment_type": "part_time",
         "tuition_payer": "student_loan",
         "target_region": "11710",
-        "target_lease_deposit": 5_000_000,
-        "target_monthly_rent": 230_000,
-        "target_management_fee": 50_000,
+        "target_purchase_price": 660_000_000,
         "target_months": 36,
     },
     # 대학생20(가난형): 가족지원 없이 월 20만원 적자가 누적되는 21세 학생.
@@ -1568,9 +1533,7 @@ COLLEGE_STUDENT_VARIANT_SPECS = (
         "employment_type": "irregular_part_time",
         "tuition_payer": "scholarship",
         "target_region": "11620",
-        "target_lease_deposit": 3_000_000,
-        "target_monthly_rent": 180_000,
-        "target_management_fee": 40_000,
+        "target_purchase_price": 372_500_000,
         "target_months": 24,
     },
 )
@@ -1657,6 +1620,8 @@ def generate(persona):
 
 
 if __name__ == "__main__":
+    OUT_ROOT = sys.argv[1] if len(sys.argv) > 1 else _default_out_root()
+    SELECTED_PERSONA_ID = sys.argv[2] if len(sys.argv) > 2 else None
     print(f"출력: {OUT_ROOT}\n")
     persona_factories = (
         persona_a,

@@ -415,6 +415,7 @@ def run_simulation(
         recommendation_result=recommendation,
         stress_test_result=stress,
         savings_portfolio_result=savings_portfolio_result,
+        savings_policy_validation=savings_validation,
         strategy_comparison_result=strategy,
     )
     # 구간을 못 돌린 이유와 파생 가정은 조립 결과에 담기지 않으므로 여기서

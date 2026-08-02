@@ -1,5 +1,5 @@
 {
-  "purpose": "기대 결과를 지정하지 않고 대학생의 실제 입력값으로 예적금 상품 평가와 월세 보증금 마련 가능성을 확인한다.",
+  "purpose": "기대 결과를 지정하지 않고 대학생의 실제 입력값으로 예적금 상품 평가와 주택 구매 가능성을 확인한다.",
   "provided_facts": {
     "persona_name": "대학생1(기본형)",
     "age": 25,
@@ -13,15 +13,13 @@
     "has_loans": false,
     "tuition_payer": "parents",
     "target_period": "약 2년",
-    "target_lease_deposit": 5000000,
-    "target_monthly_rent": 200000,
+    "target_purchase_price": 325000000,
     "employment_expected_to_continue": true
   },
   "generated_assumptions": {
     "birth_date": "20010315",
-    "target_region": "30200",
+    "target_region": "11650",
     "target_move_in_ym": "202807",
-    "target_management_fee": 50000,
     "part_time_income_start_ym": "202509",
     "applicant_type": "individual",
     "is_first_payment": true,

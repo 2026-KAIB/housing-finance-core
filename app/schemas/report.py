@@ -29,6 +29,12 @@ class ReportSection(BaseModel):
     facts: dict[str, JsonValue] | None
     missing_inputs: tuple[str, ...] = ()
     reasons: tuple[str, ...] = ()
+    # 값을 확정하지 못해 **무엇으로 대신 채웠는지**. `reasons`(왜 이런 판정이
+    # 나왔는지)와 섞지 않는다. 이 칸이 없던 동안 보고서 양식은 `reasons`에서
+    # "가정"·"파생" 같은 낱말을 찾아 가정을 추려냈는데, 가정은 애초에 여기 오는
+    # 값이라 한 건도 걸리지 않았다 — 필요 대출금액이 부대비용을 빼고 계산됐다는
+    # 경고가 그렇게 문서에서 사라졌다.
+    assumptions: tuple[str, ...] = ()
     policy_sources: tuple[str, ...] = ()
 
 

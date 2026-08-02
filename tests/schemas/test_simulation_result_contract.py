@@ -6,6 +6,9 @@ from uuid import UUID
 import pytest
 from pydantic import ValidationError
 
+from app.data_pipeline.adapters.savings_portfolio_policy_adapter import (
+    SavingsPortfolioPolicyValidation,
+)
 from app.engines.loan.combination_models import (
     CombinationStatus,
     CreditStressRegime,
@@ -40,6 +43,7 @@ from app.engines.stress import (
     run_stress_test,
 )
 from app.reports.context import build_report_ai_input
+from app.rule_engine.product_packs.models import EvaluationStatus
 from app.schemas.simulation import (
     FinancialSnapshot,
     GoalType,
@@ -464,3 +468,48 @@ def test_report_prefers_policy_validated_recommendation_summary() -> None:
     assert report.sections.stress_test.facts is not None
     assert report.sections.strategy_comparison.facts is not None
     assert any("다시 계산하지 않습니다" in rule for rule in report.generation_rules)
+
+
+def test_savings_section_carries_final_policy_decision() -> None:
+    """정책 재검증 판정은 배분과 같은 자리에서 읽혀야 한다.
+
+    판정은 엔진 결과가 아니라 Rule Pack 재검증 결과여서
+    ``SavingsPortfolioResult`` 안에 없다. 그러나 소비자에게는 "이 배분이
+    정책을 통과했는가"가 배분과 분리될 이유가 없다.
+    """
+    result = build_simulation_result(
+        _input(),
+        simulation_id=_SIMULATION_ID,
+        as_of=_AS_OF,
+        calculated_at=_CALCULATED_AT,
+        savings_portfolio_result=_savings_portfolio(),
+        savings_policy_validation=SavingsPortfolioPolicyValidation(
+            status=EvaluationStatus.PASS,
+            decisions=(),
+            reasons=("상품 X가 재검증에서 제외됨",),
+        ),
+    )
+
+    section = result.savings_portfolio
+    assert section.section_schema_version == "savings-portfolio@1.1.0"
+    assert section.result is not None
+    assert section.result["final_policy_status"] == "PASS"
+    assert section.result["final_policy_valid"] is True
+    assert section.result["validation_reasons"] == ["상품 X가 재검증에서 제외됨"]
+
+
+def test_savings_section_omits_policy_keys_when_validation_is_absent() -> None:
+    """판정을 받지 못한 상태는 통과가 아니다. PASS로 채우지 않는다."""
+    result = build_simulation_result(
+        _input(),
+        simulation_id=_SIMULATION_ID,
+        as_of=_AS_OF,
+        calculated_at=_CALCULATED_AT,
+        savings_portfolio_result=_savings_portfolio(),
+    )
+
+    section = result.savings_portfolio
+    assert section.result is not None
+    assert "final_policy_status" not in section.result
+    assert "final_policy_valid" not in section.result
+    assert "validation_reasons" not in section.result

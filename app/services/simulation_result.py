@@ -20,6 +20,9 @@ from uuid import UUID
 
 from pydantic import BaseModel
 
+from app.data_pipeline.adapters.savings_portfolio_policy_adapter import (
+    SavingsPortfolioPolicyValidation,
+)
 from app.engines.cashflow.models import CashflowResult
 from app.engines.loan.combination_models import LoanCombinationResult
 from app.engines.recommendation.models import CombinedRecommendationResult
@@ -186,6 +189,37 @@ def _goal_summary(payload: SimulationInput) -> HousingGoalSummary:
     )
 
 
+def _savings_section(
+    savings_portfolio_result: SavingsPortfolioResult | None,
+    validation: SavingsPortfolioPolicyValidation | None,
+) -> CalculationSection:
+    """저축 절에 최종 정책 재검증 판정을 함께 싣는다.
+
+    판정은 엔진이 아니라 Rule Pack 재검증이 만든다. 그래서
+    ``SavingsPortfolioResult`` 안에 없지만, 소비자에게는 "이 배분이 정책을
+    통과했는가"가 배분과 같은 자리에서 읽혀야 한다.
+
+    검증이 없으면 **채우지 않는다.** 판정을 받지 못한 상태는 통과가 아니며,
+    빈 자리를 ``PASS``로 메우면 통과와 미판정이 같은 값이 된다.
+    """
+    section = build_calculation_section(
+        savings_portfolio_result,
+        section_schema_version="savings-portfolio@1.1.0",
+    )
+    if section.result is None or validation is None:
+        return section
+    return section.model_copy(
+        update={
+            "result": {
+                **section.result,
+                "final_policy_status": validation.status.value,
+                "final_policy_valid": validation.valid,
+                "validation_reasons": list(validation.reasons),
+            }
+        }
+    )
+
+
 def build_simulation_result(
     payload: SimulationInput,
     *,
@@ -194,6 +228,7 @@ def build_simulation_result(
     calculated_at: datetime,
     cashflow_result: CashflowResult | Mapping[str, object] | None = None,
     savings_portfolio_result: SavingsPortfolioResult | None = None,
+    savings_policy_validation: SavingsPortfolioPolicyValidation | None = None,
     loan_simulation_result: LoanSimulationResult | None = None,
     loan_combination_result: LoanCombinationResult | None = None,
     recommendation_result: CombinedRecommendationResult | None = None,
@@ -220,9 +255,8 @@ def build_simulation_result(
             cashflow_result,
             section_schema_version="cashflow@1.0.0",
         ),
-        "savings_portfolio": build_calculation_section(
-            savings_portfolio_result,
-            section_schema_version="savings-portfolio@1.0.0",
+        "savings_portfolio": _savings_section(
+            savings_portfolio_result, savings_policy_validation
         ),
         "loan_simulation": build_calculation_section(
             loan_simulation_result,

@@ -20,3 +20,8 @@ data/raw/
 data/processed/
 *.sqlite3
 
+# 보고서 보관소(app/core/config.py의 report_storage_root 기본값). 개인 재무
+# 문서인 PDF가 쌓이는 자리이므로 절대 커밋하지 않는다. REPORT_ARCHIVE_PROVIDER를
+# filesystem으로 켜고 보고서를 한 번 만들면 바로 생긴다.
+var/
+

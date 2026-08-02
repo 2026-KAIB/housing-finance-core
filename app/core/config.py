@@ -61,6 +61,10 @@ class Settings(BaseSettings):
     # 보고서 PDF 보관. 기본이 "none"인 이유는 보관이 **되돌리기 어려운 부수효과**
     # 이기 때문이다 — 켜는 순간 계산 요청마다 디스크에 파일이 쌓이고 개인 재무
     # 정보가 담긴 문서가 영구 저장된다. 그건 명시적으로 켜야 하는 결정이다.
+    # ``filesystem``은 이름 그대로 파일시스템만으로 완결된다 — 본문과 기록이 모두
+    # 보관 루트 아래 놓이므로 DB 없이도 보고서를 만들고 다시 꺼낼 수 있다. DB가
+    # 설정돼 있으면 색인 행을 하나 더 남기지만, 그건 부차적이라 실패해도 보관을
+    # 무르지 않는다(`services/report_archive.py`).
     report_archive_provider: Literal["none", "filesystem"] = "none"
     # 보관 루트. 파일명은 서버가 만든 UUID로만 구성되며 사용자 입력이 경로에
     # 섞이지 않는다(`reports/storage.py`).

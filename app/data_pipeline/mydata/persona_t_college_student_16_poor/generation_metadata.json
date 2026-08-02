@@ -2,7 +2,7 @@
   "persona_name": "대학생16(가난형)",
   "persona_category": "poor",
   "character_summary": "현재 원룸 월세로 소득 대부분을 지출",
-  "purpose": "기대 결과를 미리 정하지 않고 해당 학생의 재무 사실로 예적금 평가와 월세 보증금 마련 가능성을 관찰한다.",
+  "purpose": "기대 결과를 미리 정하지 않고 해당 학생의 재무 사실로 예적금 평가와 주택 구매 가능성을 관찰한다.",
   "provided_facts": {
     "generation_request": "대학생 기본형·부유형·가난형 총 20명"
   },
@@ -12,8 +12,8 @@
     "monthly_average_expense": 950000,
     "monthly_debt_payment": 0,
     "current_assets": 800000,
-    "target_lease_deposit": 5000000,
-    "target_monthly_rent": 250000,
+    "target_purchase_price": 281700000,
+    "target_region": "11230",
     "target_move_in_ym": "202807",
     "emergency_reserve": 700000,
     "lump_sum_budget": 0,

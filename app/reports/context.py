@@ -81,6 +81,7 @@ def _report_section(
     engine_status: str | None = None,
     missing_inputs: tuple[str, ...] = (),
     reasons: tuple[str, ...] = (),
+    assumptions: tuple[str, ...] = (),
     policy_sources: tuple[str, ...] = (),
 ) -> ReportSection:
     selected = facts if facts is not None else source.result
@@ -91,6 +92,7 @@ def _report_section(
         facts=sanitized,
         missing_inputs=tuple(dict.fromkeys(source.missing_inputs + missing_inputs)),
         reasons=tuple(dict.fromkeys(source.reasons + reasons)),
+        assumptions=tuple(dict.fromkeys(source.assumptions + assumptions)),
         policy_sources=tuple(dict.fromkeys(source.policy_sources + policy_sources)),
     )
 
@@ -124,6 +126,10 @@ def _recommendation_parts(
                 if savings_payload is not None
                 else ()
             ),
+            # 추천 구간 자체는 가정을 만들지 않는다. 아래 계산이 무엇을 가정하고
+            # 낸 숫자인지를 요약이 그대로 이어받지 않으면, 추천이 실행됐다는
+            # 이유만으로 그 가정들이 문서에서 사라진다.
+            assumptions=result.savings_portfolio.assumptions,
         )
         loan_section = _report_section(
             recommendation,
@@ -148,6 +154,9 @@ def _recommendation_parts(
                 if loan_payload is not None
                 else ()
             ),
+            # 필요 대출금액이 부대비용을 빼고 파생됐다는 경고가 여기 들어 있다.
+            # 대출 계산의 가정이지 추천의 가정이 아니므로 명시적으로 이어붙인다.
+            assumptions=result.loan_simulation.assumptions,
         )
         recommendation_facts = {
             key: value

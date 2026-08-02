@@ -228,3 +228,58 @@ class TestFormAgent:
 
         assert report.adopted_sections == ()
         assert "283,520,507원" in report.to_text()
+
+
+def _with_buffer_margin(report_input: ReportAIInput, margin: str) -> ReportAIInput:
+    """스트레스 절의 최소 여유자금 마진만 바꾼 입력. 공용 픽스처는 현금흐름이 넉넉하다."""
+    stress = report_input.sections.stress_test
+    facts = dict(stress.facts or {})
+    facts["minimum_buffer_margin"] = margin
+    return report_input.model_copy(
+        update={
+            "sections": report_input.sections.model_copy(
+                update={"stress_test": stress.model_copy(update={"facts": facts})}
+            )
+        }
+    )
+
+
+def _figures(report_input: ReportAIInput, key: str) -> str:
+    section = next(s for s in build_report_form(report_input).sections if s.key == key)
+    return "\n".join(section.figures)
+
+
+class TestTheLabelsSayWhichEndOfTheRangeItIs:
+    def test_the_buffer_shortfall_is_named_as_the_worst_case(
+        self,
+        report_input: ReportAIInput,
+    ) -> None:
+        """`minimum_buffer_margin`은 시나리오 중 **가장 작은 여유**, 곧 가장 큰 부족액이다.
+
+        이것을 "최소 부족액"으로 적으면 "잘해야 이만큼 모자란다"로 읽혀 뜻이
+        정확히 뒤집힌다.
+        """
+        text = _figures(_with_buffer_margin(report_input, "-500000"), "base_vs_stress")
+
+        assert "최악 시나리오 여유자금 부족액: 500,000원" in text
+        assert "최소 여유자금 부족액" not in text
+
+    def test_a_positive_margin_is_not_reported_as_a_shortfall(
+        self,
+        report_input: ReportAIInput,
+    ) -> None:
+        text = _figures(_with_buffer_margin(report_input, "500000"), "base_vs_stress")
+
+        assert "여유자금 부족액" not in text
+
+
+class TestTheEngineAssumptionsSurvive:
+    def test_the_derived_required_amount_caveat_reaches_the_form(
+        self,
+        report_input: ReportAIInput,
+    ) -> None:
+        """가정은 `assumptions`에 담긴다. `reasons`를 낱말로 훑던 때는 한 건도 걸리지 않았다."""
+        text = _figures(report_input, "user_confirmations")
+
+        assert "계산에 사용한 가정:" in text
+        assert "부대비용이 빠져 있어 실제 필요금액은 더 클 수 있습니다" in text

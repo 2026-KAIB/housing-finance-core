@@ -2353,6 +2353,79 @@ export function ReportViewer({ input }: { input: SimulationInputPayload }) {
 Run: `npm test -- report-viewer`
 Expected: PASS 6건
 
+- [ ] **Step 4b: 보고서가 카드를 기다리지 않게 한다**
+
+Task 8이 만든 `live-dashboard.tsx`는 `if (!result) return <계산 중>`으로 **`<ReportViewer>` 앞에서 빠져나간다.** 그래서 보고서 요청이 카드 응답 뒤에 시작되고, **카드 호출이 실패하면 보고서는 아예 시도되지 않는다.** 설계 §2.7이 정한 "두 호출은 서로를 기다리지 않는다"가 지켜지지 않는다.
+
+검증 관문만 전체 화면 조기 반환으로 남기고, 카드와 보고서를 형제로 만든다:
+
+```tsx
+  return (
+    <>
+      {error ? (
+        <section className="py-12">
+          <p className="rounded-xl border border-red-200 bg-red-50 p-4 text-sm text-red-800">
+            {error}
+          </p>
+        </section>
+      ) : result ? (
+        <PortfolioView result={result} />
+      ) : (
+        <section className="py-12">
+          <p className="text-sm text-brand-muted" role="status">
+            입력하신 값으로 계산하고 있습니다…
+          </p>
+        </section>
+      )}
+      <ReportViewer input={input} />
+    </>
+  );
+```
+
+`if (error)`와 `if (!result)` 두 조기 반환 블록을 지운다. `if (input === null)` 블록은 **그대로 둔다** — 검증 실패는 계산할 값이 없다는 뜻이므로 보고서도 만들 수 없다.
+
+`live-dashboard.test.tsx`에 테스트를 더한다:
+
+```tsx
+it("카드가 아직 안 떠도 보고서 요청을 시작한다", async () => {
+  // 카드 호출은 응답하지 않게 두고, 보고서 호출이 나갔는지만 본다.
+  const calls: string[] = [];
+  vi.stubGlobal(
+    "fetch",
+    vi.fn((url: RequestInfo) => {
+      calls.push(String(url));
+      return new Promise(() => {}) as never;
+    }),
+  );
+
+  render(<LiveDashboard profile={await loadProfile(PERSONA)} />);
+
+  await waitFor(() =>
+    expect(calls.some((url) => url.includes("/reports"))).toBe(true),
+  );
+});
+
+it("카드 호출이 실패해도 보고서는 따로 시도한다", async () => {
+  const calls: string[] = [];
+  vi.stubGlobal(
+    "fetch",
+    vi.fn((url: RequestInfo) => {
+      calls.push(String(url));
+      return String(url).includes("/simulations")
+        ? Response.json({ detail: "Backend API is unavailable" }, { status: 502 })
+        : (new Promise(() => {}) as never);
+    }),
+  );
+
+  render(<LiveDashboard profile={await loadProfile(PERSONA)} />);
+
+  await waitFor(() => expect(screen.getByText(/실행 중인지/)).toBeInTheDocument());
+  expect(calls.some((url) => url.includes("/reports"))).toBe(true);
+});
+```
+
+`PERSONA`는 이 파일이 이미 쓰는 완전한 페르소나(`persona_f_college_student_02_basic`)를 쓴다 — 관문을 통과해야 두 호출이 다 나간다.
+
 - [ ] **Step 5: 전체 테스트와 타입 검사**
 
 Run: `npm test && npx tsc --noEmit`

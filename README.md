@@ -18,10 +18,7 @@
 Python 3.12 이상을 권장합니다.
 
 ```powershell
-python -m venv .venv
-.\.venv\Scripts\Activate.ps1
-python -m pip install -e ".[dev]"
-Copy-Item .env.example .env
+source .venv/bin/activate
 uvicorn app.main:app --reload
 ```
 
